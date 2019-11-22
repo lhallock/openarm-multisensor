@@ -12,12 +12,13 @@ Todo:
 
 from multisensorimport.dataobj import trialdata as td
 
-READ_PATH = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/seg_data_US.mat'
+READ_PATH = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/seg_data_US.mat'
 
 
 def main():
     """Execute all EMBC 2020 data analysis."""
-    pass
+    data1 = td.TrialData.from_preprocessed_mat_file(READ_PATH, 'Sub1', 1)
+    print(data1.data_emg.data.shape)
 
 
 if __name__ == "__main__":

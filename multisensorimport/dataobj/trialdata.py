@@ -12,7 +12,7 @@ metadata.
 
 from scipy.io import loadmat
 
-from timeseriesdata import TimeSeriesData
+from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
 
 
 class TrialData():
@@ -106,8 +106,8 @@ class TrialData():
 
         # set waypoint and dependent values
         td.wp = int(data_struct['wp'])
-        td.trial_no = wp_to_trial[td.wp]
-        td.ang = wp_to_angle[td.wp]
+        td.trial_no = wp_to_trial[str(td.wp)]
+        td.ang = wp_to_angle[str(td.wp)]
 
         # set EMG data
         emg_data = data_struct['filtEmg'][0, 0]
@@ -117,7 +117,7 @@ class TrialData():
                                                 emg_freq)
 
         # set AMG data
-        amg_data = data_struct['rawAMG'][0, 0]
+        amg_data = data_struct['rawAmg'][0, 0]
         amg_labels = [
             'forearm (front/wrist)', 'forearm (back)', 'biceps', 'triceps'
         ]

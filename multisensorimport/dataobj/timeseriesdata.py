@@ -280,13 +280,7 @@ class TimeSeriesData():
 
         Returns:
             list of length-n_ch data channel labels
-
-        Raises:
-            ValueError if channel label dimension is inconsistent with
-                self.data
         """
-        self._assert_consistent()
-
         return self._ch_labels
 
     @ch_labels.setter
