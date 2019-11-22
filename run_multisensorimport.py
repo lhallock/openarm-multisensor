@@ -14,9 +14,11 @@ from multisensorimport.dataobj import trialdata as td
 
 READ_PATH = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/seg_data_US.mat'
 
+
 def main():
     """Execute all EMBC 2020 data analysis."""
     pass
+
 
 if __name__ == "__main__":
     main()

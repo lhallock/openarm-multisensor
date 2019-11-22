@@ -18,12 +18,12 @@ class TimeSeriesData():
     """Class containing time series data and associated metadata.
 
     Attributes:
-        data (numpy.ndarray): n_ch x n array of data values
+        data (numpy.ndarray): n x n_ch array of data values
         n_ch (int): number of data channels
         n (int): number of data points
-        freq (int): sampling frequency
+        freq (int): sampling frequency (in Hz)
         offset (int): 'zero-valued' time point (for alignment with other
-            TimeSeriesData objects)
+            TimeSeriesData objects), in terms of number of samples
         label (str): human-readable identifier for data series (e.g., 'EMG')
         ch_labels (list): length-n_ch ordered list of data channel labels
 
@@ -39,6 +39,43 @@ class TimeSeriesData():
             (empty) TimeSeriesData object
         """
         self._label = label
+        self._data = None
+        self._n_ch = None
+        self._n = None
+        self._freq = None
+        self._offset = None
+        self._ch_labels = None
+
+    @classmethod
+    def from_array(cls, label, data, ch_labels, freq, offset=0):
+        """Initialize TimeSeriesData object from array and metadata.
+
+        Example:
+            obj = TimeSeriesData.from_array(label, data, ch_labels, freq)
+
+        Args:
+            label (str): desired label for data series (e.g., 'EMG')
+            data (numpy.ndarray): n x n_ch array of desired data values
+            ch_labels (list): length-n_ch ordered list of desired data channel
+                labels
+            freq (int): sampling frequency (in Hz)
+            offset (int): 'zero-valued' time point (for alignment with other
+                TimeSeriesData objects), in terms of number of samples
+
+        Returns:
+            TimeSeriesData object containing specified values
+        """
+        tsd = cls(label)
+        tsd._data = data
+        tsd._n_ch = tsd._data.shape[1]
+        tsd._n = tsd._data.shape[0]
+        tsd._freq = freq
+        tsd._offset = offset
+        tsd._ch_labels = ch_labels
+
+        tsd._assert_consistent()
+
+        return tsd
 
     @classmethod
     def from_file(cls,
@@ -109,8 +146,8 @@ class TimeSeriesData():
                                        skip_header=header_lines,
                                        usecols=cols)
 
-        self._n_ch = self._data.shape[0]
-        self._n = self._data.shape[1]
+        self._n_ch = self._data.shape[1]
+        self._n = self._data.shape[0]
 
     def _init_from_wav(self, filename):
         """Internal helper method for instantiation from WAV.
@@ -122,6 +159,8 @@ class TimeSeriesData():
             check if data type is consistent w/ CSV read
         """
         self._freq, self._data = wavfile.read(filename)
+        self._n_ch = self._data.shape[1]
+        self._n = self._data.shape[0]
 
     def _assert_consistent(self):
         """Confirm that dimensions of data and channel labels are consistent.
@@ -134,7 +173,7 @@ class TimeSeriesData():
         Raises:
             ValueError if self.ch_labels is inconsistent with self.data
         """
-        if len(self._ch_labels) != self.n_ch:
+        if self.ch_labels and (len(self.ch_labels) != self.n_ch):
             raise ValueError('Channel labels are of inconsistent dimension.')
 
     ###########################################################################
@@ -246,7 +285,6 @@ class TimeSeriesData():
             ValueError if channel label dimension is inconsistent with
                 self.data
         """
-
         self._assert_consistent()
 
         return self._ch_labels

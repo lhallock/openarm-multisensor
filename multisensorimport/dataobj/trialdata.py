@@ -1,266 +1,138 @@
 #!/usr/bin/env python3
-"""Class containing time series data and associated metadata.
+"""Class containing all muscle data for a single experimental trial.
 
-This module contains the TimeSeriesData class, which contains time series data
-and associated metadata (resolution, frequency, channel labels, etc.). The
-class is generic and designed for use with electromyography (EMG), acoustic
-myography (AMG), and force data, as well as quantitative features extracted
-from ultrasound (e.g., muscle cross-sectional area, or CSA). In practice, this
-class can be used to describe any time-series data, biometric or non-biometric.
+This module contains the TrialData class, which contains all time series data
+associated with a particular trial and associated metadata. Specifically, this
+class is used to aggregate associated surface electromyography (sEMG), acoustic
+myography (AMG), force, and quantitative features associated with time series
+ultrasound (e.g., muscle cross-sectional area, or CSA), alongside subject
+metadata.
 
 """
 
-import numpy as np
-from scipy.io import wavfile
+from scipy.io import loadmat
+
+from timeseriesdata import TimeSeriesData
 
 
-class TimeSeriesData():
-    """Class containing time series data and associated metadata.
+class TrialData():
+    """Class containing muscle time series data and associated metadata.
 
     Attributes:
-        data (numpy.ndarray): n_ch x n array of data values
-        n_ch (int): number of data channels
-        n (int): number of data points
-        freq (int): sampling frequency
-        offset (int): 'zero-valued' time point (for alignment with other
-            TimeSeriesData objects)
-        label (str): human-readable identifier for data series (e.g., 'EMG')
-        ch_labels (list): length-n_ch ordered list of data channel labels
-
+        subj (str): subject identifier
+        trial_no (int): trial number
+        wp (int): kinematic waypoint (corresponds directly to elbow angle)
+        ang (int): elbow angle in degrees of flexion (i.e., from "full
+            flexion", which is technically impossible)
+        data_emg (TimeSeriesData): sEMG data, pre-normalized and filtered with
+            60Hz notch filter
+        data_amg (TimeSeriesData): AMG data
+        data_force (TimeSeriesData): force data, pre-converted to wrench at
+            robot handle
+        data_ultrasound (TimeSeriesData): ultrasound time series data,
+            extracted using FUNCTION TODO
     """
 
-    def __init__(self, label):
-        """Standard initializer for TimeSeriesData objects.
-
-        Args:
-            label (str): desired label for data series (e.g., 'EMG')
+    def __init__(self):
+        """Standard initializer for TrialData objects.
 
         Returns:
-            (empty) TimeSeriesData object
+            (empty) TrialData object
         """
-        self._label = label
+        self.subj = None
+        self.trial_no = None
+        self.wp = None
+        self.ang = None
+        self.data_emg = None
+        self.data_amg = None
+        self.data_force = None
+        self.data_ultrasound = None
 
     @classmethod
-    def from_file(cls,
-                  label,
-                  filename,
-                  ch_labels,
-                  freq=None,
-                  offset=0,
-                  filetype='csv',
-                  header_lines=1,
-                  cols=-1):
-        """Initialize TimeSeriesData object from file.
+    def from_preprocessed_mat_file(cls, filename, subj, struct_no):
+        """Initialize TrialData object from specialized MATLAB .mat file.
 
-        Example:
-            obj = TimeSeriesData.from_file(label, filename, freq, ch_labels)
+        This initializer is designed for use with publication-specific
+        preformatted MATLAB .mat files used in prior data analysis.
 
         Args:
-            label (str): desired label for data series (e.g., 'EMG')
-            filename (str): path to data series file
-            filetype (str): file format, either 'csv' or 'wav'
-            header_lines (int): number of initial rows of CSV to skip when
-                importing
-            cols (sequence): columns of CSV to include during import (if -1,
-                all columns will be imported)
+            filename(str): path to MATLAB .mat data file
+            subj (str): desired subject identifier
+            struct_no (int): cell to access within the saved MATLAB struct
+                (NOTE: zero-indexed, e.g., 0-12)
 
         Returns:
-            TimeSeriesData object containing data from file
+            TrialData object containing data from file
         """
-        tsd = cls(label)
-        tsd._offset = offset
-        tsd._ch_labels = ch_labels
+        td = cls()
+        td.subj = subj
 
-        if filetype == 'csv':
-            tsd._init_from_csv(filename, header_lines, cols)
-            tsd._freq = freq
-        elif filetype == 'wav':
-            tsd._init_from_wav(filename)
-            # error out if specified frequency is inconsistent with frequency
-            # extracted from WAV file
-            if freq and (freq != tsd._freq):
-                raise ValueError('Specified frequency is inconsistent with',
-                                 'internal WAV file frequency.')
-        else:
-            raise ValueError('Unable to instantiate TimeSeriesData object:',
-                             'unsupported file type.')
+        # define trial numbers and angle values for each waypoint (measured
+        # during data collection)
+        wp_to_trial = {
+            '1': '5',
+            '2': '6',
+            '3': '8',
+            '4': '9',
+            '5': '11',
+            '6': '24',
+            '7': '14',
+            '8': '15',
+            '9': '16',
+            '10': '25',
+            '11': '20',
+            '12': '21',
+            '13': '23'
+        }
+        wp_to_angle = {
+            '1': '155',
+            '2': '136',
+            '3': '132',
+            '4': '119',
+            '5': '111',
+            '6': '113',
+            '7': '107',
+            '8': '98',
+            '9': '90',
+            '10': '83',
+            '11': '78',
+            '12': '73',
+            '13': '63'
+        }
 
-        tsd._assert_consistent()
+        # load data from .mat file
+        data = loadmat(filename)
+        data_struct = data['data'][0, struct_no]
 
-        return tsd
+        # set waypoint and dependent values
+        td.wp = int(data_struct['wp'])
+        td.trial_no = wp_to_trial[td.wp]
+        td.ang = wp_to_angle[td.wp]
 
-    def _init_from_csv(self, filename, header_lines, cols):
-        """Internal helper method for instantiation from CSV.
+        # set EMG data
+        emg_data = data_struct['filtEmg'][0, 0]
+        emg_labels = ['forearm', 'biceps', 'triceps', 'NONE']
+        emg_freq = 1000
+        td.data_emg = TimeSeriesData.from_array('sEMG', emg_data, emg_labels,
+                                                emg_freq)
 
-        Args:
-            filename (str): path to data series file
-            header_lines (int): number of initial rows of CSV to skip when
-                importing
-            cols (sequence): columns of CSV to include during import (if -1,
-                all columns will be imported)
-        """
-        if cols == -1:
-            self._data = np.genfromtxt(filename,
-                                       delimiter=',',
-                                       skip_header=header_lines)
-        else:
-            self._data = np.genfromtxt(filename,
-                                       delimiter=',',
-                                       skip_header=header_lines,
-                                       usecols=cols)
+        # set AMG data
+        amg_data = data_struct['rawAMG'][0, 0]
+        amg_labels = [
+            'forearm (front/wrist)', 'forearm (back)', 'biceps', 'triceps'
+        ]
+        amg_freq = 2000
+        td.data_amg = TimeSeriesData.from_array('AMG', amg_data, amg_labels,
+                                                amg_freq)
 
-        self._n_ch = self._data.shape[0]
-        self._n = self._data.shape[1]
+        # set force data
+        force_data = data_struct['forceHandle'][0, 0]
+        force_labels = ['F_x', 'F_y', 'F_z', 'T_x', 'T_y', 'T_z']
+        force_freq = 2400
+        td.data_force = TimeSeriesData.from_array('force', force_data,
+                                                  force_labels, force_freq)
 
-    def _init_from_wav(self, filename):
-        """Internal helper method for instantiation from WAV.
+        # TODO: set ultrasound data
+        td.data_ultrasound = None
 
-        Args:
-            filename (str): path to desired data series file
-
-        Todo:
-            check if data type is consistent w/ CSV read
-        """
-        self._freq, self._data = wavfile.read(filename)
-
-    def _assert_consistent(self):
-        """Confirm that dimensions of data and channel labels are consistent.
-
-        This function is called on object initialization, as well as whenever
-        self.ch_labels is accessed or modified externally. Note that it is NOT
-        called when self.data is accessed -- data can exist without labels, but
-        labels can't exist without data!
-
-        Raises:
-            ValueError if self.ch_labels is inconsistent with self.data
-        """
-        if len(self._ch_labels) != self.n_ch:
-            raise ValueError('Channel labels are of inconsistent dimension.')
-
-    ###########################################################################
-    ## GETTERS AND SETTERS
-    ###########################################################################
-
-    @property
-    def data(self):
-        """Get object data.
-
-        Returns:
-            numpy.ndarray data object
-        """
-        return self._data
-
-    @data.setter
-    def data(self, data):
-        """Set object data.
-
-        Args:
-            numpy.ndarray n_ch x n data array
-        """
-        self._data = data
-        self._n_ch = self._data.shape[0]
-        self._n = self._data.shape[1]
-
-    @property
-    def n_ch(self):
-        """Get number of data channels.
-
-        Returns:
-            int number of data channels
-        """
-        return self._n_ch
-
-    @property
-    def n(self):
-        """Get number of data points in time series.
-
-        Returns:
-            int number of data points
-        """
-        return self._n
-
-    @property
-    def freq(self):
-        """Get frequency of data collection (in Hz).
-
-        Returns:
-            int frequency in Hz
-        """
-        return self._freq
-
-    @freq.setter
-    def freq(self, freq):
-        """Set data collection rate (in Hz).
-
-        Args:
-            freq (int): data collection frequency
-        """
-        self._freq = freq
-
-    @property
-    def offset(self):
-        """Get 'zero-valued' time point (for alignment with other
-            TimeSeriesData objects).
-
-        Returns:
-            int offset time point (in number of data points)
-        """
-        return self._offset
-
-    @offset.setter
-    def offset(self, offset):
-        """Set 'zero-valued' time point (for alignment with other
-            TimeSeriesData objects).
-
-        Args:
-            offset (int): desired offset (in number of data points)
-        """
-        self._offset = offset
-
-    @property
-    def label(self):
-        """Get human-readable data series identifier.
-
-        Returns:
-            str data series identifier
-        """
-        return self._label
-
-    @label.setter
-    def label(self, label):
-        """Set human-readable data series identifier.
-
-        Args:
-            label (str): desired data series identifier
-        """
-        self._label = label
-
-    @property
-    def ch_labels(self):
-        """Get ordered list of data channel labels.
-
-        Returns:
-            list of length-n_ch data channel labels
-
-        Raises:
-            ValueError if channel label dimension is inconsistent with
-                self.data
-        """
-
-        self._assert_consistent()
-
-        return self._ch_labels
-
-    @ch_labels.setter
-    def ch_labels(self, ch_labels):
-        """Set data channel labels.
-
-        Args:
-            ch_labels (sequence): length-n_ch sequence of data channel labels
-
-        Raises:
-            ValueError if channel label dimension is inconsistent with
-                self.data
-        """
-        self._ch_labels = ch_labels
-        self._assert_consistent()
+        return td
