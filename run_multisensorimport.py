@@ -13,7 +13,6 @@ Todo:
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 from multisensorimport.dataobj import trialdata as td
 
 READ_PATH = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/seg_data_US.mat'
