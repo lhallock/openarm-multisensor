@@ -34,13 +34,27 @@ def main():
 
     # hard-code points to track
     currPoints = [
-        np.array([[61, 11]], dtype=np.float32),
-        np.array([[47, 80]], dtype=np.float32),
-        np.array([[50, 149]], dtype=np.float32),
-        np.array([[80, 213]], dtype=np.float32),
-        np.array([[91, 226]], dtype=np.float32),
-        np.array([[137, 178]], dtype=np.float32),
-        np.array([[150, 125]], dtype=np.float32)
+        np.array([[63, 2]], dtype=np.float32),
+        np.array([[58, 20]], dtype=np.float32),
+        np.array([[52, 45]], dtype=np.float32),
+        np.array([[49, 69]], dtype=np.float32),
+        np.array([[48, 94]], dtype=np.float32),
+        np.array([[49, 126]], dtype=np.float32),
+        np.array([[56, 157]], dtype=np.float32),
+        np.array([[69, 184]], dtype=np.float32),
+        np.array([[79, 207]], dtype=np.float32),
+        np.array([[91, 224]], dtype=np.float32),
+        np.array([[115, 208]], dtype=np.float32),
+        np.array([[131, 189]], dtype=np.float32),
+        np.array([[138, 174]], dtype=np.float32),
+        np.array([[151, 152]], dtype=np.float32),
+        np.array([[152, 131]], dtype=np.float32),
+        np.array([[146, 106]], dtype=np.float32),
+        np.array([[133, 75]], dtype=np.float32),
+        np.array([[120, 54]], dtype=np.float32),
+        np.array([[116, 29]], dtype=np.float32),
+        np.array([[111, 16]], dtype=np.float32),
+        np.array([[115, 4]], dtype=np.float32)
     ]
     npCurrPoints = np.array(currPoints)
 
@@ -49,13 +63,10 @@ def main():
 
     # read initial frame
     filename = READ_PATH + str(ind_low) + '.pgm'
-    frame = cv2.imread(filename, -1)
+    old_frame = cv2.imread(filename, -1)
 
     # track and display specified points through images
     for i in range(ind_low + 1, ind_high + 1):
-
-        # save old frame for optical flow calculation
-        old_frame = frame.copy()
 
         # read in new frame
         filename = READ_PATH + str(i) + '.pgm'
@@ -64,6 +75,9 @@ def main():
         # calculate new point locations
         new_points, status, error = cv2.calcOpticalFlowPyrLK(
             old_frame, frame, npCurrPoints, None, **lk_params)
+
+        # save old frame for optical flow calculation
+        old_frame = frame.copy()
 
         # reset point locations
         npCurrPoints = new_points
