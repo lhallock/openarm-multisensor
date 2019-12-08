@@ -90,7 +90,7 @@ def main():
         key = cv2.waitKey(1)
         if key == 27:  # stop on escape key
             break
-        time.sleep(0.01)
+        time.sleep(0.05)
 
     cv2.destroyAllWindows()
 
