@@ -32,31 +32,25 @@ def main():
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
-    # hard-code points to track
-    currPoints = [
-        np.array([[63, 2]], dtype=np.float32),
-        np.array([[58, 20]], dtype=np.float32),
-        np.array([[52, 45]], dtype=np.float32),
-        np.array([[49, 69]], dtype=np.float32),
-        np.array([[48, 94]], dtype=np.float32),
-        np.array([[49, 126]], dtype=np.float32),
-        np.array([[56, 157]], dtype=np.float32),
-        np.array([[69, 184]], dtype=np.float32),
-        np.array([[79, 207]], dtype=np.float32),
-        np.array([[91, 224]], dtype=np.float32),
-        np.array([[115, 208]], dtype=np.float32),
-        np.array([[131, 189]], dtype=np.float32),
-        np.array([[138, 174]], dtype=np.float32),
-        np.array([[151, 152]], dtype=np.float32),
-        np.array([[152, 131]], dtype=np.float32),
-        np.array([[146, 106]], dtype=np.float32),
-        np.array([[133, 75]], dtype=np.float32),
-        np.array([[120, 54]], dtype=np.float32),
-        np.array([[116, 29]], dtype=np.float32),
-        np.array([[111, 16]], dtype=np.float32),
-        np.array([[115, 4]], dtype=np.float32)
-    ]
+    # extract initial contour from keyframe
+    keyframe_path = READ_PATH + '0.png'
+    img = cv2.imread(keyframe_path, -1)
+    alpha_channel = img[:, :, 3]
+    _, mask = cv2.threshold(alpha_channel, 254, 255, cv2.THRESH_BINARY)  # binarize mask
+    color = img[:, :, :3]
+    new_img = cv2.bitwise_not(cv2.bitwise_not(color, mask=mask))
+    new_img = (255-new_img)
+    gray = cv2.cvtColor(new_img, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 127, 255, 0)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+
+    # convert contour to array
+    currPoints = []
+    for i in range(len(contours[0])):
+        currPoints.append(np.array(contours[0][i], dtype=np.float32))
     npCurrPoints = np.array(currPoints)
+    print(len(currPoints))
 
     # create named window
     cv2.namedWindow('Frame')
@@ -91,6 +85,9 @@ def main():
         if key == 27:  # stop on escape key
             break
         time.sleep(0.05)
+
+        # print contour area
+        print(cv2.contourArea(npCurrPoints))
 
     cv2.destroyAllWindows()
 
