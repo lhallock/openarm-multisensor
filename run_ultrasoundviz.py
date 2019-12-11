@@ -50,7 +50,10 @@ def main():
     for i in range(len(contours[0])):
         currPoints.append(np.array(contours[0][i], dtype=np.float32))
     npCurrPoints = np.array(currPoints)
-    print(len(currPoints))
+
+    # keep track of contour area
+    contour_areas = []
+    contour_areas.append(cv2.contourArea(npCurrPoints))
 
     # create named window
     cv2.namedWindow('Frame')
@@ -86,10 +89,17 @@ def main():
             break
         time.sleep(0.05)
 
-        # print contour area
-        print(cv2.contourArea(npCurrPoints))
+        # append new contour area
+        contour_areas.append(cv2.contourArea(npCurrPoints))
 
     cv2.destroyAllWindows()
+
+    # write contour areas to csv file
+    out_path = READ_PATH + 'csa.csv'
+    with open(out_path, 'w') as outfile:
+        for ctr in contour_areas:
+            outfile.write(str(ctr))
+            outfile.write('\n')
 
 
 if __name__ == "__main__":
