@@ -85,7 +85,7 @@ class TimeSeriesData():
                   freq=None,
                   offset=0,
                   filetype='csv',
-                  header_lines=1,
+                  header_lines=0,
                   cols=-1):
         """Initialize TimeSeriesData object from file.
 
@@ -146,8 +146,12 @@ class TimeSeriesData():
                                        skip_header=header_lines,
                                        usecols=cols)
 
-        self._n_ch = self._data.shape[1]
-        self._n = self._data.shape[0]
+        if len(self._data.shape) == 1: # handle single-channel data
+            self._n_ch = 1
+            self._n = self._data.shape[0]
+        else:
+            self._n_ch = self._data.shape[1]
+            self._n = self._data.shape[0]
 
     def _init_from_wav(self, filename):
         """Internal helper method for instantiation from WAV.

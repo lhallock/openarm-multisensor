@@ -49,14 +49,15 @@ class TrialData():
         self.data_ultrasound = None
 
     @classmethod
-    def from_preprocessed_mat_file(cls, filename, subj, struct_no):
+    def from_preprocessed_mat_file(cls, filename_mat, filename_us, subj, struct_no):
         """Initialize TrialData object from specialized MATLAB .mat file.
 
         This initializer is designed for use with publication-specific
         preformatted MATLAB .mat files used in prior data analysis.
 
         Args:
-            filename(str): path to MATLAB .mat data file
+            filename_mat (str): path to MATLAB .mat data file
+            filename_us (str): path to ultrasound .csv data file
             subj (str): desired subject identifier
             struct_no (int): cell to access within the saved MATLAB struct
                 (NOTE: zero-indexed, e.g., 0-12)
@@ -101,7 +102,7 @@ class TrialData():
         }
 
         # load data from .mat file
-        data = loadmat(filename)
+        data = loadmat(filename_mat)
         data_struct = data['data'][0, struct_no]
 
         # set waypoint and dependent values
@@ -132,7 +133,10 @@ class TrialData():
         td.data_force = TimeSeriesData.from_array('force', force_data,
                                                   force_labels, force_freq)
 
-        # TODO: set ultrasound data
-        td.data_ultrasound = None
+        # set ultrasound data
+        us_labels = ['CSA']
+        us_freq = 8 #TODO: confirm value
+        td.data_ultrasound = TimeSeriesData.from_file('US', filename_us,
+                                                      us_labels, us_freq)
 
         return td
