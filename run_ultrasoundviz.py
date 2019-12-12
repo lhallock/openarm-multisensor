@@ -34,7 +34,7 @@ def main():
     pts = track.extract_contour_pts(keyframe_path)
 
     # track points
-    contour_areas = track.track_pts(READ_PATH, pts, lk_params, False)
+    contour_areas = track.track_pts(READ_PATH, pts, lk_params, True)
 
     # write contour areas to csv file
     out_path = READ_PATH + 'csa.csv'

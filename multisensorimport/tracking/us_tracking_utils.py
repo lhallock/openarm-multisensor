@@ -94,6 +94,7 @@ def track_pts(filedir, pts, lk_params, viz=True):
             else:
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
+                frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
                 # calculate new point locations
                 new_pts, status, error = cv2.calcOpticalFlowPyrLK(
@@ -106,15 +107,15 @@ def track_pts(filedir, pts, lk_params, viz=True):
                 pts = new_pts
                 for i in range(len(pts)):
                     x, y = pts[i].ravel()
-                    cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
+                    cv2.circle(frame_color, (x, y), 5, (0, 255, 0), -1)
 
                 # display to frame
                 if viz:
-                    cv2.imshow('Frame', frame)
+                    cv2.imshow('Frame', frame_color)
                     key = cv2.waitKey(1)
                     if key == 27: # stop on escape key
                         break
-                    time.sleep(0.05)
+                    time.sleep(0.01)
 
                 # append new contour area
                 contour_areas.append(cv2.contourArea(pts))
