@@ -18,7 +18,7 @@ import numpy as np
 
 #from multisensorimport.dataobj import trialdata as td
 
-READ_PATH = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/ultrasound_t5w1/'
+READ_PATH = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/ultrasound_t5w1_expanded/'
 
 
 def main():
