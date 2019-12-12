@@ -76,8 +76,9 @@ def track_pts(filedir, pts, lk_params, viz=True):
     contour_areas = []
     contour_areas.append(cv2.contourArea(pts))
 
-    # create OpenCV window
-    cv2.namedWindow('Frame')
+    # create OpenCV window (if visualization is desired)
+    if viz:
+        cv2.namedWindow('Frame')
 
     # track and display specified points through images
     first_loop = True
@@ -108,16 +109,18 @@ def track_pts(filedir, pts, lk_params, viz=True):
                     cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
 
                 # display to frame
-                cv2.imshow('Frame', frame)
-                key = cv2.waitKey(1)
-                if key == 27: # stop on escape key
-                    break
-                time.sleep(0.05)
+                if viz:
+                    cv2.imshow('Frame', frame)
+                    key = cv2.waitKey(1)
+                    if key == 27: # stop on escape key
+                        break
+                    time.sleep(0.05)
 
                 # append new contour area
                 contour_areas.append(cv2.contourArea(pts))
 
-    cv2.destroyAllWindows()
+    if viz:
+        cv2.destroyAllWindows()
 
     return contour_areas
 
