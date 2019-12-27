@@ -15,6 +15,7 @@ import csv
 
 import cv2
 import numpy as np
+from scipy import signal
 
 def extract_contour_pts(filename):
     """Extract points from largest contour in PNG image.
@@ -54,7 +55,7 @@ def extract_contour_pts(filename):
     return np_points
 
 
-def track_pts(filedir, pts, lk_params, viz=True):
+def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
     """Track specified points through all (ordered) images in directory.
 
     This function is used to track, record, and visualize points through a full
@@ -70,17 +71,29 @@ def track_pts(filedir, pts, lk_params, viz=True):
         lk_params (dict): parameters for Lucas-Kanade image tracking in OpenCV
             TODO: set appropriate default values
         viz (bool): whether to visualize the tracking process
+        filter (int): what kind of filter to use (0 for none, 1 for median, 2 for anisotropic diffusion)
 
     Returns:
         list of contour areas of each frame
     """
     # keep track of contour areas
     contour_areas = []
+    # add first contour area
     contour_areas.append(cv2.contourArea(pts))
 
     # create OpenCV window (if visualization is desired)
     if viz:
         cv2.namedWindow('Frame')
+
+    # set which filter function to use
+    filter = None
+
+    if filterType == 1:
+        filter = medianFilter
+    elif filterType == 2:
+        filter = anisotropicDiffuse
+    else:
+        filter = noFilter
 
     # track and display specified points through images
     first_loop = True
@@ -91,11 +104,16 @@ def track_pts(filedir, pts, lk_params, viz=True):
             # if it's the first image, we already have the contour area
             if first_loop:
                 old_frame = cv2.imread(filepath, -1)
+                # apply filter to frame
+                old_frame = filter(old_frame)
                 first_loop = False
 
             else:
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
+                # apply filter to frame
+                frame = filter(frame)
+
                 frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
                 # calculate new point locations
@@ -128,7 +146,7 @@ def track_pts(filedir, pts, lk_params, viz=True):
     return contour_areas
 
 
-def track_pts_to_keyframe(filedir, pts, lk_params, viz=True):
+def track_pts_to_keyframe(filedir, pts, lk_params, viz=True, filterType = 0):
     """Track specified points, resetting on ground-truth keyframe.
 
     This function is used to track, record, and visualize points through a full
@@ -160,6 +178,16 @@ def track_pts_to_keyframe(filedir, pts, lk_params, viz=True):
     if viz:
         cv2.namedWindow('Frame')
 
+    # set which filter function to use
+    filter = None
+
+    if filterType == 1:
+        filter = medianFilter
+    elif filterType == 2:
+        filter = anisotropicDiffuse
+    else:
+        filter = noFilter
+
     # track and display specified points through images
     first_loop = True
     for filename in sorted(os.listdir(filedir)):
@@ -169,17 +197,23 @@ def track_pts_to_keyframe(filedir, pts, lk_params, viz=True):
             # if it's the first image, we already have the contour area
             if first_loop:
                 old_frame = cv2.imread(filepath, -1)
+                # apply filter to frame
+                old_frame = filter(old_frame)
                 first_loop = False
 
             else:
 
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
+                # apply filter to frame
+                frame = filter(frame)
+
                 frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
                 # if it's a keyframe, get contour points from that
                 filenum = filename.split('.')[0]
                 if filenum in keyframes:
+                    print("KEY FRAME!")
                     keyframe_path = filedir + str(keyframes[filenum]) + '.png'
                     new_pts = extract_contour_pts(keyframe_path)
 
@@ -231,6 +265,7 @@ def get_keyframes(filedir):
     keyframes = {}
 
     filepath = filedir + 'keyframes.csv'
+    print(filepath)
     with open(filepath, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
         for row in reader:
@@ -242,3 +277,21 @@ def get_keyframes(filedir):
 
 def write_us_csv(outfile, vals, val_labels=None):
     pass
+
+# filtering
+def noFilter(colorImage):
+    return colorImage
+
+def medianFilter(colorImage):
+    # hyperparameter
+    kernelSize = 5
+    return cv2.medianBlur(colorImage, kernelSize)
+
+def anisotropicDiffuse(colorImage):
+    colorImage = cv2.cvtColor(colorImage, cv2.COLOR_GRAY2RGB)
+    # hyperparameters
+    alphaVar = 0.1
+    KVar = 5
+    nitersVar = 5
+    diffusedColor = cv2.ximgproc.anisotropicDiffusion(src = colorImage, alpha = alphaVar, K = KVar, niters = nitersVar)
+    return cv2.cvtColor(diffusedColor, cv2.COLOR_RGB2GRAY)

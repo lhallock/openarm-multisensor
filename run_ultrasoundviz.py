@@ -18,14 +18,14 @@ import numpy as np
 
 from multisensorimport.tracking import us_tracking_utils as track
 
-READ_PATH = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/ultrasound_t5w1/'
+READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_t5w1/'
 
 
 def main():
     """Execute ultrasound image tracking visualization."""
     # set Lucas-Kanade optical flow parameters
     lk_params = dict(winSize=(25, 25),
-                     maxLevel=8,
+                     maxLevel=0,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
@@ -69,9 +69,13 @@ def main():
     # extract initial contour from keyframe
     keyframe_path = READ_PATH + '0.png'
     pts = track.extract_contour_pts(keyframe_path)
+    # print("MATCHING LENGTH", matchPoints(pts, pts_good))
+    print("TYPE 1", type(pts[0][0][0]))
+    pts = matchPoints(pts, pts_good)
+    print("TYPE 2", type(pts[0][0][0]))
 
     # track points
-    contour_areas = track.track_pts_to_keyframe(READ_PATH, pts, lk_params, True)
+    contour_areas = track.track_pts_to_keyframe(READ_PATH, pts, lk_params, True, filterType = 2)
 
     # write contour areas to csv file
     out_path = READ_PATH + 'csa.csv'
@@ -79,6 +83,26 @@ def main():
         for ctr in contour_areas:
             outfile.write(str(ctr))
             outfile.write('\n')
+
+def matchPoints(contourPoints, goodPoints):
+    epsilon = 10
+    finalIndeces = set()
+    finalPoints = []
+    print("LENGTH", len(contourPoints))
+
+    listContourPoints = contourPoints.tolist()
+
+    for i in range(len(listContourPoints)):
+        cPoint = listContourPoints[i]
+        for gPoint in goodPoints.tolist():
+            diff = np.linalg.norm(np.array(gPoint) - np.array(cPoint))
+            if diff <= epsilon:
+                if i not in finalIndeces:
+                    finalIndeces.add(i)
+                    finalPoints.append(cPoint)
+
+    return np.float32(np.array(finalPoints))
+
 
 
 if __name__ == "__main__":
