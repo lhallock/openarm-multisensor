@@ -23,9 +23,10 @@ READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_
 
 def main():
     """Execute ultrasound image tracking visualization."""
+    window_size = 15
     # set Lucas-Kanade optical flow parameters
-    lk_params = dict(winSize=(25, 25),
-                     maxLevel=0,
+    lk_params = dict(winSize=(window_size, window_size),
+                     maxLevel=9,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
@@ -66,16 +67,18 @@ def main():
     init_img = cv2.imread(init_path, -1)
     pts_good = cv2.goodFeaturesToTrack(init_img, mask=None, **feature_params)
 
+
     # extract initial contour from keyframe
     keyframe_path = READ_PATH + '0.png'
     pts = track.extract_contour_pts(keyframe_path)
+    pts = track.filterPoints(window_size, pts, 0.0015, init_img)
     # print("MATCHING LENGTH", matchPoints(pts, pts_good))
-    print("TYPE 1", type(pts[0][0][0]))
-    pts = matchPoints(pts, pts_good)
-    print("TYPE 2", type(pts[0][0][0]))
+    # print("TYPE 1", type(pts[0][0][0]))
+    # pts = matchPoints(pts, pts_good)
+    # print("TYPE 2", type(pts[0][0][0]))
 
     # track points
-    contour_areas = track.track_pts_to_keyframe(READ_PATH, pts, lk_params, True, filterType = 2)
+    contour_areas = track.track_pts(READ_PATH, pts, lk_params, True, filterType = 2)
 
     # write contour areas to csv file
     out_path = READ_PATH + 'csa.csv'

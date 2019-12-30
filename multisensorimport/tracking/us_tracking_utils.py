@@ -91,6 +91,8 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
     if filterType == 1:
         filter = medianFilter
     elif filterType == 2:
+        filter = bilateralFilter
+    elif filterType == 3:
         filter = anisotropicDiffuse
     else:
         filter = noFilter
@@ -111,6 +113,7 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
             else:
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
+                # print("SHAPE", frame.shape)
                 # apply filter to frame
                 frame = filter(frame)
 
@@ -127,6 +130,7 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
                 pts = new_pts
                 for i in range(len(pts)):
                     x, y = pts[i].ravel()
+
                     cv2.circle(frame_color, (x, y), 5, (0, 255, 0), -1)
 
                 # display to frame
@@ -229,7 +233,7 @@ def track_pts_to_keyframe(filedir, pts, lk_params, viz=True, filterType = 0):
                 pts = new_pts
                 for i in range(len(pts)):
                     x, y = pts[i].ravel()
-                    cv2.circle(frame_color, (x, y), 5, (0, 255, 0), -1)
+                    #  cv2.circle(frame_color, (x, y), 5, (0, 255, 0), -1)
 
                 # display to frame
                 if viz:
@@ -278,6 +282,37 @@ def get_keyframes(filedir):
 def write_us_csv(outfile, vals, val_labels=None):
     pass
 
+# various helpers methods
+def shiTomasiCornerScore(point, blockSize, img):
+    print(point[0])
+    point = point[0]
+    x = int(round(point[0]))
+    y = int(round(point[1]))
+
+    # sets dimension of Sobel derivative kernel
+    kSize = 3
+    # obtain eigenvalues and corresponding eigenvectors of image structure tensor
+    eigen = cv2.cornerEigenValsAndVecs(img, blockSize, ksize = kSize)
+
+    # extract eigenvalues
+    lambdaOne = getImageValue(x, y, eigen)[0]
+    lambdaTwo = getImageValue(x, y, eigen)[1]
+
+    # return Shi-Tomasi corner score (min value of eigenvalues)
+    return min(lambdaOne, lambdaTwo)
+
+def filterPoints(window_size, pts, eps, img):
+    pts = list(pts)
+    filteredPts = []
+    for point in pts:
+        if (shiTomasiCornerScore(point, window_size, img) >= eps):
+            filteredPts.append(point)
+    return np.array(filteredPts)
+
+def getImageValue(x, y, img):
+    return img[y][x]
+
+
 # filtering
 def noFilter(colorImage):
     return colorImage
@@ -287,8 +322,20 @@ def medianFilter(colorImage):
     kernelSize = 5
     return cv2.medianBlur(colorImage, kernelSize)
 
+def bilateralFilter(colorImage):
+    colorImage = cv2.cvtColor(colorImage, cv2.COLOR_GRAY2RGB)
+
+    # hyperparameters
+    diam = 30
+    sigmaColor = 100
+    sigmaSpace = 100
+    bilateralColor = cv2.bilateralFilter(colorImage, diam, sigmaColor, sigmaSpace)
+    return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
+
+
 def anisotropicDiffuse(colorImage):
     colorImage = cv2.cvtColor(colorImage, cv2.COLOR_GRAY2RGB)
+    print("SHAPE", colorImage)
     # hyperparameters
     alphaVar = 0.1
     KVar = 5
