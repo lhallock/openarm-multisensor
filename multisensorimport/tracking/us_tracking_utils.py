@@ -183,14 +183,7 @@ def track_pts_to_keyframe(filedir, pts, lk_params, viz=True, filterType = 0):
         cv2.namedWindow('Frame')
 
     # set which filter function to use
-    filter = None
-
-    if filterType == 1:
-        filter = medianFilter
-    elif filterType == 2:
-        filter = anisotropicDiffuse
-    else:
-        filter = noFilter
+    filter = getFilterFromNum(filterType)
 
     # track and display specified points through images
     first_loop = True
@@ -301,17 +294,49 @@ def shiTomasiCornerScore(point, blockSize, img):
     # return Shi-Tomasi corner score (min value of eigenvalues)
     return min(lambdaOne, lambdaTwo)
 
-def filterPoints(window_size, pts, eps, img):
+def filterPoints(window_size, pts, eps, filterType, img):
+
+    filter = getFilterFromNum(filterType)
+
+    img = filter(img)
+
     pts = list(pts)
+    map = dict()
     filteredPts = []
-    for point in pts:
-        if (shiTomasiCornerScore(point, window_size, img) >= eps):
+    for i in range(len(pts)):
+        point = pts[i]
+        cornerScore = shiTomasiCornerScore(point, window_size, img)
+        map[i] = cornerScore
+        if (cornerScore >= eps):
             filteredPts.append(point)
-    return np.array(filteredPts)
+
+    topHalfPoints = []
+
+    # converts map to a list of 2-tuples (key, value), which are in sorted order by value
+    # key is index of point in the pts list
+    sortedMapping = sorted(map.items(), key=lambda x: x[1], reverse=True)
+
+    # get top 50% of points
+    for i in range(0, len(sortedMapping) // 2):
+        topHalfPoints.append(pts[sortedMapping[i][0]])
+
+    return np.array(topHalfPoints)
 
 def getImageValue(x, y, img):
     return img[y][x]
 
+
+def getFilterFromNum(filterType):
+    filter = None
+    if filterType == 1:
+        filter = medianFilter
+    elif filterType == 2:
+        filter = bilateralFilter
+    elif filterType == 3:
+        filter = anisotropicDiffuse
+    else:
+        filter = noFilter
+    return filter
 
 # filtering
 def noFilter(colorImage):
@@ -326,7 +351,7 @@ def bilateralFilter(colorImage):
     colorImage = cv2.cvtColor(colorImage, cv2.COLOR_GRAY2RGB)
 
     # hyperparameters
-    diam = 30
+    diam = 12
     sigmaColor = 100
     sigmaSpace = 100
     bilateralColor = cv2.bilateralFilter(colorImage, diam, sigmaColor, sigmaSpace)
@@ -335,7 +360,6 @@ def bilateralFilter(colorImage):
 
 def anisotropicDiffuse(colorImage):
     colorImage = cv2.cvtColor(colorImage, cv2.COLOR_GRAY2RGB)
-    print("SHAPE", colorImage)
     # hyperparameters
     alphaVar = 0.1
     KVar = 5

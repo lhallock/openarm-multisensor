@@ -71,14 +71,14 @@ def main():
     # extract initial contour from keyframe
     keyframe_path = READ_PATH + '0.png'
     pts = track.extract_contour_pts(keyframe_path)
-    pts = track.filterPoints(window_size, pts, 0.0015, init_img)
-    # print("MATCHING LENGTH", matchPoints(pts, pts_good))
-    # print("TYPE 1", type(pts[0][0][0]))
-    # pts = matchPoints(pts, pts_good)
-    # print("TYPE 2", type(pts[0][0][0]))
+
+    # filter to be used (1: median filter, 2: bilateral filter, 3: anisotropic diffusion filter, anything else no filter )
+    imageFilterNum = 2
+    # remove points that have low corner scores (Shi Tomasi Corner scoring)
+    pts = track.filterPoints(window_size, pts, 0.0015, imageFilterNum, init_img)
 
     # track points
-    contour_areas = track.track_pts(READ_PATH, pts, lk_params, True, filterType = 2)
+    contour_areas = track.track_pts(READ_PATH, pts, lk_params, True, filterType = imageFilterNum)
 
     # write contour areas to csv file
     out_path = READ_PATH + 'csa.csv'

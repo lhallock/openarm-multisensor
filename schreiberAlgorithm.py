@@ -96,7 +96,7 @@ def computeDeltaP(warpParams, img, templateImg, weights, delTx, delTy, xLower, x
             vec += weight * steepestDescentImage * diff
             hessian += weight * np.dot(steepestDescentImage.reshape(len(steepestDescentImage), 1), steepestDescentImage.reshape(1, len(steepestDescentImage)))
 
-    return np.dot(np.linalv.inv(hessian, vec))
+    return np.dot(np.linalg.inv(hessian, vec))
 
 
 def updateP(warpParams, img, templateImg, weights, delTx, delTy, xLower, xUpper, yLower, yUpper, maxIters, eps):
