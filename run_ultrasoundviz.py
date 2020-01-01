@@ -23,10 +23,10 @@ READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_
 
 def main():
     """Execute ultrasound image tracking visualization."""
-    window_size = 15
+    window_size = 17
     # set Lucas-Kanade optical flow parameters
-    lk_params = dict(winSize=(window_size, window_size),
-                     maxLevel=9,
+    lk_params = dict(winSize=(17, 17),
+                     maxLevel=3,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 

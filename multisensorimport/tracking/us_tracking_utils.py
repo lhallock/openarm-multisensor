@@ -108,6 +108,7 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
                 old_frame = cv2.imread(filepath, -1)
                 # apply filter to frame
                 old_frame = filter(old_frame)
+                old_frame = canny(old_frame)
                 first_loop = False
 
             else:
@@ -116,6 +117,7 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
                 # print("SHAPE", frame.shape)
                 # apply filter to frame
                 frame = filter(frame)
+                frame = canny(frame)
 
                 frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
@@ -277,8 +279,9 @@ def write_us_csv(outfile, vals, val_labels=None):
 
 # various helpers methods
 def shiTomasiCornerScore(point, blockSize, img):
-    print(point[0])
+    # point is a 1 element numpy array whose element is a numpy array of x, y so unpack
     point = point[0]
+    # get x,y coords
     x = int(round(point[0]))
     y = int(round(point[1]))
 
@@ -291,21 +294,26 @@ def shiTomasiCornerScore(point, blockSize, img):
     lambdaOne = getImageValue(x, y, eigen)[0]
     lambdaTwo = getImageValue(x, y, eigen)[1]
 
-    # return Shi-Tomasi corner score (min value of eigenvalues)
+    # return Shi-Tomasi corner score (min of eigenvalues)
     return min(lambdaOne, lambdaTwo)
 
 def filterPoints(window_size, pts, eps, filterType, img):
 
+    # select image filter, determined by filterType argument
     filter = getFilterFromNum(filterType)
 
+    # apply filter
     img = filter(img)
+    img = canny(img)
 
+
+    # convert pts from np array to list for convenience, create dict for sorting
     pts = list(pts)
     map = dict()
     filteredPts = []
     for i in range(len(pts)):
         point = pts[i]
-        cornerScore = shiTomasiCornerScore(point, window_size, img)
+        cornerScore = shiTomasiCornerScore(point, 7, img)
         map[i] = cornerScore
         if (cornerScore >= eps):
             filteredPts.append(point)
@@ -316,8 +324,8 @@ def filterPoints(window_size, pts, eps, filterType, img):
     # key is index of point in the pts list
     sortedMapping = sorted(map.items(), key=lambda x: x[1], reverse=True)
 
-    # get top 50% of points
-    for i in range(0, len(sortedMapping) // 2):
+    # get top 45% of points
+    for i in range(0, round(.55 * len(sortedMapping))):
         topHalfPoints.append(pts[sortedMapping[i][0]])
 
     return np.array(topHalfPoints)
@@ -338,7 +346,7 @@ def getFilterFromNum(filterType):
         filter = noFilter
     return filter
 
-# filtering
+# image filtering
 def noFilter(colorImage):
     return colorImage
 
@@ -351,9 +359,9 @@ def bilateralFilter(colorImage):
     colorImage = cv2.cvtColor(colorImage, cv2.COLOR_GRAY2RGB)
 
     # hyperparameters
-    diam = 12
-    sigmaColor = 100
-    sigmaSpace = 100
+    diam = 25
+    sigmaColor = 80
+    sigmaSpace = 80
     bilateralColor = cv2.bilateralFilter(colorImage, diam, sigmaColor, sigmaSpace)
     return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
 
@@ -366,3 +374,11 @@ def anisotropicDiffuse(colorImage):
     nitersVar = 5
     diffusedColor = cv2.ximgproc.anisotropicDiffusion(src = colorImage, alpha = alphaVar, K = KVar, niters = nitersVar)
     return cv2.cvtColor(diffusedColor, cv2.COLOR_RGB2GRAY)
+
+def otsuBinarization(grayImage):
+    ret2,th2 = cv2.threshold(grayImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    return th2
+
+def canny(grayImage):
+    edges = cv2.Canny(grayImage,180,200)
+    return edges
