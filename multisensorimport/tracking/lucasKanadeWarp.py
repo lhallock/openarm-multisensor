@@ -32,14 +32,6 @@ def lucas_kanade_affine_warp(curr_image, template_image, warp_params, point1, po
         p5 = update_warp_params[4]
         p6 = update_warp_params[5]
 
-        # rotation part of affine transformation
-        mat = np.array([
-            np.array([1+p1, p3]),
-            np.array([p2,1+p4])
-        ])
-        # translation part of affine transformation
-        shift = np.array([p5, p6])
-
         # x coordinates of template window
         x_coords = np.arange(x1, x2 + 1, 1)
         # y coordinates of template window
@@ -65,11 +57,6 @@ def lucas_kanade_affine_warp(curr_image, template_image, warp_params, point1, po
         delIx_warped = spline_inter_curr_image.ev(Y_w.flatten(), X_w.flatten(), dx = 0, dy = 1).flatten()
         delIy_warped = spline_inter_curr_image.ev(Y_w.flatten(), X_w.flatten(), dx = 1, dy = 0).flatten()
 
-        count = 0
-        for i in range(len(delIx_warped)):
-            if delIx_warped[i] > 0.1:
-                count += 1
-
         # template image points at valid coordinates
         template_image_values = spline_inter_template_image.ev(Y, X).flatten()
 
@@ -83,11 +70,6 @@ def lucas_kanade_affine_warp(curr_image, template_image, warp_params, point1, po
         delIx_warped = spline_inter_curr_image.ev(Y_w, X_w, dx = 0, dy = 1).flatten()
         delIy_warped = spline_inter_curr_image.ev(Y_w, X_w, dx = 1, dy = 0).flatten()
 
-        count = 0
-        for i in range(len(delIx_warped)):
-            if delIx_warped[i] > 0.1:
-                count += 1
-        # print(count)
         num_valid_points = X.shape[0]
 
         # go through points and compute hessian, steepest descent image

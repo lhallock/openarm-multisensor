@@ -4,6 +4,7 @@ import os
 import cv2
 import numpy as np
 from multisensorimport.tracking import schreiberAlgorithm as schreiber
+from multisensorimport.tracking import schreibersAlgorithm as schreibers
 from multisensorimport.tracking import lucasKanadeWarp as LKWarp
 
 
@@ -114,6 +115,7 @@ def testingTwo():
 
 
     point = np.array([pointX, pointY])
+    print('Original: ', point)
 
     windowSize = 100
     warp_params = np.zeros(6)
@@ -127,12 +129,56 @@ def testingTwo():
 
     newP = LKWarp.lucas_kanade_affine_warp(imgTwoGray, imgOneGray, warp_params, np.array([xLower, yLower]), np.array([xUpper, yUpper]),0.3, 1000)
     newPoint = schreiber.affineWarp(point, newP)
-    print(newPoint)
+    print('Lucas Kanade Warp: ', newPoint)
     # cv2.imshow('img 2', imgTwoGray)
     # cv2.waitKey()
 
 
+def testingThree():
+    # image info
+    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/Exercise .mp4')
+    cap.read()
+    cap.read()
+    cap.read()
+    cap.read()
+    cap.read()
+    ret, imgOne = cap.read()
+    ret, imgTwo = cap.read()
+    # imgOnePath = '/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/ball1.png'
+    # imgTwoPath = '/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/ball2.png'
+    #
+    # imgOne = cv2.imread(imgOnePath, -1)
+    imgOneGray = cv2.cvtColor(imgOne, cv2.COLOR_RGB2GRAY)
+    #
+    #
+    #
+    # imgTwo = cv2.imread(imgTwoPath, -1)
+    imgTwoGray = cv2.cvtColor(imgTwo, cv2.COLOR_RGB2GRAY)
+    #
+    # tracking info
+    pointX = 105
+    pointY = 583
 
+
+    point = np.array([pointX, pointY])
+
+    windowSize = 100
+    full_warp_params = np.zeros(6)
+    one_step_warp_params = np.zeros(6)
+
+    errors = np.zeros(imgOneGray.shape)
+
+    xLower = pointX - (windowSize // 2)
+    xUpper = pointX + (windowSize // 2)
+    yLower = pointY - (windowSize // 2)
+    yUpper = pointY + (windowSize // 2)
+
+    full_warp_optimal, one_step_optimal, new_errors = schreibers.robust_drift_corrected_tracking(imgTwoGray, imgOneGray, imgOneGray, errors, full_warp_params, one_step_warp_params, np.array([xLower, yLower]), np.array([xUpper, yUpper]),0.3, 1000)
+
+    newPoint = schreiber.affineWarp(point, full_warp_optimal)
+    print('Schreiber: ', newPoint)
+    # cv2.imshow('img 2', imgTwoGray)
+    # cv2.waitKey()
 
 
 #
@@ -141,3 +187,5 @@ def testingTwo():
 
 if __name__ == "__main__":
     testingTwo()
+
+    testingThree()
