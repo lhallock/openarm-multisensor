@@ -48,22 +48,28 @@ def update_warp_params(curr_image_interp, template_image_interp, curr_image_shap
 
         # print('iter: ', iter, ': ', num_points)
 
+        image_diff_count = 0
         for i in range(num_points):
             x = x_coords_filtered[i]
             y = y_coords_filtered[i]
             weight = weights_filtered[i]
             image_diff = error_image[i]
+            if iter == 0:
+                if image_diff > 50:
+                    image_diff_count += 1
+
             del_x = delIx_warped[i]
             del_y = delIy_warped[i]
             vec = np.array([x * del_x, x * del_y, y * del_x, y * del_y, del_x, del_y])
             steepest_descent_image += weight * vec * image_diff
             hessian += weight * np.dot(vec.reshape(num_params, 1), vec.reshape(1, num_params))
-
+        print('Iter: ', iter, 'Steepest image norm: ', np.linalg.norm(steepest_descent_image))
+        print('Iter: ', iter, 'Hessian norm: ', np.linalg.norm(hessian))
 
         delta_p = np.dot(np.linalg.inv(hessian), steepest_descent_image)
         # take a descent step
         updating_warp_params += delta_p
-
+        print('Iter: ', iter, 'Delta p norm: ', np.linalg.norm(delta_p))
         if (np.linalg.norm(delta_p) <= eps):
             break
 
@@ -79,7 +85,10 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
     spline_inter_first_template = RectBivariateSpline(np.arange(first_template.shape[0]), np.arange(first_template.shape[1]), first_template)
     spline_inter_errors = RectBivariateSpline(np.arange(curr_errors.shape[0]), np.arange(curr_errors.shape[1]), curr_errors)
 
-    # unpack warp parameters
+    print('One step: ', one_step_warp_params)
+    print('Full: ', full_warp_params)
+
+    # unpack full warp parameters p*(0 -> n-1)
     p1 = full_warp_params[0]
     p2 = full_warp_params[1]
     p3 = full_warp_params[2]
@@ -87,15 +96,13 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
     p5 = full_warp_params[4]
     p6 = full_warp_params[5]
 
-    # error median for weight computation
-    error_median = np.median(curr_errors.flatten())
-
     # coordinates in first_template image (box)
     x_coords = np.arange(point1[0], point2[0] + 1, 1)
     y_coords = np.arange(point1[1], point2[1] + 1, 1)
 
     X, Y = np.meshgrid(x_coords, y_coords)
 
+    # warp into curr template coordinates
     X_w = (1 + p1) * X + p3 * Y + p5
     Y_w =  p2 * X + (1 + p4) * Y + p6
 
@@ -108,9 +115,10 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
 
     # get the errors at X_filtered, Y_filtered (errors are in the first_template coordinate frame)
     errors_filtered = spline_inter_errors.ev(Y_filtered, X_filtered)
+    errors_filtered_median = np.median(errors_filtered.flatten())
     # get the weights from errors, using scheme described in Schreiber's Paper
-    weights_filtered = (errors_filtered <= error_median * 1.4826).astype(int)
-
+    weights_filtered = (errors_filtered <= errors_filtered_median * 1.4826).astype(int)
+    print('Weights filtered ', weights_filtered)
     # update the one step parameters to obtain an estimate of warp p(n-1 -> n), using p*(n-2 -> n-1) as initial guess
     one_step_warp_estimate = update_warp_params(spline_inter_curr_image, spline_inter_curr_template, curr_image.shape, weights_filtered, X_w, Y_w, one_step_warp_params, eps, max_iters)
 
@@ -119,8 +127,9 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
 
     # get errors at x_coords, y_coords
     errors = spline_inter_errors.ev(Y, X)
+    errors_median = np.median(errors.flatten())
     # get weights from errors
-    weights = (errors <= error_median * 1.4826).astype(int)
+    weights = (errors <= errors_median * 1.4826).astype(int)
 
     # update full warp params by tracking first_template in curr_image with p(0 -> n) as guess, obtainin p*(0 -> n)
     full_warp_optimal = update_warp_params(spline_inter_curr_image, spline_inter_first_template, curr_image.shape, weights, X, Y, full_warp_guess, eps, max_iters)

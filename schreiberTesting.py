@@ -173,12 +173,77 @@ def testingThree():
     yLower = pointY - (windowSize // 2)
     yUpper = pointY + (windowSize // 2)
 
-    full_warp_optimal, one_step_optimal, new_errors = schreibers.robust_drift_corrected_tracking(imgTwoGray, imgOneGray, imgOneGray, errors, full_warp_params, one_step_warp_params, np.array([xLower, yLower]), np.array([xUpper, yUpper]),0.3, 1000)
+    full_warp_params, one_step_warp_params, errors = schreibers.robust_drift_corrected_tracking(imgTwoGray, imgOneGray, imgOneGray, errors, full_warp_params, one_step_warp_params, np.array([xLower, yLower]), np.array([xUpper, yUpper]),0.3, 1000)
 
-    newPoint = schreiber.affineWarp(point, full_warp_optimal)
-    print('Schreiber: ', newPoint)
+    point1 = schreiber.affineWarp(point, full_warp_params)
+    print('Schreiber1: ', point1)
+    # print(errors)
+
+    ret, imgThree = cap.read()
+    imgThreeGray = cv2.cvtColor(imgThree, cv2.COLOR_RGB2GRAY)
+    full_warp_params, one_step_warp_params, errors = schreibers.robust_drift_corrected_tracking(imgThreeGray, imgOneGray, imgTwoGray, errors, full_warp_params, one_step_warp_params, np.array([xLower, yLower]), np.array([xUpper, yUpper]),0.3, 1000)
+    point2 = schreiber.affineWarp(point, full_warp_params)
+    print('Schreiber2: ', point2)
+
+    cv2.imshow('3', imgThreeGray)
+    cv2.imshow('2', imgTwoGray)
+    cv2.imshow('1', imgOneGray)
+    cv2.waitKey()
+
     # cv2.imshow('img 2', imgTwoGray)
     # cv2.waitKey()
+
+def testingFour():
+    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/Exercise .mp4')
+    iter = 0
+    first_template = None
+    curr_template = None
+    errors = None
+
+
+    pointX = 105
+    pointY = 583
+    windowSize = 100
+
+    point = np.array([pointX, pointY])
+    xLower = pointX - (windowSize // 2)
+    xUpper = pointX + (windowSize // 2)
+    yLower = pointY - (windowSize // 2)
+    yUpper = pointY + (windowSize // 2)
+
+    full_warp_params = np.zeros(6)
+    one_step_warp_params = np.zeros(6)
+
+    while True:
+        print(iter)
+        ret, frame = cap.read()
+
+        if not ret:
+            break
+
+        if iter == 0:
+            first_template_color = frame
+            first_template = cv2.cvtColor(first_template_color, cv2.COLOR_RGB2GRAY)
+            curr_template_color = frame
+            curr_template = cv2.cvtColor(curr_template_color, cv2.COLOR_RGB2GRAY)
+            errors = np.zeros(first_template.shape)
+            iter += 1
+            pass
+
+        curr_image = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        full_warp_params, one_step_warp_params, errors = schreibers.robust_drift_corrected_tracking(curr_image, first_template, curr_template, errors, full_warp_params, one_step_warp_params, np.array([xLower, yLower]), np.array([xUpper, yUpper]),0.3, 1000)
+        curr_template = curr_image
+        cv2.imshow('Frame', curr_image)
+        key = cv2.waitKey(1)
+        iter += 1
+        if key == 27:
+            break
+        time.sleep(0.01)
+
+
+
+
+
 
 
 #
@@ -186,6 +251,4 @@ def testingThree():
 # computeWarpOpticalFlow(fullWarpParams, oneStepWarpParams, currImage, currTemplateImage, firstTemplateImage, currCumulativeErrors, eta, xLower, xUpper, yLower, yUpper, maxIters, eps, alpha):
 
 if __name__ == "__main__":
-    testingTwo()
-
     testingThree()
