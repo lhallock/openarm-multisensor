@@ -3,7 +3,7 @@ import cv2
 from scipy.interpolate import RectBivariateSpline
 
 
-def update_warp_params(curr_image_interp, template_image_interp, curr_image_shape, weights, x_coords, y_coords, warp_params, eps, max_iters):
+def update_warp_params(curr_image_interp, template_image_interp, delIx_interp, delIy_interp, curr_image_shape, weights, x_coords, y_coords, warp_params, eps, max_iters, debug = False):
 
     # initial guess for warp params
     updating_warp_params = warp_params.copy()
@@ -14,6 +14,8 @@ def update_warp_params(curr_image_interp, template_image_interp, curr_image_shap
 
     # steepest descent using Gauss-Newton method
     while (iter < max_iters):
+        if debug:
+            print('WARP PARAMS: ', updating_warp_params)
         # unpack warp parameters
         p1 = updating_warp_params[0]
         p2 = updating_warp_params[1]
@@ -23,7 +25,17 @@ def update_warp_params(curr_image_interp, template_image_interp, curr_image_shap
         p6 = updating_warp_params[5]
 
         x_coords_w = (1 + p1) * x_coords + p3 * y_coords + p5
+        if debug:
+            print('MIN X: ', np.min(x_coords_w))
+            print('MAX X: ', np.max(x_coords_w))
+
+
         y_coords_w = p2 * x_coords + (1 + p4) * y_coords + p6
+
+        if debug:
+            print('MIN Y: ', np.min(y_coords_w))
+            print('MAX Y: ', np.max(y_coords_w))
+
 
         valid_pos = (x_coords_w >= 0) & (x_coords_w < curr_image_shape[1]) & (y_coords_w >= 0) & (y_coords_w < curr_image_shape[0])
 
@@ -39,8 +51,8 @@ def update_warp_params(curr_image_interp, template_image_interp, curr_image_shap
         warped_image_values = curr_image_interp.ev(y_coords_w, x_coords_w)
         error_image = template_image_values - warped_image_values
 
-        delIx_warped = curr_image_interp.ev(y_coords_w, x_coords_w, dx = 0, dy = 1)
-        delIy_warped = curr_image_interp.ev(y_coords_w, x_coords_w, dx = 1, dy = 0)
+        delIx_warped = delIx_interp.ev(y_coords_w, x_coords_w)
+        delIy_warped = delIy_interp.ev(y_coords_w, x_coords_w)
 
         num_points = x_coords_filtered.shape[0]
         hessian = np.zeros((num_params, num_params))
@@ -61,15 +73,26 @@ def update_warp_params(curr_image_interp, template_image_interp, curr_image_shap
             del_x = delIx_warped[i]
             del_y = delIy_warped[i]
             vec = np.array([x * del_x, x * del_y, y * del_x, y * del_y, del_x, del_y])
+            if debug:
+                print('VEC: ', vec)
+                print('DELX: ', del_x, ' DELY: ', del_y)
             steepest_descent_image += weight * vec * image_diff
             hessian += weight * np.dot(vec.reshape(num_params, 1), vec.reshape(1, num_params))
-        print('Iter: ', iter, 'Steepest image norm: ', np.linalg.norm(steepest_descent_image))
-        print('Iter: ', iter, 'Hessian norm: ', np.linalg.norm(hessian))
+        # print('Iter: ', iter, 'Steepest image norm: ', np.linalg.norm(steepest_descent_image))
+        # print('Iter: ', iter, 'Hessian norm: ', np.linalg.norm(hessian))
 
-        delta_p = np.dot(np.linalg.inv(hessian), steepest_descent_image)
+
+        delta_p = np.dot(np.linalg.pinv(hessian), steepest_descent_image)
+        if debug:
+            print('Iter: ', iter)
+            print('Num points: ', num_points)
+            print('Delta p norm: ', np.linalg.norm(delta_p))
+            print('Hessian norm: ', np.linalg.norm(hessian))
+            print('Steepest descent norm: ', np.linalg.norm(steepest_descent_image))
+            print('weights: ', weights)
         # take a descent step
         updating_warp_params += delta_p
-        print('Iter: ', iter, 'Delta p norm: ', np.linalg.norm(delta_p))
+        # print('Iter: ', iter, 'Delta p norm: ', np.linalg.norm(delta_p))
         if (np.linalg.norm(delta_p) <= eps):
             break
 
@@ -78,15 +101,23 @@ def update_warp_params(curr_image_interp, template_image_interp, curr_image_shap
     return updating_warp_params
 
 
-def robust_drift_corrected_tracking(curr_image, first_template, curr_template, curr_errors, full_warp_params, one_step_warp_params, point1, point2, eps, max_iters):
+def robust_drift_corrected_tracking(curr_image, first_template, curr_template, curr_errors, full_warp_params, one_step_warp_params, point1, point2, eps, max_iters, debug = False):
     # spline interpolation of image, templates, errors for potential indexing into non-integer coordinates
     spline_inter_curr_image = RectBivariateSpline(np.arange(curr_image.shape[0]), np.arange(curr_image.shape[1]), curr_image)
     spline_inter_curr_template = RectBivariateSpline(np.arange(curr_template.shape[0]), np.arange(curr_template.shape[1]), curr_template)
     spline_inter_first_template = RectBivariateSpline(np.arange(first_template.shape[0]), np.arange(first_template.shape[1]), first_template)
     spline_inter_errors = RectBivariateSpline(np.arange(curr_errors.shape[0]), np.arange(curr_errors.shape[1]), curr_errors)
 
-    print('One step: ', one_step_warp_params)
-    print('Full: ', full_warp_params)
+    # gradient computations
+    delIx = imageDerivativeX(curr_image)
+    delIy = imageDerivativeY(curr_image)
+
+    # spline interpolation of gradients
+    spline_inter_delIx = RectBivariateSpline(np.arange(delIx.shape[0]), np.arange(delIx.shape[1]), delIx)
+    spline_inter_delIy = RectBivariateSpline(np.arange(delIy.shape[0]), np.arange(delIy.shape[1]), delIy)
+
+    # print('One step: ', one_step_warp_params)
+    # print('Full: ', full_warp_params)
 
     # unpack full warp parameters p*(0 -> n-1)
     p1 = full_warp_params[0]
@@ -118,12 +149,14 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
     errors_filtered_median = np.median(errors_filtered.flatten())
     # get the weights from errors, using scheme described in Schreiber's Paper
     weights_filtered = (errors_filtered <= errors_filtered_median * 1.4826).astype(int)
-    print('Weights filtered ', weights_filtered)
+    # print('Weights filtered ', weights_filtered)
     # update the one step parameters to obtain an estimate of warp p(n-1 -> n), using p*(n-2 -> n-1) as initial guess
-    one_step_warp_estimate = update_warp_params(spline_inter_curr_image, spline_inter_curr_template, curr_image.shape, weights_filtered, X_w, Y_w, one_step_warp_params, eps, max_iters)
+    print('Obtaining one step estimate')
+    one_step_warp_estimate = update_warp_params(spline_inter_curr_image, spline_inter_curr_template, spline_inter_delIx, spline_inter_delIy, curr_image.shape, weights_filtered, X_w, Y_w, one_step_warp_params, eps, max_iters, debug = debug)
 
     # combine p*(0 -> n-1) and p(n-1 -> n) to get initial guess for p(0 -> n)
     full_warp_guess = one_step_warp_estimate + full_warp_params
+    print('FULL WARP GUESS: ', full_warp_guess)
 
     # get errors at x_coords, y_coords
     errors = spline_inter_errors.ev(Y, X)
@@ -132,12 +165,13 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
     weights = (errors <= errors_median * 1.4826).astype(int)
 
     # update full warp params by tracking first_template in curr_image with p(0 -> n) as guess, obtainin p*(0 -> n)
-    full_warp_optimal = update_warp_params(spline_inter_curr_image, spline_inter_first_template, curr_image.shape, weights, X, Y, full_warp_guess, eps, max_iters)
+    print('Getting full optimal')
+    full_warp_optimal = update_warp_params(spline_inter_curr_image, spline_inter_first_template, spline_inter_delIx, spline_inter_delIy, curr_image.shape, weights, X, Y, full_warp_guess, eps, max_iters, debug = debug)
 
     # obtain optimal one step warp, p*(n-1 -> n), by combining optimal full warp with previous optimal full warp
     one_step_warp_optimal = full_warp_optimal - full_warp_params
 
-
+    print('Updating errors')
     # error updating
     # learning rate:
     alpha = 0.1
@@ -176,6 +210,15 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
     # return full_warp_optimal, one_step_warp_optimal, errors, new_median
     return full_warp_optimal, one_step_warp_optimal, curr_errors
 
+
+def imageDerivativeX(img):
+    sobel_x64f = cv2.Sobel(img,cv2.CV_64F,1,0,ksize=5)
+    return sobel_x64f
+
+
+def imageDerivativeY(img):
+    sobel_x64f = cv2.Sobel(img,cv2.CV_64F,0,1,ksize=5)
+    return sobel_x64f
 
 # helper for testing
 def affineWarp(point, warpParams):

@@ -25,8 +25,8 @@ def main():
     """Execute ultrasound image tracking visualization."""
     window_size = 17
     # set Lucas-Kanade optical flow parameters
-    lk_params = dict(winSize=(17, 17),
-                     maxLevel=3,
+    lk_params = dict(winSize=(19, 19),
+                     maxLevel=5,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
@@ -72,13 +72,37 @@ def main():
     keyframe_path = READ_PATH + '0.png'
     pts = track.extract_contour_pts(keyframe_path)
 
-    # filter to be used (1: median filter, 2: bilateral filter, 3: anisotropic diffusion filter, anything else no filter )
-    imageFilterNum = 2
+    # filter to be used (1: median filter, 2: bilateral filter, 3: course bilateral, 4: anisotropicDiffuse anything else no filter )
+    fineFilterNum = 2
+    courseFilterNum = 3
+
     # remove points that have low corner scores (Shi Tomasi Corner scoring)
-    pts = track.filterPoints(window_size, pts, 0.0015, imageFilterNum, init_img)
+    fineFilteredPoints = track.fineFilterPoints(window_size, pts, 0.0015, fineFilterNum, init_img, .45)
+    courseFilteredPoints = track.fineFilterPoints(window_size, pts, 0.0015, courseFilterNum, init_img, .4)
+
+
+    # find points which differ
+    coursePointsIndeces = set()
+    finePointsIndeces = set()
+    for i in range(len(courseFilteredPoints)):
+        coursePoint = courseFilteredPoints[i]
+        add = True
+        for j in range(len(fineFilteredPoints)):
+            finePoint = fineFilteredPoints[j]
+            if np.linalg.norm(finePoint - coursePoint) < 0.0001:
+                add = False
+        if add:
+            coursePointsIndeces.add(i)
+
+
+    coursePoints = []
+    for index in coursePointsIndeces:
+        coursePoints.append(courseFilteredPoints[index])
+
+    courseFilteredPoints = np.array(coursePoints)
 
     # track points
-    contour_areas = track.track_pts(READ_PATH, pts, lk_params, True, filterType = imageFilterNum)
+    contour_areas = track.track_pts(READ_PATH, fineFilteredPoints, courseFilteredPoints, lk_params, True, fineFilterType = fineFilterNum, courseFilterType = courseFilterNum)
 
     # write contour areas to csv file
     out_path = READ_PATH + 'csa.csv'

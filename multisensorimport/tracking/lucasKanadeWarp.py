@@ -4,18 +4,12 @@ from scipy.interpolate import RectBivariateSpline
 
 
 
-def lucas_kanade_affine_warp(curr_image, template_image, warp_params, point1, point2, eps, max_iters):
+def lucas_kanade_affine_warp(curr_image, template_image, warp_params, x_coords, y_coords, eps, max_iters):
 
     update_warp_params = warp_params.copy()
 
 
     num_params = len(update_warp_params)
-
-    # unpack tracking window bounds
-    x1 = point1[0]
-    y1 = point1[1]
-    x2 = point2[0]
-    y2 = point2[1]
 
     # spline interpolation of image for potential indexing into non-integer coordinates
     spline_inter_curr_image = RectBivariateSpline(np.arange(curr_image.shape[0]), np.arange(curr_image.shape[1]), curr_image)
@@ -31,11 +25,6 @@ def lucas_kanade_affine_warp(curr_image, template_image, warp_params, point1, po
         p4 = update_warp_params[3]
         p5 = update_warp_params[4]
         p6 = update_warp_params[5]
-
-        # x coordinates of template window
-        x_coords = np.arange(x1, x2 + 1, 1)
-        # y coordinates of template window
-        y_coords = np.arange(y1, y2 + 1, 1)
 
         # mesh grid of x, y coordinates of template window
         X, Y = np.meshgrid(x_coords, y_coords)
@@ -96,3 +85,32 @@ def lucas_kanade_affine_warp(curr_image, template_image, warp_params, point1, po
         iter += 1
 
     return update_warp_params
+
+def affine_warp_point_set(x_coords, y_coords, warp_params):
+    # unpack warp parameters
+    p1 = warp_params[0]
+    p2 = warp_params[1]
+    p3 = warp_params[2]
+    p4 = warp_params[3]
+    p5 = warp_params[4]
+    p6 = warp_params[5]
+
+    x_coords_ret = (1 + p1) * x_coords + p3 * y_coords + p5
+    y_coords_ret = p2 * x_coords + (1 + p4) * y_coords + p6
+
+    return x_coords_ret, y_coords_ret
+
+def affine_warp_single_point(point, warp_params):
+    # unpack warp parameters
+    p1 = warp_params[0]
+    p2 = warp_params[1]
+    p3 = warp_params[2]
+    p4 = warp_params[3]
+    p5 = warp_params[4]
+    p6 = warp_params[5]
+    x = point[0]
+    y = point[1]
+
+    new_x = (1 + p1) * x + p3 * y + p5
+    new_y = p2 * x + (1 + p4) * y + p6
+    return np.array([new_x, new_y])

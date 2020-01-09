@@ -55,7 +55,7 @@ def extract_contour_pts(filename):
     return np_points
 
 
-def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
+def track_pts(filedir, finePts, coursePts, lk_params, viz=True, fineFilterType = 0, courseFilterType = 0):
     """Track specified points through all (ordered) images in directory.
 
     This function is used to track, record, and visualize points through a full
@@ -79,6 +79,7 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
     # keep track of contour areas
     contour_areas = []
     # add first contour area
+    pts = np.concatenate((finePts, coursePts), axis=0)
     contour_areas.append(cv2.contourArea(pts))
 
     # create OpenCV window (if visualization is desired)
@@ -86,16 +87,8 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
         cv2.namedWindow('Frame')
 
     # set which filter function to use
-    filter = None
-
-    if filterType == 1:
-        filter = medianFilter
-    elif filterType == 2:
-        filter = bilateralFilter
-    elif filterType == 3:
-        filter = anisotropicDiffuse
-    else:
-        filter = noFilter
+    courseFilter = getFilterFromNum(courseFilterType)
+    fineFilter = getFilterFromNum(fineFilterType)
 
     # track and display specified points through images
     first_loop = True
@@ -107,8 +100,8 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
             if first_loop:
                 old_frame = cv2.imread(filepath, -1)
                 # apply filter to frame
-                old_frame = filter(old_frame)
-                old_frame = canny(old_frame)
+                old_frame_course = courseFilter(old_frame)
+                old_frame_fine = fineFilter(old_frame)
                 first_loop = False
 
             else:
@@ -116,20 +109,26 @@ def track_pts(filedir, pts, lk_params, viz=True, filterType = 0):
                 frame = cv2.imread(filepath, -1)
                 # print("SHAPE", frame.shape)
                 # apply filter to frame
-                frame = filter(frame)
-                frame = canny(frame)
-
+                frame_course = courseFilter(frame)
+                frame_fine = fineFilter(frame)
                 frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
                 # calculate new point locations
-                new_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                    old_frame, frame, pts, None, **lk_params)
+                new_fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    old_frame_fine, frame_fine, finePts, None, **lk_params)
+
+                new_course_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    old_frame_course, frame_course, coursePts, None, **lk_params)
 
                 # save old frame for optical flow calculation
-                old_frame = frame.copy()
+                old_frame_course = frame_course.copy()
+                old_frame_fine = frame_fine.copy()
 
                 # reset point locations
-                pts = new_pts
+                finePts = new_fine_pts
+                coursePts = new_course_pts
+                pts = np.concatenate((finePts, coursePts), axis=0)
+                print(len(pts))
                 for i in range(len(pts)):
                     x, y = pts[i].ravel()
 
@@ -286,7 +285,7 @@ def shiTomasiCornerScore(point, blockSize, img):
     y = int(round(point[1]))
 
     # sets dimension of Sobel derivative kernel
-    kSize = 3
+    kSize = 5
     # obtain eigenvalues and corresponding eigenvectors of image structure tensor
     eigen = cv2.cornerEigenValsAndVecs(img, blockSize, ksize = kSize)
 
@@ -297,15 +296,13 @@ def shiTomasiCornerScore(point, blockSize, img):
     # return Shi-Tomasi corner score (min of eigenvalues)
     return min(lambdaOne, lambdaTwo)
 
-def filterPoints(window_size, pts, eps, filterType, img):
+def fineFilterPoints(window_size, pts, eps, filterType, img, percent):
 
     # select image filter, determined by filterType argument
     filter = getFilterFromNum(filterType)
 
     # apply filter
-    img = filter(img)
-    img = canny(img)
-
+    filtered_img = filter(img)
 
     # convert pts from np array to list for convenience, create dict for sorting
     pts = list(pts)
@@ -313,22 +310,22 @@ def filterPoints(window_size, pts, eps, filterType, img):
     filteredPts = []
     for i in range(len(pts)):
         point = pts[i]
-        cornerScore = shiTomasiCornerScore(point, 7, img)
+        cornerScore = shiTomasiCornerScore(point, 7, filtered_img)
         map[i] = cornerScore
         if (cornerScore >= eps):
             filteredPts.append(point)
 
-    topHalfPoints = []
+    filteredPoints = []
 
     # converts map to a list of 2-tuples (key, value), which are in sorted order by value
     # key is index of point in the pts list
     sortedMapping = sorted(map.items(), key=lambda x: x[1], reverse=True)
 
-    # get top 45% of points
-    for i in range(0, round(.55 * len(sortedMapping))):
-        topHalfPoints.append(pts[sortedMapping[i][0]])
+    # get top 60% of points
+    for i in range(0, round(percent * len(sortedMapping))):
+        filteredPoints.append(pts[sortedMapping[i][0]])
 
-    return np.array(topHalfPoints)
+    return np.array(filteredPoints)
 
 def getImageValue(x, y, img):
     return img[y][x]
@@ -341,6 +338,8 @@ def getFilterFromNum(filterType):
     elif filterType == 2:
         filter = bilateralFilter
     elif filterType == 3:
+        filter = courseBilateralFilter
+    elif filterType == 4:
         filter = anisotropicDiffuse
     else:
         filter = noFilter
@@ -359,9 +358,18 @@ def bilateralFilter(colorImage):
     colorImage = cv2.cvtColor(colorImage, cv2.COLOR_GRAY2RGB)
 
     # hyperparameters
-    diam = 25
-    sigmaColor = 80
-    sigmaSpace = 80
+    diam = 35
+    sigmaColor = 100
+    sigmaSpace = 100
+    bilateralColor = cv2.bilateralFilter(colorImage, diam, sigmaColor, sigmaSpace)
+    return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
+
+def courseBilateralFilter(colorImage):
+    colorImage = cv2.cvtColor(colorImage, cv2.COLOR_GRAY2RGB)
+    # hyperparameters
+    diam = 20
+    sigmaColor = 40
+    sigmaSpace = 40
     bilateralColor = cv2.bilateralFilter(colorImage, diam, sigmaColor, sigmaSpace)
     return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
 
