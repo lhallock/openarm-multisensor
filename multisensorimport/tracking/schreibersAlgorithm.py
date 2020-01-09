@@ -3,7 +3,7 @@ import cv2
 from scipy.interpolate import RectBivariateSpline
 
 
-def update_warp_params(curr_image_interp, template_image_interp, delIx_interp, delIy_interp, curr_image_shape, weights, x_coords, y_coords, warp_params, eps, max_iters, debug = False):
+def update_warp_params(curr_image_interp, template_image_interp, delIx_interp, delIy_interp, curr_image_shape, weights, X, Y, warp_params, eps, max_iters, debug = False):
 
     # initial guess for warp params
     updating_warp_params = warp_params.copy()
@@ -24,37 +24,35 @@ def update_warp_params(curr_image_interp, template_image_interp, delIx_interp, d
         p5 = updating_warp_params[4]
         p6 = updating_warp_params[5]
 
-        x_coords_w = (1 + p1) * x_coords + p3 * y_coords + p5
+        X_w = (1 + p1) * X + p3 * Y + p5
         if debug:
-            print('MIN X: ', np.min(x_coords_w))
-            print('MAX X: ', np.max(x_coords_w))
+            print('MIN X: ', np.min(X_w))
+            print('MAX X: ', np.max(X_w))
 
-
-        y_coords_w = p2 * x_coords + (1 + p4) * y_coords + p6
+        Y_w = p2 * X + (1 + p4) * Y + p6
 
         if debug:
-            print('MIN Y: ', np.min(y_coords_w))
-            print('MAX Y: ', np.max(y_coords_w))
+            print('MIN Y: ', np.min(Y_w))
+            print('MAX Y: ', np.max(Y_w))
 
+        valid_pos = (X_w >= 0) & (X_w < curr_image_shape[1]) & (Y_w >= 0) & (Y_w < curr_image_shape[0])
 
-        valid_pos = (x_coords_w >= 0) & (x_coords_w < curr_image_shape[1]) & (y_coords_w >= 0) & (y_coords_w < curr_image_shape[0])
+        X_filtered = X[valid_pos]
+        X_w = X_w[valid_pos]
 
-        x_coords_filtered = x_coords[valid_pos]
-        x_coords_w = x_coords_w[valid_pos]
-
-        y_coords_filtered = y_coords[valid_pos]
-        y_coords_w = y_coords_w[valid_pos]
+        Y_filtered = Y[valid_pos]
+        Y_w = Y_w[valid_pos]
 
         weights_filtered = weights[valid_pos]
 
-        template_image_values = template_image_interp.ev(y_coords_filtered, x_coords_filtered)
-        warped_image_values = curr_image_interp.ev(y_coords_w, x_coords_w)
+        template_image_values = template_image_interp.ev(Y_filtered, X_filtered)
+        warped_image_values = curr_image_interp.ev(Y_w, X_w)
         error_image = template_image_values - warped_image_values
 
-        delIx_warped = delIx_interp.ev(y_coords_w, x_coords_w)
-        delIy_warped = delIy_interp.ev(y_coords_w, x_coords_w)
+        delIx_warped = curr_image_interp.ev(Y_w, X_w, dx = 0, dy = 1)
+        delIy_warped = curr_image_interp.ev(Y_w, X_w, dx = 1, dy = 0)
 
-        num_points = x_coords_filtered.shape[0]
+        num_points = X_filtered.shape[0]
         hessian = np.zeros((num_params, num_params))
         steepest_descent_image = np.zeros(num_params)
 
@@ -62,8 +60,8 @@ def update_warp_params(curr_image_interp, template_image_interp, delIx_interp, d
 
         image_diff_count = 0
         for i in range(num_points):
-            x = x_coords_filtered[i]
-            y = y_coords_filtered[i]
+            x = X_filtered[i]
+            y = Y_filtered[i]
             weight = weights_filtered[i]
             image_diff = error_image[i]
             if iter == 0:
@@ -81,7 +79,6 @@ def update_warp_params(curr_image_interp, template_image_interp, delIx_interp, d
         # print('Iter: ', iter, 'Steepest image norm: ', np.linalg.norm(steepest_descent_image))
         # print('Iter: ', iter, 'Hessian norm: ', np.linalg.norm(hessian))
 
-
         delta_p = np.dot(np.linalg.pinv(hessian), steepest_descent_image)
         if debug:
             print('Iter: ', iter)
@@ -93,7 +90,7 @@ def update_warp_params(curr_image_interp, template_image_interp, delIx_interp, d
         # take a descent step
         updating_warp_params += delta_p
         # print('Iter: ', iter, 'Delta p norm: ', np.linalg.norm(delta_p))
-        if (np.linalg.norm(delta_p) <= eps):
+        if np.linalg.norm(delta_p) <= eps:
             break
 
         iter += 1
@@ -217,8 +214,8 @@ def imageDerivativeX(img):
 
 
 def imageDerivativeY(img):
-    sobel_x64f = cv2.Sobel(img,cv2.CV_64F,0,1,ksize=5)
-    return sobel_x64f
+    sobel_y64f = cv2.Sobel(img,cv2.CV_64F,0,1,ksize=5)
+    return sobel_y64f
 
 # helper for testing
 def affineWarp(point, warpParams):

@@ -3,10 +3,22 @@ import cv2
 from scipy.interpolate import RectBivariateSpline
 
 
+def multi_point_lucas_kanade(curr_image, template_image, point_mappings, eps, max_iters):
+    ret = []
+    for point_mapping in point_mappings:
+        point = point_mapping[0]
+        associated_points = point_mapping[1]
+        warp_params = lucas_kanade_affine_warp(curr_image, template_image, associated_points[0], associated_points[1], eps, max_iters)
+        new_point = affine_warp_single_point(point, warp_params)
+        new_Xs, new_Ys = affine_warp_point_set(associated_points[0], associated_points[1], warp_params)
+        ret.append((new_point, (new_Xs, new_Ys)))
 
-def lucas_kanade_affine_warp(curr_image, template_image, warp_params, x_coords, y_coords, eps, max_iters):
+    return ret
 
-    update_warp_params = warp_params.copy()
+
+def lucas_kanade_affine_warp(curr_image, template_image, X, Y, eps, max_iters):
+
+    update_warp_params = np.zeros(6)
 
 
     num_params = len(update_warp_params)
@@ -27,11 +39,11 @@ def lucas_kanade_affine_warp(curr_image, template_image, warp_params, x_coords, 
         p6 = update_warp_params[5]
 
         # mesh grid of x, y coordinates of template window
-        X, Y = np.meshgrid(x_coords, y_coords)
+        # X, Y = np.meshgrid(x_coords, y_coords)
 
         # grid of warped x, y coordinates
         X_w = (1 + p1) * X + p3 * Y + p5
-        Y_w =  p2 * X + (1 + p4) * Y + p6
+        Y_w = p2 * X + (1 + p4) * Y + p6
 
         # get indeces of warped points which do not go out of bounds in curr_image
         valid_pos = (X_w >= 0) & (X_w < curr_image.shape[1]) & (Y_w >= 0) & (Y_w < curr_image.shape[1])
@@ -74,7 +86,8 @@ def lucas_kanade_affine_warp(curr_image, template_image, warp_params, x_coords, 
             steepest_descent_image += vec * error
             hessian += np.dot(vec.reshape(num_params, 1), vec.reshape(1, num_params))
 
-        delta_p = np.dot(np.linalg.inv(hessian), steepest_descent_image)
+        delta_p = np.dot(np.linalg.pinv(hessian), steepest_descent_image)
+        # print('Delta p norm: ', np.linalg.norm(delta_p))
 
         # take a descent step
         update_warp_params += delta_p

@@ -263,7 +263,6 @@ def testingFour():
         curr_image = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         full_warp_params, one_step_warp_params, errors = schreibers.robust_drift_corrected_tracking(curr_image, first_template, curr_template, errors, full_warp_params, one_step_warp_params, np.array([xLower, yLower]), np.array([xUpper, yUpper]),0.3, 100)
         curr_template = curr_image
-        warped
         cv2.imshow('Frame', frame)
         key = cv2.waitKey(1)
         iter += 1
@@ -274,12 +273,8 @@ def testingFour():
 
 def testingFive():
     # image info
-    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/Exercise .mp4')
-    cap.read()
-    cap.read()
-    cap.read()
-    cap.read()
-    cap.read()
+    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/testVid.mp4')
+
     ret, imgOne = cap.read()
     ret, imgTwo = cap.read()
     # imgOnePath = '/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/ball1.png'
@@ -294,75 +289,135 @@ def testingFive():
     imgTwoGray = cv2.cvtColor(imgTwo, cv2.COLOR_RGB2GRAY)
     #
     # tracking info
-    pointX = 105
-    pointY = 583
+    pointX = 520
+    pointY = 35
 
 
     point = np.array([pointX, pointY])
 
     windowSize = 100
     full_warp_params = np.zeros(6)
-    print('LK0: ', full_warp_params)
+    print('LK0: ', point)
 
 
-    xLower = pointX - (windowSize // 2)
-    xUpper = pointX + (windowSize // 2)
-    yLower = pointY - (windowSize // 2)
-    yUpper = pointY + (windowSize // 2)
+    xLower = 506
+    xUpper = 533
+    yLower = 20
+    yUpper = 50
 
     x_coords = np.arange(xLower, xUpper + 1)
     y_coords = np.arange(yLower, yUpper + 1)
 
-    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgTwoGray, imgOneGray, full_warp_params, x_coords, y_coords, 0.3, 1000)
+    X, Y = np.meshgrid(x_coords, y_coords)
 
-    x_coords, y_coords = LKWarp.affine_warp_point_set(x_coords, y_coords, full_warp_params)
+    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgTwoGray, imgOneGray, X, Y, 0.3, 1000)
+
+    X, Y = LKWarp.affine_warp_point_set(X, Y, full_warp_params)
     point = LKWarp.affine_warp_single_point(point, full_warp_params)
+    cv2.circle(imgTwo, (int(np.rint(point[0])), int(np.rint(point[1]))), 5, (0, 255, 0), -1)
     print('LK1: ', point)
     # print(errors)
 
     ret, imgThree = cap.read()
     imgThreeGray = cv2.cvtColor(imgThree, cv2.COLOR_RGB2GRAY)
-    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgThreeGray, imgTwoGray, full_warp_params, x_coords, y_coords, 0.3, 1000)
-    x_coords, y_coords = LKWarp.affine_warp_point_set(x_coords, y_coords, full_warp_params)
+    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgThreeGray, imgTwoGray, X, Y, 0.03, 1000)
+    X, Y = LKWarp.affine_warp_point_set(X, Y, full_warp_params)
     point = LKWarp.affine_warp_single_point(point, full_warp_params)
+    cv2.circle(imgThree, (int(np.rint(point[0])), int(np.rint(point[1]))), 5, (0, 255, 0), -1)
+
     print('LK2: ', point)
 
     ret, imgFour = cap.read()
     imgFourGray = cv2.cvtColor(imgFour, cv2.COLOR_RGB2GRAY)
-    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgFourGray, imgThreeGray, full_warp_params, x_coords, y_coords, 0.3, 1000)
-    x_coords, y_coords = LKWarp.affine_warp_point_set(x_coords, y_coords, full_warp_params)
+    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgFourGray, imgThreeGray, X, Y, 0.03, 1000)
+    X, Y = LKWarp.affine_warp_point_set(X, Y, full_warp_params)
     point = LKWarp.affine_warp_single_point(point, full_warp_params)
+    cv2.circle(imgFour, (int(np.rint(point[0])), int(np.rint(point[1]))), 5, (0, 255, 0), -1)
+
     print('LK3: ', point)
 
     ret, imgFive = cap.read()
     imgFiveGray = cv2.cvtColor(imgFive, cv2.COLOR_RGB2GRAY)
-    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgFiveGray, imgFourGray, full_warp_params, x_coords, y_coords, 0.3, 1000)
-    x_coords, y_coords = LKWarp.affine_warp_point_set(x_coords, y_coords, full_warp_params)
+    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgFiveGray, imgFourGray, X, Y, 0.03, 1000)
+    X, Y = LKWarp.affine_warp_point_set(X, Y, full_warp_params)
     point = LKWarp.affine_warp_single_point(point, full_warp_params)
+    cv2.circle(imgFive, (int(np.rint(point[0])), int(np.rint(point[1]))), 5, (0, 255, 0), -1)
+
     print('LK4: ', point)
 
     ret, imgSix = cap.read()
     imgSixGray = cv2.cvtColor(imgSix, cv2.COLOR_RGB2GRAY)
-    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgSixGray, imgFiveGray, full_warp_params, x_coords, y_coords, 0.3, 1000)
-    x_coords, y_coords = LKWarp.affine_warp_point_set(x_coords, y_coords, full_warp_params)
+    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgSixGray, imgFiveGray, X, Y, 0.03, 1000)
+    X, Y = LKWarp.affine_warp_point_set(X, Y, full_warp_params)
     point = LKWarp.affine_warp_single_point(point, full_warp_params)
+    cv2.circle(imgSix, (int(np.rint(point[0])), int(np.rint(point[1]))), 5, (0, 255, 0), -1)
+
     print('LK5: ', point)
 
     ret, imgSeven = cap.read()
     imgSevenGray = cv2.cvtColor(imgSeven, cv2.COLOR_RGB2GRAY)
-    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgSevenGray, imgSixGray, full_warp_params, x_coords, y_coords, 0.3, 1000)
-    x_coords, y_coords = LKWarp.affine_warp_point_set(x_coords, y_coords, full_warp_params)
+    full_warp_params = LKWarp.lucas_kanade_affine_warp(imgSevenGray, imgSixGray, X, Y, 0.03, 1000)
+    X, Y = LKWarp.affine_warp_point_set(X, Y, full_warp_params)
     point = LKWarp.affine_warp_single_point(point, full_warp_params)
+    cv2.circle(imgSeven, (int(np.rint(point[0])), int(np.rint(point[1]))), 5, (0, 255, 0), -1)
+
     print('LK6: ', point)
 
-    cv2.imshow('6', imgSevenGray)
-    cv2.imshow('5', imgSixGray)
-    cv2.imshow('4', imgFiveGray)
-    cv2.imshow('3', imgFourGray)
-    cv2.imshow('2', imgThreeGray)
-    cv2.imshow('1', imgTwoGray)
-    cv2.imshow('0', imgOneGray)
+    cv2.imshow('6', imgSeven)
+    cv2.imshow('5', imgSix)
+    cv2.imshow('4', imgFive)
+    cv2.imshow('3', imgFour)
+    cv2.imshow('2', imgThree)
+    cv2.imshow('1', imgTwo)
+    cv2.imshow('0', imgOne)
     cv2.waitKey()
+
+def testingSix():
+
+    pointX = 520
+    pointY = 35
+    point = np.array([pointX, pointY])
+
+    xLower = 506
+    xUpper = 533
+    yLower = 20
+    yUpper = 50
+    x_coords = np.arange(xLower, xUpper + 1)
+    y_coords = np.arange(yLower, yUpper + 1)
+
+    X, Y = np.meshgrid(x_coords, y_coords)
+
+    point_mapping = [(point, (X, Y))]
+
+    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/testVid.mp4')
+    ret, prev_img = cap.read()
+    prev_img_gray = cv2.cvtColor(prev_img, cv2.COLOR_RGB2GRAY)
+
+    if not ret:
+        return
+
+    frame_num = 0
+    cv2.namedWindow('Frame')
+    while(True):
+        ret, curr_img = cap.read()
+        curr_img_gray = cv2.cvtColor(curr_img, cv2.COLOR_RGB2GRAY)
+        if not ret:
+            break
+        point_mapping = LKWarp.multi_point_lucas_kanade(curr_img_gray, prev_img_gray, point_mapping, 0.03, 1000)
+
+        for p_m in point_mapping:
+            point = p_m[0]
+            print(point)
+            cv2.circle(curr_img, (int(np.rint(point[0])), int(np.rint(point[1]))), 5, (0, 255, 0), -1)
+
+        cv2.imshow('Frame', curr_img)
+        key = cv2.waitKey(1)
+        if key == 27:  # stop on escape key
+            break
+        time.sleep(0.01)
+
+        prev_img_gray = curr_img_gray
+        frame_num +=1
 
 
 
@@ -372,4 +427,4 @@ def testingFive():
 # computeWarpOpticalFlow(fullWarpParams, oneStepWarpParams, currImage, currTemplateImage, firstTemplateImage, currCumulativeErrors, eta, xLower, xUpper, yLower, yUpper, maxIters, eps, alpha):
 
 if __name__ == "__main__":
-    testingFive()
+    testingSix()
