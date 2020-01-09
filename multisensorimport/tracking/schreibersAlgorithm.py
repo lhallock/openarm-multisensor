@@ -58,15 +58,11 @@ def update_warp_params(curr_image_interp, template_image_interp, delIx_interp, d
 
         # print('iter: ', iter, ': ', num_points)
 
-        image_diff_count = 0
         for i in range(num_points):
             x = X_filtered[i]
             y = Y_filtered[i]
             weight = weights_filtered[i]
             image_diff = error_image[i]
-            if iter == 0:
-                if image_diff > 50:
-                    image_diff_count += 1
 
             del_x = delIx_warped[i]
             del_y = delIy_warped[i]
@@ -132,7 +128,8 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
 
     # warp into curr template coordinates
     X_w = (1 + p1) * X + p3 * Y + p5
-    Y_w =  p2 * X + (1 + p4) * Y + p6
+    Y_w = p2 * X + (1 + p4) * Y + p6
+
 
     # filter out the points which are out of bounds
     valid_pos = (X_w >= 0) & (X_w < curr_template.shape[1]) & (Y_w >= 0) & (Y_w < curr_template.shape[0])
@@ -182,29 +179,29 @@ def robust_drift_corrected_tracking(curr_image, first_template, curr_template, c
     p6 = full_warp_optimal[5]
 
     # warp coords
-    x_coords_w = (1 + p1) * x_coords + p3 * y_coords + p5
-    y_coords_w = p2 * x_coords + (1 + p4) * y_coords + p6
+    X_w = (1 + p1) * X + p3 * X + p5
+    Y_w = p2 * X + (1 + p4) * Y + p6
 
     # remove out of bounds coordinates
-    valid_pos = (x_coords_w >= 0) & (x_coords_w < curr_image.shape[1]) & (y_coords_w >= 0) & (y_coords_w < curr_image.shape[0])
-    x_coords_w = x_coords_w[valid_pos]
-    y_coords_w = y_coords_w[valid_pos]
+    valid_pos = (X_w >= 0) & (X_w < curr_image.shape[1]) & (Y_w >= 0) & (Y_w < curr_image.shape[0])
+    X_w = X_w[valid_pos].flatten()
+    Y_w = Y_w[valid_pos].flatten()
 
-    x_coords = x_coords[valid_pos]
-    y_coords = y_coords[valid_pos]
+    X_filtered = X[valid_pos].flatten()
+    Y_filtered = Y[valid_pos].flatten()
 
 
-    for i in range(len(x_coords)):
-        x = x_coords[i]
-        x_w = x_coords_w[i]
-        for j in range(len(y_coords)):
-            y = y_coords[j]
-            y_w = y_coords_w[j]
+    for i in range(len(X_filtered)):
+        x = X_filtered[i]
+        x_w = X_w[i]
+        for j in range(len(Y_filtered)):
+            y = Y_filtered[j]
+            y_w = Y_w[j]
             temp_err = np.abs(spline_inter_curr_image.ev(np.array([y_w]), np.array([x_w]))[0] - spline_inter_first_template.ev(np.array([y]), np.array([x]))[0])
             curr_errors[y][x] = (1 - alpha) * curr_errors[y][x] + alpha * temp_err
 
 
-    # return full_warp_optimal, one_step_warp_optimal, errors, new_median
+    # return full_warp_optimal, one_step_warp_optimal, errors
     return full_warp_optimal, one_step_warp_optimal, curr_errors
 
 

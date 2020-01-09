@@ -55,7 +55,7 @@ def main():
     errorMedian = 0
 
     # fullWarpParams, oneStepWarpParams, errorMedian = schreiber.computeWarpOpticalFlow(fullWarpParams, oneStepWarpParams, imgTwoGray, imgOneGray, imgOneGray, errors, errorMedian, startX, endX, startY, endY, maxIters, eps, alpha)
-    warpParams = LKWarp.lucas_kanade_affine_warp(imageTwoGray, imageOneGray, fullWarpParams, )
+    warpParams = LKWarp.lucas_kanade_affine_warp(imgTwoGray, imgOneGray, fullWarpParams, )
     fullWarpParams = schreiber.computeLucasKanadeOpticalFlow(fullWarpParams, imgTwoGray, imgOneGray, point, windowSize, maxIters, eps)
 
     newPoint = schreiber.affineWarp(point, fullWarpParams)
@@ -420,6 +420,260 @@ def testingSix():
         frame_num +=1
 
 
+def testingSeven():
+    tracker = cv2.TrackerCSRT_create()
+    window_size = 5
+    point_x_1 = 146
+    point_y_1 = 118
+    point_1 = np.array([point_x_1, point_y_1])
+
+    x_coords = np.arange(point_x_1 - window_size//2, point_x_1 +window_size // 2 + 1)
+    y_coords = np.arange(point_y_1 - window_size//2, point_y_1 +window_size // 2 + 1)
+
+    X_1, Y_1 = np.meshgrid(x_coords, y_coords)
+    X_1 = X_1.flatten()
+    Y_1 = Y_1.flatten()
+
+    point_mapping = [(point_1, (X_1, Y_1))]
+
+    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/test.mp4')
+
+    bbox = (point_x_1 - window_size//2, point_y_1 - window_size//2, 7, 7)
+    print(bbox)
+
+
+    ret, prev_img = cap.read()
+
+
+    if not ret:
+        return
+
+    prev_img_gray = bilateralFilter(prev_img)
+
+    tracker.init(prev_img_gray, bbox)
+
+
+    frame_num = 0
+    cv2.namedWindow('Frame')
+    while(True):
+        ret, curr_img = cap.read()
+        curr_img_gray = bilateralFilter(curr_img)
+
+        ok, bbox = tracker.update(curr_img_gray)
+
+        if ok:
+            # Tracking success
+            p1 = (int(bbox[0]), int(bbox[1]))
+            p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+            cv2.rectangle(curr_img, p1, p2, (255, 0, 0), 2, 1)
+
+        if not ret:
+            break
+        point_mapping = LKWarp.multi_point_lucas_kanade(curr_img_gray, prev_img_gray, point_mapping, 0.03, 1000)
+
+        for p_m in point_mapping:
+            point_1 = p_m[0]
+            print(point_1)
+            # cv2.circle(curr_img, (int(np.rint(point_1[0])), int(np.rint(point_1[1]))), 5, (0, 255, 0), -1)
+
+        cv2.imshow('Frame', curr_img)
+        key = cv2.waitKey(1)
+        if key == 27:  # stop on escape key
+            break
+        time.sleep(0.01)
+
+        prev_img_gray = curr_img_gray
+        frame_num +=1
+
+def testing_eight():
+    window_size = 19
+
+    points = [np.array([139., 169.]), np.array([137., 171.]), np.array([137., 172.]), np.array([149., 150.]), np.array([143., 111.]), np.array([149., 129.]), np.array([ 58.,  47.]), np.array([123., 196.]), np.array([113., 44.])]
+    point_mapping = generate_point_mappings(points, window_size)
+
+    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/test.mp4')
+
+
+
+    ret, prev_img = cap.read()
+
+    if not ret:
+        return
+
+    prev_img_gray = bilateralFilter(prev_img)
+
+
+    frame_num = 0
+    cv2.namedWindow('Frame')
+    while(True):
+        ret, curr_img = cap.read()
+        curr_img_gray = bilateralFilter(curr_img)
+
+
+        if not ret:
+            break
+        point_mapping = LKWarp.multi_point_lucas_kanade(curr_img_gray, prev_img_gray, point_mapping, 0.03, 1000)
+
+        for p_m in point_mapping:
+            point_1 = p_m[0]
+            # print(point_1)
+            cv2.circle(curr_img, (int(np.rint(point_1[0])), int(np.rint(point_1[1]))), 5, (0, 255, 0), -1)
+
+        cv2.imshow('Frame', curr_img)
+        key = cv2.waitKey(1)
+        if key == 27:  # stop on escape key
+            break
+        time.sleep(0.01)
+
+        prev_img_gray = curr_img_gray
+        frame_num +=1
+
+
+def testing_nine():
+
+    pointX = 520
+    pointY = 35
+    point = np.array([pointX, pointY])
+
+    xLower = 506
+    xUpper = 533
+    yLower = 20
+    yUpper = 50
+    x_coords = np.arange(xLower, xUpper + 1)
+    y_coords = np.arange(yLower, yUpper + 1)
+
+    point1 = np.array([xLower, yLower])
+    point2 = np.array([xUpper, yUpper])
+
+    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/testVid.mp4')
+    ret, prev_img = cap.read()
+    prev_img_gray = cv2.cvtColor(prev_img, cv2.COLOR_RGB2GRAY)
+    first_template_gray = prev_img_gray
+    prev_template_gray = prev_img_gray
+    full_warp_params = np.zeros(6)
+    one_step_warp_params = np.zeros(6)
+    errors = np.zeros(first_template_gray.shape)
+
+    if not ret:
+        return
+
+    frame_num = 0
+    cv2.namedWindow('Frame')
+    while(True):
+        ret, curr_img = cap.read()
+        curr_img_gray = cv2.cvtColor(curr_img, cv2.COLOR_RGB2GRAY)
+        if not ret:
+            break
+        full_warp_params, one_step_warp_params, errors = schreibers.robust_drift_corrected_tracking(curr_img_gray, first_template_gray, prev_template_gray, errors, full_warp_params, one_step_warp_params, point1, point2, 0.03, 1000)
+
+        point = schreibers.affineWarp(point, one_step_warp_params)
+        cv2.circle(curr_img, (int(np.rint(point[0])), int(np.rint(point[1]))), 5, (0, 255, 0), -1)
+
+        cv2.imshow('Frame', curr_img)
+        key = cv2.waitKey(1)
+        if key == 27:  # stop on escape key
+            break
+        time.sleep(0.01)
+
+        prev_template_gray = curr_img_gray
+        frame_num +=1
+
+
+def testing_CSRT():
+    tracker = cv2.TrackerCSRT_create()
+    window_size = 5
+    point_x_1 = 146
+    point_y_1 = 118
+    point_1 = np.array([point_x_1, point_y_1])
+
+    x_coords = np.arange(point_x_1 - window_size//2, point_x_1 +window_size // 2 + 1)
+    y_coords = np.arange(point_y_1 - window_size//2, point_y_1 +window_size // 2 + 1)
+
+    X_1, Y_1 = np.meshgrid(x_coords, y_coords)
+    X_1 = X_1.flatten()
+    Y_1 = Y_1.flatten()
+
+    point_mapping = [(point_1, (X_1, Y_1))]
+
+    cap = cv2.VideoCapture('/Users/akashvelu/Documents/Research_HART2/openarm-multisensor/testData/test.mp4')
+
+    bbox = (point_x_1 - window_size//2, point_y_1 - window_size//2, 7, 7)
+    print(bbox)
+
+
+    ret, prev_img = cap.read()
+
+
+    if not ret:
+        return
+
+    prev_img_gray = bilateralFilter(prev_img)
+
+    tracker.init(prev_img_gray, bbox)
+
+
+    frame_num = 0
+    cv2.namedWindow('Frame')
+    while(True):
+        ret, curr_img = cap.read()
+        curr_img_gray = bilateralFilter(curr_img)
+
+        ok, bbox = tracker.update(curr_img_gray)
+
+        if ok:
+            # Tracking success
+            p1 = (int(bbox[0]), int(bbox[1]))
+            p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+            cv2.rectangle(curr_img, p1, p2, (255, 0, 0), 2, 1)
+
+        if not ret:
+            break
+        point_mapping = LKWarp.multi_point_lucas_kanade(curr_img_gray, prev_img_gray, point_mapping, 0.03, 1000)
+
+        for p_m in point_mapping:
+            point_1 = p_m[0]
+            print(point_1)
+            # cv2.circle(curr_img, (int(np.rint(point_1[0])), int(np.rint(point_1[1]))), 5, (0, 255, 0), -1)
+
+        cv2.imshow('Frame', curr_img)
+        key = cv2.waitKey(1)
+        if key == 27:  # stop on escape key
+            break
+        time.sleep(0.01)
+
+        prev_img_gray = curr_img_gray
+        frame_num +=1
+
+def generate_point_mappings(points, window_size):
+    ret = []
+    for point in points:
+        x = point[0]
+        y = point[1]
+        x_lower = x - window_size // 2
+        x_upper = x + window_size // 2
+
+        y_lower = y - window_size // 2
+        y_upper = y + window_size // 2
+
+        x_coords = np.arange(x_lower, x_upper + 1)
+        y_coords = np.arange(y_lower, y_upper + 1)
+
+        X, Y = np.meshgrid(x_coords, y_coords)
+        X = X.flatten()
+        Y = Y.flatten()
+
+        ret.append((point, (X, Y)))
+    return ret
+
+def bilateralFilter(color_image):
+    # color_image = cv2.cvtColor(color_image, cv2.COLOR_GRAY2RGB)
+
+    # hyperparameters
+    diam = 35
+    sigma_color = 100
+    sigma_space = 100
+    bilateral_color = cv2.bilateralFilter(color_image, diam, sigma_color, sigma_space)
+    return cv2.cvtColor(bilateral_color, cv2.COLOR_RGB2GRAY)
 
 
 #
@@ -427,4 +681,4 @@ def testingSix():
 # computeWarpOpticalFlow(fullWarpParams, oneStepWarpParams, currImage, currTemplateImage, firstTemplateImage, currCumulativeErrors, eta, xLower, xUpper, yLower, yUpper, maxIters, eps, alpha):
 
 if __name__ == "__main__":
-    testingSix()
+    testingSeven()

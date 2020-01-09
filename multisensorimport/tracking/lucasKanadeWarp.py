@@ -1,19 +1,40 @@
 import numpy as np
 import cv2
 from scipy.interpolate import RectBivariateSpline
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 def multi_point_lucas_kanade(curr_image, template_image, point_mappings, eps, max_iters):
-    ret = []
-    for point_mapping in point_mappings:
-        point = point_mapping[0]
-        associated_points = point_mapping[1]
-        warp_params = lucas_kanade_affine_warp(curr_image, template_image, associated_points[0], associated_points[1], eps, max_iters)
-        new_point = affine_warp_single_point(point, warp_params)
-        new_Xs, new_Ys = affine_warp_point_set(associated_points[0], associated_points[1], warp_params)
-        ret.append((new_point, (new_Xs, new_Ys)))
-
+    # convert points into tuples for multithreading
+    tup_converts = [(point_mapping, curr_image, template_image, eps, max_iters) for point_mapping in point_mappings]
+    # open four threads
+    pool = ThreadPool(10)
+    # run LK with multiple threads, return result
+    ret = pool.starmap(op, tup_converts)
+    # close threads
+    pool.close()
     return ret
+    # ret = []
+    # for point_mapping in point_mappings:
+    #     point = point_mapping[0]
+    #     associated_points = point_mapping[1]
+    #     warp_params = lucas_kanade_affine_warp(curr_image, template_image, associated_points[0], associated_points[1], eps, max_iters)
+    #     new_point = affine_warp_single_point(point, warp_params)
+    #     new_Xs, new_Ys = affine_warp_point_set(associated_points[0], associated_points[1], warp_params)
+    #     ret.append((new_point, (new_Xs, new_Ys)))
+    #
+    # return ret
+
+
+
+def op(point_mapping, curr_image, template_image, eps, max_iters):
+    point = point_mapping[0]
+    associated_points = point_mapping[1]
+    warp_params = lucas_kanade_affine_warp(curr_image, template_image, associated_points[0], associated_points[1], eps,
+                                           max_iters)
+    new_point = affine_warp_single_point(point, warp_params)
+    new_Xs, new_Ys = affine_warp_point_set(associated_points[0], associated_points[1], warp_params)
+    return (new_point, (new_Xs, new_Ys))
 
 
 def lucas_kanade_affine_warp(curr_image, template_image, X, Y, eps, max_iters):

@@ -26,7 +26,7 @@ def main():
     window_size = 17
     # set Lucas-Kanade optical flow parameters
     lk_params = dict(winSize=(19, 19),
-                     maxLevel=5,
+                     maxLevel=3,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
@@ -77,13 +77,12 @@ def main():
     courseFilterNum = 3
 
     # remove points that have low corner scores (Shi Tomasi Corner scoring)
-    fineFilteredPoints = track.fineFilterPoints(window_size, pts, 0.0015, fineFilterNum, init_img, .45)
-    courseFilteredPoints = track.fineFilterPoints(window_size, pts, 0.0015, courseFilterNum, init_img, .4)
+    fineFilteredPoints = track.filter_points(window_size, pts, 0.0015, fineFilterNum, init_img, .5)
+    courseFilteredPoints = track.filter_points(window_size, pts, 0.0015, courseFilterNum, init_img, .45)
 
 
     # find points which differ
     coursePointsIndeces = set()
-    finePointsIndeces = set()
     for i in range(len(courseFilteredPoints)):
         coursePoint = courseFilteredPoints[i]
         add = True
