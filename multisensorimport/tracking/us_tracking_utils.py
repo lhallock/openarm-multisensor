@@ -15,7 +15,10 @@ import csv
 
 import cv2
 import numpy as np
+import scipy
 from scipy import signal
+from multisensorimport.tracking import supporters_simple as supporters_simple
+
 
 def extract_contour_pts(filename):
     """Extract points from largest contour in PNG image.
@@ -54,8 +57,73 @@ def extract_contour_pts(filename):
 
     return np_points
 
+def track_pts_csrt(filedir, pts, viz=True):
+    # keep track of contour areas
+    contour_areas = []
+    # add first contour area
+    contour_areas.append(cv2.contourArea(pts))
 
-def track_pts(filedir, finePts, coursePts, lk_params, viz=True, fineFilterType = 0, courseFilterType = 0):
+    # create OpenCV window (if visualization is desired)
+    if viz:
+        cv2.namedWindow('Frame')
+
+    # track and display specified points through images
+    first_loop = True
+    old_frame = None
+    i = 0
+    skip_num = 200
+    for filename in sorted(os.listdir(filedir)):
+        if filename.endswith('.pgm') and i % skip_num == 0:
+            filepath = filedir + filename
+
+            # if it's the first image, we already have the contour area
+            if first_loop:
+                old_frame = cv2.imread(filepath, -1)
+                # apply filter to frame
+                first_loop = False
+
+            else:
+                # read in new frame
+                frame = cv2.imread(filepath, -1)
+                # print("SHAPE", frame.shape)
+                # apply filter to frame
+                try:
+                    shape = frame.shape
+                except cv2.error as e:
+                    print('Invalid frame!')
+                    continue
+                frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
+
+                # # CSRT tracking
+                pts = csrt_tracking(old_frame, frame, pts, (7, 7))
+                old_frame = frame
+                # print('POINTS: ', pts)
+
+                for i in range(len(pts)):
+                    x, y = pts[i].ravel()
+                    x = int(np.rint(x))
+                    y = int(np.rint(y))
+                    cv2.circle(frame_color, (x, y), 5, (0, 255, 0), -1)
+
+                # display to frame
+                if viz:
+                    cv2.imshow('Frame', frame_color)
+                    key = cv2.waitKey(1)
+                    if key == 27: # stop on escape key
+                        break
+                    time.sleep(0.01)
+
+                # append new contour area
+               # contour_areas.append(cv2.contourArea(pts))
+        i += 1
+
+    if viz:
+        cv2.destroyAllWindows()
+
+    return contour_areas
+
+def track_pts(filedir, fine_pts, course_pts, supporter_pts, supporter_params, lk_params, viz=True, fine_filter_type=0, course_filter_type=0):
     """Track specified points through all (ordered) images in directory.
 
     This function is used to track, record, and visualize points through a full
@@ -65,20 +133,24 @@ def track_pts(filedir, finePts, coursePts, lk_params, viz=True, fineFilterType =
 
     Args:
         filedir (str): directory in which files are stored, including final '/'
-        pts (numpy.ndarray): list of points to track; assumed to correspond to
+        fine_pts (numpy.ndarray): list of points with higher corner scores, from an aggressively filtered image, to track; assumed to correspond to
             the first image file in filedir, and to be in counter-clockwise
+            order (TODO: check this)
+        course_pts (numpy.ndarray): list of points with higher corner scores, from a less filtered image, to track; assumed to correspond to
+            the first image file in filedir, and to be in counter-clockwise.
             order (TODO: check this)
         lk_params (dict): parameters for Lucas-Kanade image tracking in OpenCV
             TODO: set appropriate default values
         viz (bool): whether to visualize the tracking process
-        filter (int): what kind of filter to use (0 for none, 1 for median, 2 for anisotropic diffusion)
+        fine_filter_type (int): what kind of filter to use to "finely" filter points (more aggressive filter) (0 for none, 1 for median, 2 for fine bilateral, 3 for course bilateral, 4 for anisotropic diffusion)
+        course_filter_type (int): same as fine_filter_type, but less aggressive, used to "coursely" filter points (keeps more top right points)
 
     Returns:
         list of contour areas of each frame
     """
-
+    # print(course_pts)
     # combine course and fine points
-    pts = np.concatenate((finePts, coursePts), axis=0)
+    pts = np.concatenate((fine_pts, course_pts), axis=0)
 
     # keep track of contour areas
     contour_areas = []
@@ -89,15 +161,18 @@ def track_pts(filedir, finePts, coursePts, lk_params, viz=True, fineFilterType =
     if viz:
         cv2.namedWindow('Frame')
 
-    # set filters (course filter is a less aggresive filter, fine_filter more aggressive)
-    course_filter = get_filter_from_num(courseFilterType)
-    fine_filter = get_filter_from_num(fineFilterType)
+    # set filters (course filter is a less aggressive filter, fine_filter more aggressive)
+    course_filter = get_filter_from_num(course_filter_type)
+    fine_filter = get_filter_from_num(fine_filter_type)
 
     # track and display specified points through images
     first_loop = True
+    frame_num = 0
     for filename in sorted(os.listdir(filedir)):
+        print(frame_num)
         if filename.endswith('.pgm'):
             filepath = filedir + filename
+            # print(filepath)
 
             # if it's the first image, we already have the contour area
             if first_loop:
@@ -117,29 +192,54 @@ def track_pts(filedir, finePts, coursePts, lk_params, viz=True, fineFilterType =
                 frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
 
-                # # CSRT tracking
-                # csrt_tracking(old_frame, frame, pts, (7, 7))
-
                 # calculate new point locations for fine_points using frame filtered by the fine filter
                 new_fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                    old_frame_fine, frame_fine, finePts, None, **lk_params)
+                    old_frame_fine, frame_fine, fine_pts, None, **lk_params)
 
                 # calculate new point locations for course_points using frame filtered by the course filter
-                new_course_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                    old_frame_course, frame_course, coursePts, None, **lk_params)
+                predicted_course_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    old_frame_course, frame_course, course_pts, None, **lk_params)
+
+                # calculate new supporter locations in course filter frame
+                new_supporter_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    old_frame_course, frame_course, supporter_pts, None, **lk_params
+                )
+
+                # reformat for supporters
+                predicted_course_pts = supporters_simple.format_supporters(predicted_course_pts)
+
+                new_feature_params = []
+                new_course_pts = []
+                use_tracking = (frame_num <= 10)
+                for i in range(len(predicted_course_pts)):
+                    predicted_point = predicted_course_pts[i]
+                    param_list = supporter_params[i]
+                    point_location, new_params = supporters_simple.apply_supporters_model(predicted_point, supporter_pts, new_supporter_pts, param_list, use_tracking, 0.7)
+                    # print("POINT: ", predicted_point)
+                    new_feature_params.append(new_params)
+                    new_course_pts.append(np.array([[point_location[0], point_location[1]]], dtype=np.float32))
+
+                new_course_pts = np.array(new_course_pts)
 
                 # save old frame for optical flow calculation
                 old_frame_course = frame_course.copy()
                 old_frame_fine = frame_fine.copy()
 
                 # reset point locations
-                finePts = new_fine_pts
-                coursePts = new_course_pts
-                pts = np.concatenate((finePts, coursePts), axis=0)
-                print(len(pts))
-                for i in range(len(pts)):
-                    x, y = pts[i].ravel()
+                fine_pts = new_fine_pts
+                course_pts = new_course_pts
+                supporter_pts = new_supporter_pts
+
+                pts = np.concatenate((fine_pts, course_pts), axis=0)
+                for i in range(len(fine_pts)):
+                    x, y = fine_pts[i].ravel()
+                    cv2.circle(frame_color, (x, y), 5, (255, 0, 0), -1)
+                for i in range(len(course_pts)):
+                    x, y = course_pts[i].ravel()
                     cv2.circle(frame_color, (x, y), 5, (0, 255, 0), -1)
+                for i in range(len(supporter_pts)):
+                    x, y = supporter_pts[i].ravel()
+                    cv2.circle(frame_color, (x, y), 5, (0, 0, 255), -1)
 
                 # display to frame
                 if viz:
@@ -151,11 +251,63 @@ def track_pts(filedir, finePts, coursePts, lk_params, viz=True, fineFilterType =
 
                 # append new contour area
                 contour_areas.append(cv2.contourArea(pts))
+        frame_num += 1
 
     if viz:
         cv2.destroyAllWindows()
 
     return contour_areas
+
+def filter_supporters(supporter_points, filedir, lk_params):
+    print("FILTERING")
+    # track and display specified points through images
+    first_loop = True
+    frame_num = 0
+    movement = []
+    old_frame_course = None
+    supporter_points_formated = supporters_simple.format_supporters(supporter_points)
+    for i in range(len(supporter_points)):
+        movement.append(0)
+
+    for filename in sorted(os.listdir(filedir)):
+        print(frame_num)
+        if filename.endswith('.pgm'):
+            filepath = filedir + filename
+            # print(filepath)
+
+            # if it's the first image, we already have the contour area
+            if first_loop:
+                old_frame = cv2.imread(filepath, -1)
+                # apply filter to frame
+                old_frame_course = course_bilateral_filter(old_frame)
+                first_loop = False
+
+            else:
+                # read in new frame
+                frame = cv2.imread(filepath, -1)
+
+                # apply filter to frame
+                frame_course = course_bilateral_filter(frame)
+                frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
+                supporter_points, status, error = cv2.calcOpticalFlowPyrLK(
+                    old_frame_course, frame_course, supporter_points, None, **lk_params)
+
+                # reformat for supporters
+                new_supporter_points = supporters_simple.format_supporters(supporter_points)
+                for i in range(len(new_supporter_points)):
+                    new_supporter_point = new_supporter_points[i]
+                    prev_supporter_point = supporter_points_formated[i]
+                    movement[i] += np.linalg.norm(new_supporter_point - prev_supporter_point)
+
+        frame_num += 1
+
+    movement = np.array(movement)
+    movement / frame_num
+    moved_points = movement >= scipy.percentile(movement, 50)
+    print("FINISHED FILTERING")
+    return moved_points
+
 
 
 def track_pts_to_keyframe(filedir, pts, lk_params, viz=True, filterType = 0):
@@ -242,7 +394,7 @@ def track_pts_to_keyframe(filedir, pts, lk_params, viz=True, filterType = 0):
                     key = cv2.waitKey(1)
                     if key == 27: # stop on escape key
                         break
-                    time.sleep(0.01)
+                    time.sleep(0.0001)
 
                 # append new contour area
                 contour_areas.append(cv2.contourArea(pts))
@@ -281,6 +433,7 @@ def get_keyframes(filedir):
     return keyframes
 
 
+
 def write_us_csv(outfile, vals, val_labels=None):
     pass
 
@@ -306,7 +459,7 @@ def shi_tomasi_corner_score(point, block_size, img):
     return min(lambda_one, lambda_two)
 
 
-def filter_points(window_size, pts, eps, filter_type, img, percent):
+def filter_points(window_size, pts, filter_type, img, percent):
 
     # select image filter, determined by filterType argument
     filter = get_filter_from_num(filter_type)
@@ -316,22 +469,19 @@ def filter_points(window_size, pts, eps, filter_type, img, percent):
 
     # convert pts from np array to list for convenience, create dict for sorting
     pts = list(pts)
-    map = dict()
-    filtered_pts = []
+    ind_to_score_map = dict()
     for i in range(len(pts)):
         point = pts[i]
-        corner_score = shi_tomasi_corner_score(point, 7, filtered_img)
-        map[i] = corner_score
-        if (corner_score >= eps):
-            filtered_pts.append(point)
+        corner_score = shi_tomasi_corner_score(point, window_size, filtered_img)
+        ind_to_score_map[i] = corner_score
 
     filtered_points = []
 
     # converts map to a list of 2-tuples (key, value), which are in sorted order by value
     # key is index of point in the pts list
-    sorted_mapping = sorted(map.items(), key=lambda x: x[1], reverse=True)
+    sorted_mapping = sorted(ind_to_score_map.items(), key=lambda x: x[1], reverse=True)
 
-    # get top 60% of points
+    # get top percent% of points
     for i in range(0, round(percent * len(sorted_mapping))):
         filtered_points.append(pts[sorted_mapping[i][0]])
 
@@ -346,10 +496,16 @@ def csrt_tracking(prev_img, curr_img, points, window_size):
         x = point[0][0]
         y = point[0][1]
         tracker = cv2.TrackerCSRT_create()
-        bounding_box = (x - window_size[0]//2, y - window_size[1]//2, window_size[0], window_size[1])
+        x_lower = max(0, x - window_size[0]//2)
+        y_lower = max(0, y - window_size[1]//2)
+        bounding_box = (x_lower, y_lower, window_size[0], window_size[1])
+        print('prev img shape: ', prev_img.shape)
+        print('bounding box: ', bounding_box)
         tracker.init(prev_img, bounding_box)
 
         ret, new_bounding_box = tracker.update(curr_img)
+        if not ret:
+            continue
         lower_x = new_bounding_box[0]
         lower_y = new_bounding_box[1]
         translation_x = (x - window_size[0]//2) - lower_x
@@ -358,23 +514,23 @@ def csrt_tracking(prev_img, curr_img, points, window_size):
         new_x = x + translation_x
         new_y = y + translation_y
 
-        new_points.append(np.array([np.array([new_x, new_y])]))
+        if (new_x >= 0 and new_x < curr_img.shape[1]) and (new_y >= 0 and new_y < curr_img.shape[0]):
+            new_points.append(np.array([np.array([new_x, new_y])]))
 
     color_curr_img = cv2.cvtColor(curr_img, cv2.COLOR_GRAY2RGB)
     # visualize
     for point in new_points:
-        x = int(np.rint(point[0][0]))
-        y = int(np.rint(point[0][1]))
+        int_point = point.astype(np.int64)
+        x = int_point[0][0]
+        y = int_point[0][1]
         cv2.circle(color_curr_img, (x, y), 5, (0, 255, 0), -1)
 
     cv2.imshow('Frame2', color_curr_img)
-    key = cv2.waitKey(1)
     time.sleep(0.01)
 
     new_points = np.array(new_points)
 
-    return new_points.reshape(points.shape)
-
+    return new_points.reshape(len(new_points), 1, 2)
 
 
 def get_image_value(x, y, img):
@@ -395,48 +551,57 @@ def get_filter_from_num(filter_type):
         filter = no_filter
     return filter
 
-# image filtering
-def no_filter(color_image):
-    return color_image
 
-def median_filter(color_image):
+# image filtering
+def no_filter(img):
+    return img
+
+
+def median_filter(img):
     # hyperparameter
     kernelSize = 5
-    return cv2.medianBlur(color_image, kernelSize)
+    return cv2.medianBlur(img, kernelSize)
 
-def fine_bilateral_filter(color_image):
-    color_image = cv2.cvtColor(color_image, cv2.COLOR_GRAY2RGB)
+
+def fine_bilateral_filter(img):
+    # convert to color (what bilateral filter expects)
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
     # hyperparameters
     diam = 35
     sigmaColor = 80
     sigmaSpace = 80
-    bilateralColor = cv2.bilateralFilter(color_image, diam, sigmaColor, sigmaSpace)
+    bilateralColor = cv2.bilateralFilter(img, diam, sigmaColor, sigmaSpace)
+
+    # convert back to grayscale and return
     return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
 
-def course_bilateral_filter(color_image):
-    color_image = cv2.cvtColor(color_image, cv2.COLOR_GRAY2RGB)
+
+def course_bilateral_filter(img):
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     # hyperparameters
     diam = 20
-    sigmaColor = 10
-    sigmaSpace = 10
-    bilateralColor = cv2.bilateralFilter(color_image, diam, sigmaColor, sigmaSpace)
+    sigmaColor = 100
+    sigmaSpace = 100
+    bilateralColor = cv2.bilateralFilter(img, diam, sigmaColor, sigmaSpace)
     return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
 
 
-def anisotropic_diffuse(color_image):
-    color_image = cv2.cvtColor(color_image, cv2.COLOR_GRAY2RGB)
+def anisotropic_diffuse(img):
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     # hyperparameters
     alphaVar = 0.1
     KVar = 5
     nitersVar = 5
-    diffusedColor = cv2.ximgproc.anisotropicDiffusion(src = color_image, alpha = alphaVar, K = KVar, niters = nitersVar)
+    diffusedColor = cv2.ximgproc.anisotropicDiffusion(src = img, alpha = alphaVar, K = KVar, niters = nitersVar)
     return cv2.cvtColor(diffusedColor, cv2.COLOR_RGB2GRAY)
 
-def otsu_binarization(grayImage):
-    ret2,th2 = cv2.threshold(grayImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+def otsu_binarization(gray_image):
+    ret2, th2 = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return th2
 
-def canny(grayImage):
-    edges = cv2.Canny(grayImage,180,200)
+
+def canny(gray_image):
+    edges = cv2.Canny(gray_image, 180, 200)
     return edges
