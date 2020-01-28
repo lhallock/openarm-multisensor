@@ -58,7 +58,6 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
     # right now, take a weighted average of the mean displacements + supporter positions, weighted by probability of supporter and prediction
     # also consider taking argmax over multivariate gaussian
     else:
-
         numerator = 0
         denominator = 0
         displacements = []
@@ -70,16 +69,12 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
         displacements = np.array(displacements)
         mean = displacements.mean()
         variance = displacements.var()
-        use_weight = False
-        if np.sum(displacements >= 50) > len(feature_points) // 2:
-            use_weight = True
-
 
         for i in range(len(feature_points)):
             feature_point = feature_points[i]
             prev_feature_point = prev_feature_points[i]
             displacement_norm = np.linalg.norm(feature_point - prev_feature_point)
-            weight = weight_function(displacement_norm, mean, variance, use_weight)
+            weight = weight_function(displacement_norm, mean, variance)
             covariance = feature_params[i][1]
             displacement = feature_params[i][0]
             numerator += (weight * (displacement + feature_point))/np.linalg.det(covariance)
@@ -112,12 +107,18 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
 
 
 
-def weight_function(displacement_norm, mean, variance, use_weight):
+def weight_function(displacement_norm, mean, variance):
+    alpha = 5
+    # print("DISP NORM: ", displacement_norm)
+    # return alpha * displacement_norm + (1 - alpha)
     rv = scipy.stats.multivariate_normal(mean = mean, cov = variance)
     # return rv.pdf(displacement_norm)
     # return displacement_norm
     #return displacement_norm
-    return 1
+    # return alpha * displacement_norm + (1 - alpha)
+    return 1 + alpha * displacement_norm
+
+    # return 1
 
 def point_likelihood(x, y, feature_points, feature_params):
     point = np.array([x, y])

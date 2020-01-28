@@ -17,6 +17,7 @@ import cv2
 import numpy as np
 import scipy
 from scipy import signal
+from scipy.spatial import distance as dist
 from multisensorimport.tracking import supporters_simple as supporters_simple
 
 
@@ -55,7 +56,43 @@ def extract_contour_pts(filename):
         points.append(np.array(contours[0][i], dtype=np.float32))
     np_points = np.array(points)
 
+
     return np_points
+
+def extract_contour_pts_two(filename):
+    img = cv2.imread(filename, -1)
+    # convert image to grayscale if it iscolor
+    if len(img.shape) > 2:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    threshold_level = 127
+    # binarize image
+    _, binarized = cv2.threshold(img, threshold_level, 255, cv2.THRESH_BINARY)
+    # flip image
+    flipped = cv2.bitwise_not(binarized)
+    contours, _ = cv2.findContours(flipped, cv2.RETR_EXTERNAL,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+
+    # convert largest contour to tracking-compatible array
+    points = []
+    frame_color = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    for i in range(len(contours[0])):
+        points.append(np.array(contours[0][i], dtype=np.float32))
+        #cv2.circle(frame_color, (x, y), 5, (0, 255, 0), -1)
+    np_points = np.array(points)
+    # cvx_hull = cv2.convexHull(np_points, clockwise=True)
+    # print(len(cvx_hull))
+    # for i in range(len(cvx_hull)):
+    #     x = cvx_hull[i][0][0]
+    #     y = cvx_hull[i][0][1]
+    #     cv2.circle(frame_color, (x, y), 5, (0, 255, 0), -1)
+
+
+    # cv2.imshow('SEGMENTED', frame_color)
+    # cv2.waitKey()
+
+    return np_points
+
+
 
 def track_pts_csrt(filedir, pts, viz=True):
     # keep track of contour areas
@@ -123,7 +160,7 @@ def track_pts_csrt(filedir, pts, viz=True):
 
     return contour_areas
 
-def track_pts(filedir, fine_pts, course_pts, supporter_pts, supporter_params, lk_params, viz=True, fine_filter_type=0, course_filter_type=0):
+def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_pts_inds, supporter_pts, supporter_params, lk_params, feature_params,viz=True, fine_filter_type=0, course_filter_type=0):
     """Track specified points through all (ordered) images in directory.
 
     This function is used to track, record, and visualize points through a full
@@ -183,54 +220,72 @@ def track_pts(filedir, fine_pts, course_pts, supporter_pts, supporter_params, lk
                 first_loop = False
 
             else:
+
+
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
-                # print("SHAPE", frame.shape)
-                # apply filter to frame
+
+                # obtain key frame, for re-initializing points and/or intersection/union computation
+                key_frame_path = seg_filedir + filename
+                segmented_contour = extract_contour_pts_two(key_frame_path)
+
+                # apply filters to frame
                 frame_course = course_filter(frame)
                 frame_fine = fine_filter(frame)
                 frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
+                # how often we reset contour to a pre-segmented frame
+                reset_freq = 110
 
-                # calculate new point locations for fine_points using frame filtered by the fine filter
-                new_fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                    old_frame_fine, frame_fine, fine_pts, None, **lk_params)
+                # reset condition
+                if frame_num % reset_freq == 0 and frame_num < 300:
+                    print("RESETTING POINTS")
 
-                # calculate new point locations for course_points using frame filtered by the course filter
-                predicted_course_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                    old_frame_course, frame_course, course_pts, None, **lk_params)
+                    course_pts, course_pts_inds, fine_pts, fine_pts_inds, supporter_pts, supporter_params = initialize_points(filedir, key_frame_path, frame, feature_params, lk_params, 2)
 
-                # calculate new supporter locations in course filter frame
-                new_supporter_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                    old_frame_course, frame_course, supporter_pts, None, **lk_params
-                )
+                else:
+                    # calculate new point locations for fine_points using frame filtered by the fine filter
+                    new_fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                        old_frame_fine, frame_fine, fine_pts, None, **lk_params)
 
-                # reformat for supporters
-                predicted_course_pts = supporters_simple.format_supporters(predicted_course_pts)
+                    # calculate new point locations for course_points using frame filtered by the course filter
+                    predicted_course_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                        old_frame_course, frame_course, course_pts, None, **lk_params)
 
-                new_feature_params = []
-                new_course_pts = []
-                use_tracking = (frame_num <= 10)
-                for i in range(len(predicted_course_pts)):
-                    predicted_point = predicted_course_pts[i]
-                    param_list = supporter_params[i]
-                    point_location, new_params = supporters_simple.apply_supporters_model(predicted_point, supporter_pts, new_supporter_pts, param_list, use_tracking, 0.7)
-                    # print("POINT: ", predicted_point)
-                    new_feature_params.append(new_params)
-                    new_course_pts.append(np.array([[point_location[0], point_location[1]]], dtype=np.float32))
+                    # calculate new supporter locations in course filter frame
+                    new_supporter_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                        old_frame_course, frame_course, supporter_pts, None, **lk_params
+                    )
 
-                new_course_pts = np.array(new_course_pts)
+                    # reformat for supporters
+                    predicted_course_pts = supporters_simple.format_supporters(predicted_course_pts)
 
-                # save old frame for optical flow calculation
-                old_frame_course = frame_course.copy()
-                old_frame_fine = frame_fine.copy()
+                    new_feature_params = []
+                    new_course_pts = []
+                    use_tracking = ((frame_num % reset_freq) <= -1)
+                    for i in range(len(predicted_course_pts)):
+                        predicted_point = predicted_course_pts[i]
+                        param_list = supporter_params[i]
+                        point_location, new_params = supporters_simple.apply_supporters_model(predicted_point, supporter_pts, new_supporter_pts, param_list, use_tracking, 0.7)
+                        # print("POINT: ", predicted_point)
+                        new_feature_params.append(new_params)
+                        new_course_pts.append(np.array([[point_location[0], point_location[1]]], dtype=np.float32))
 
-                # reset point locations
-                fine_pts = new_fine_pts
-                course_pts = new_course_pts
-                supporter_pts = new_supporter_pts
+                    new_course_pts = np.array(new_course_pts)
 
-                pts = np.concatenate((fine_pts, course_pts), axis=0)
+                    # save old frame for optical flow calculation
+                    old_frame_course = frame_course.copy()
+                    old_frame_fine = frame_fine.copy()
+
+                    # reset point locations
+                    fine_pts = new_fine_pts
+                    course_pts = new_course_pts
+                    supporter_pts = new_supporter_pts
+
+                    # reset supporter params
+                    supporter_params = new_feature_params
+
+
                 for i in range(len(fine_pts)):
                     x, y = fine_pts[i].ravel()
                     cv2.circle(frame_color, (x, y), 5, (255, 0, 0), -1)
@@ -241,6 +296,9 @@ def track_pts(filedir, fine_pts, course_pts, supporter_pts, supporter_params, lk
                     x, y = supporter_pts[i].ravel()
                     cv2.circle(frame_color, (x, y), 5, (0, 0, 255), -1)
 
+                tracked_contour = order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds)
+                cv2.drawContours(frame_color, [tracked_contour.astype(int)], 0, (0, 255, 0), 3)
+                cv2.fillPoly(frame_color, [tracked_contour.astype(int)], 255)
                 # display to frame
                 if viz:
                     cv2.imshow('Frame', frame_color)
@@ -250,7 +308,25 @@ def track_pts(filedir, fine_pts, course_pts, supporter_pts, supporter_params, lk
                     time.sleep(0.01)
 
                 # append new contour area
-                contour_areas.append(cv2.contourArea(pts))
+                contour_areas.append(cv2.contourArea(tracked_contour))
+
+                # calculate intersection over union
+                mat_predicted = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+                mat_segmented = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+
+                cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)], 255)
+                cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)], 255)
+
+                # cv2.imshow("SEG", mat_segmented)
+                # cv2.imshow("PRED", mat_predicted)
+                # cv2.waitKey()
+
+                intersection = np.sum(np.logical_and(mat_predicted, mat_segmented))
+                union = np.sum(np.logical_or(mat_predicted, mat_segmented))
+
+                jaccard_index = intersection / union
+                print("JACCARD: ", jaccard_index)
+
         frame_num += 1
 
     if viz:
@@ -476,16 +552,20 @@ def filter_points(window_size, pts, filter_type, img, percent):
         ind_to_score_map[i] = corner_score
 
     filtered_points = []
+    filtered_points_ind = []
 
     # converts map to a list of 2-tuples (key, value), which are in sorted order by value
     # key is index of point in the pts list
     sorted_mapping = sorted(ind_to_score_map.items(), key=lambda x: x[1], reverse=True)
+    print("MAPPING: ", sorted_mapping)
 
     # get top percent% of points
     for i in range(0, round(percent * len(sorted_mapping))):
-        filtered_points.append(pts[sorted_mapping[i][0]])
+        points_ind = sorted_mapping[i][0]
+        filtered_points.append(pts[points_ind])
+        filtered_points_ind.append(points_ind)
 
-    return np.array(filtered_points)
+    return np.array(filtered_points), np.array(filtered_points_ind)
 
 
 def csrt_tracking(prev_img, curr_img, points, window_size):
@@ -523,6 +603,9 @@ def csrt_tracking(prev_img, curr_img, points, window_size):
         int_point = point.astype(np.int64)
         x = int_point[0][0]
         y = int_point[0][1]
+        if x <= 0 or y <= 0:
+            print("OUT OF BOUNDS!")
+            return
         cv2.circle(color_curr_img, (x, y), 5, (0, 255, 0), -1)
 
     cv2.imshow('Frame2', color_curr_img)
@@ -531,6 +614,87 @@ def csrt_tracking(prev_img, curr_img, points, window_size):
     new_points = np.array(new_points)
 
     return new_points.reshape(len(new_points), 1, 2)
+
+def initialize_points(READ_PATH, keyframe_path, init_img, feature_params, lk_params, which_contour):
+    if which_contour == 1:
+        pts = extract_contour_pts(keyframe_path)
+    else:
+        pts= extract_contour_pts_two(keyframe_path)
+
+    # filter to be used (1: median filter, 2: bilateral filter, 3: course bilateral, 4: anisotropicDiffuse anything else no filter )
+    fineFilterNum = 2
+    courseFilterNum = 3
+
+    filter = get_filter_from_num(courseFilterNum)
+    filtered_init_img = filter(init_img)
+    # remove points that have low corner scores (Shi Tomasi Corner scoring)
+    fine_filtered_points, fine_filtered_indeces = filter_points(7, pts, fineFilterNum, init_img, .45)
+    course_filtered_points, course_filtered_indeces = filter_points(7, pts, courseFilterNum, init_img, 1)
+    print(pts[0])
+    print(fine_filtered_points.shape)
+    fine_filtered_points = np.append(fine_filtered_points, np.array([pts[0]]), axis=0)
+    fine_filtered_indeces = np.append(fine_filtered_indeces, 0)
+
+
+
+    # find points which differ
+    course_points_indeces = set()
+    for i in range(len(course_filtered_points)):
+        coursePoint = course_filtered_points[i]
+        add = True
+        for j in range(len(fine_filtered_points)):
+            finePoint = fine_filtered_points[j]
+            if (np.linalg.norm(finePoint - coursePoint) < 0.001) or (not (coursePoint[0][0] > 90 and coursePoint[0][1] < 120)):
+                add = False
+        if add:
+            course_points_indeces.add(i)
+
+
+    # only add the course points that are already not being tracked by fine points
+    coursePoints = []
+    courseInds = []
+    for index in course_points_indeces:
+        coursePoints.append(course_filtered_points[index])
+        courseInds.append(course_filtered_indeces[index])
+
+    course_filtered_points = np.array(coursePoints)
+    course_filtered_indeces = np.array(courseInds)
+
+    # find supporters, and filter based on those that move (static supporters are less useful)
+    supporters_tracking = cv2.goodFeaturesToTrack(filtered_init_img, mask=None, **feature_params)
+    # ind = filter_supporters(supporters_tracking, READ_PATH, lk_params)
+    # supporters_tracking = supporters_tracking[ind]
+
+    supporter_params = []
+    for i in range(len(coursePoints)):
+        point = coursePoints[i][0]
+        _, params = supporters_simple.initialize_supporters(supporters_tracking, point, 10)
+        supporter_params.append(params)
+
+    return course_filtered_points, course_filtered_indeces, fine_filtered_points, fine_filtered_indeces, supporters_tracking, supporter_params
+
+
+def order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds):
+    point_dict = dict()
+    for i in range(len(fine_pts)):
+        fine_pt = fine_pts[i]
+        fine_pt_ind = fine_pts_inds[i]
+        point_dict[fine_pt_ind] = fine_pt
+    for i in range(len(course_pts)):
+        course_pt = course_pts[i]
+        course_pt_ind = course_pts_inds[i]
+        point_dict[course_pt_ind] = course_pt
+
+    pts = []
+    for key in sorted(point_dict.keys()):
+        pts.append(point_dict[key])
+
+    return np.array(pts)
+
+
+
+
+
 
 
 def get_image_value(x, y, img):
@@ -580,7 +744,7 @@ def fine_bilateral_filter(img):
 def course_bilateral_filter(img):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     # hyperparameters
-    diam = 20
+    diam = 9
     sigmaColor = 100
     sigmaSpace = 100
     bilateralColor = cv2.bilateralFilter(img, diam, sigmaColor, sigmaSpace)

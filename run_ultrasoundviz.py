@@ -16,24 +16,28 @@ import os
 import cv2
 import numpy as np
 
+from multisensorimport.tracking import supporters_simple as supporters_simple
 from multisensorimport.tracking import us_tracking_utils as track
 
-READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_t5w1/'
+# READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_t5w1_expanded/'
+READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_t5w1_for_testing/'
+SEG_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_t5w1/'
+
 
 
 def main():
     """Execute ultrasound image tracking visualization."""
     window_size = 17
     # set Lucas-Kanade optical flow parameters
-    lk_params = dict(winSize=(19, 19),
+    lk_params = dict(winSize=(17, 17),
                      maxLevel=3,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
     # params for ShiTomasi corner detection
-    feature_params = dict(maxCorners = 100,
-                          qualityLevel = 0.3,
-                          minDistance = 7,
+    feature_params = dict(maxCorners = 300,
+                          qualityLevel = 0.7,
+                          minDistance = 2,
                           blockSize = 7)
 
     # set some optional manually-selected points
@@ -63,45 +67,25 @@ def main():
     pts_manual = np.array(curr_pts)
 
     # try some good points
+    # init_path = READ_PATH + '256.122143234.pgm'
     init_path = READ_PATH + '1495.pgm'
     init_img = cv2.imread(init_path, -1)
-    pts_good = cv2.goodFeaturesToTrack(init_img, mask=None, **feature_params)
 
-
-    # extract initial contour from keyframe
-    keyframe_path = READ_PATH + '0.png'
-    pts = track.extract_contour_pts(keyframe_path)
+    filtered_init_img = track.course_bilateral_filter(init_img)
 
     # filter to be used (1: median filter, 2: bilateral filter, 3: course bilateral, 4: anisotropicDiffuse anything else no filter )
     fineFilterNum = 2
     courseFilterNum = 3
 
-    # remove points that have low corner scores (Shi Tomasi Corner scoring)
-    fineFilteredPoints = track.filter_points(window_size, pts, 0.0015, fineFilterNum, init_img, .5)
-    courseFilteredPoints = track.filter_points(window_size, pts, 0.0015, courseFilterNum, init_img, .45)
+    # extract initial contour from keyframe
+    keyframe_path = READ_PATH + '0.png'
 
 
-    # find points which differ
-    coursePointsIndeces = set()
-    for i in range(len(courseFilteredPoints)):
-        coursePoint = courseFilteredPoints[i]
-        add = True
-        for j in range(len(fineFilteredPoints)):
-            finePoint = fineFilteredPoints[j]
-            if np.linalg.norm(finePoint - coursePoint) < 0.0001:
-                add = False
-        if add:
-            coursePointsIndeces.add(i)
-
-
-    coursePoints = []
-    for index in coursePointsIndeces:
-        coursePoints.append(courseFilteredPoints[index])
-
-    courseFilteredPoints = np.array(coursePoints)
+    course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, supporter_params = track.initialize_points(READ_PATH, keyframe_path, init_img, feature_params, lk_params, 1)
 
     # track points
-    contour_areas = track.track_pts(READ_PATH, fineFilteredPoints, courseFilteredPoints, lk_params, True, fineFilterType = fineFilterNum, courseFilterType = courseFilterNum)
+
+    contour_areas = track.track_pts(SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, supporters_tracking, supporter_params, lk_params, feature_params, True, fine_filter_type=fineFilterNum, course_filter_type=courseFilterNum)
 
     # write contour areas to csv file
     out_path = READ_PATH + 'csa.csv'
@@ -114,7 +98,6 @@ def matchPoints(contourPoints, goodPoints):
     epsilon = 10
     finalIndeces = set()
     finalPoints = []
-    print("LENGTH", len(contourPoints))
 
     listContourPoints = contourPoints.tolist()
 
