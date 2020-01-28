@@ -36,7 +36,7 @@ def main():
 
     # params for ShiTomasi corner detection
     feature_params = dict(maxCorners = 300,
-                          qualityLevel = 0.7,
+                          qualityLevel = 0.25,
                           minDistance = 2,
                           blockSize = 7)
 
