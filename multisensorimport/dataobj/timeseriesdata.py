@@ -19,6 +19,8 @@ class TimeSeriesData():
 
     Attributes:
         data (numpy.ndarray): n x n_ch array of data values
+        data_from_offset (numpy.ndarray): n' x n_ch array of data values, where
+            n' is the number of data values after the specified offset
         n_ch (int): number of data channels
         n (int): number of data points
         freq (int): sampling frequency (in Hz)
@@ -40,6 +42,7 @@ class TimeSeriesData():
         """
         self._label = label
         self._data = None
+        self._data_from_offset = None
         self._n_ch = None
         self._n = None
         self._freq = None
@@ -72,7 +75,7 @@ class TimeSeriesData():
         tsd._freq = freq
         tsd._offset = offset
         tsd._ch_labels = ch_labels
-
+        tsd._data_from_offset = tsd._compute_offset_data()
         tsd._assert_consistent()
 
         return tsd
@@ -149,9 +152,13 @@ class TimeSeriesData():
         if len(self._data.shape) == 1: # handle single-channel data
             self._n_ch = 1
             self._n = self._data.shape[0]
+            self._data = np.reshape(self._data, (-1, 1))
         else:
             self._n_ch = self._data.shape[1]
             self._n = self._data.shape[0]
+
+        self._data_from_offset = self._compute_offset_data()
+
 
     def _init_from_wav(self, filename):
         """Internal helper method for instantiation from WAV.
@@ -166,6 +173,9 @@ class TimeSeriesData():
         self._n_ch = self._data.shape[1]
         self._n = self._data.shape[0]
 
+        self._data_from_offset = self._compute_offset_data()
+
+
     def _assert_consistent(self):
         """Confirm that dimensions of data and channel labels are consistent.
 
@@ -179,6 +189,25 @@ class TimeSeriesData():
         """
         if self.ch_labels and (len(self.ch_labels) != self.n_ch):
             raise ValueError('Channel labels are of inconsistent dimension.')
+
+
+    def _compute_offset_data(self):
+        """Compute data matrix from specified offset
+
+        Note that if the specified index is before data collection begins, the
+        array will pre-populate with zeros. (TODO: make these NaNs probably)
+
+        Returns:
+            numpy.ndarray matrix starting from specified offset index
+        """
+        # if offset is positive, just chop off the start of the matrix
+        if self.offset >= 0:
+            return self.data[self.offset:, :]
+
+        # if offset is negative, prepend zeros
+        if self.offset < 0:
+            prefix = np.zeros((-1*self.offset, self.data.shape[1]))
+            return np.vstack((prefix, self.data))
 
     ###########################################################################
     ## GETTERS AND SETTERS
@@ -203,6 +232,15 @@ class TimeSeriesData():
         self._data = data
         self._n_ch = self._data.shape[0]
         self._n = self._data.shape[1]
+
+    @property
+    def data_from_offset(self):
+        """Get object data starting from specified offset.
+
+        Returns:
+            numpy.ndarray data object. computed from offset
+        """
+        return self._data_from_offset
 
     @property
     def n_ch(self):

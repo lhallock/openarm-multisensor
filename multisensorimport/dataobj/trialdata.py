@@ -179,26 +179,26 @@ class TrialData():
         Returns:
             pandas dataframe with publication-relevant data streams
         """
-        # build ultrasound data series
-        us_len = self.data_ultrasound.data.shape[0]
-        us_freq_pd_str = self.as_pd_freq(self.data_ultrasound.freq)
-        us_index = pd.timedelta_range(0, periods=us_len, freq=us_freq_pd_str)
-        us_series = pd.Series(self.data_ultrasound.data, us_index)
-        print(us_series)
-
         # build force data series
-        force_len = self.data_force.data.shape[0]
+        force_len = self.data_force.data_from_offset.shape[0]
         force_freq_pd_str = self.as_pd_freq(self.data_force.freq)
         force_index = pd.timedelta_range(0, periods=force_len,
                                          freq=force_freq_pd_str)
-        force_series = pd.Series(self.data_force_abs.data[:, 0], force_index)
+        force_series = pd.Series(self.data_force_abs.data_from_offset[:, 0], force_index)
         print(force_series)
+
+        # build ultrasound data series
+        us_len = self.data_ultrasound.data_from_offset.shape[0]
+        us_freq_pd_str = self.as_pd_freq(self.data_ultrasound.freq)
+        us_index = pd.timedelta_range(0, periods=us_len, freq=us_freq_pd_str)
+        us_series = pd.Series(self.data_ultrasound.data_from_offset[:, 0], us_index)
+        print(us_series)
 
         # build EMG data series
         emg_len = self.data_emg.data.shape[0]
         emg_freq_pd_str = self.as_pd_freq(self.data_emg.freq)
         emg_index = pd.timedelta_range(0, periods=emg_len, freq=emg_freq_pd_str)
-        emg_series = pd.Series(self.data_emg.data[:, 1], emg_index)
+        emg_series = pd.Series(self.data_emg.data_from_offset[:, 1], emg_index)
         #TODO: choose forearm (0) or biceps (1)
         print(emg_series)
 
