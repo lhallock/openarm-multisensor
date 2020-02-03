@@ -56,7 +56,9 @@ class TrialData():
         self.data_ultrasound = None
 
     @classmethod
-    def from_preprocessed_mat_file(cls, filename_mat, filename_us, subj, struct_no):
+    def from_preprocessed_mat_file(cls, filename_mat, filename_us, subj,
+                                   struct_no, emg_peak=0, amg_peak=0,
+                                   force_peak=0, us_peak=0):
         """Initialize TrialData object from specialized MATLAB .mat file.
 
         This initializer is designed for use with publication-specific
@@ -68,6 +70,9 @@ class TrialData():
             subj (str): desired subject identifier
             struct_no (int): cell to access within the saved MATLAB struct
                 (NOTE: zero-indexed, e.g., 0-12)
+            {emg,amg,force,us}_peak (int): location of first peak in each data
+                series, used for alignment across series (specified as index
+                within array)
 
         Returns:
             TrialData object containing data from file
@@ -121,7 +126,7 @@ class TrialData():
         emg_data = data_struct['filtEmg'][0, 0]
         emg_labels = ['forearm', 'biceps', 'triceps', 'NONE']
         emg_freq = 1000
-        emg_offset = 0
+        emg_offset = td.offset_from_peak(emg_peak, emg_freq)
         td.data_emg = TimeSeriesData.from_array('sEMG', emg_data, emg_labels,
                                                 emg_freq, emg_offset)
 
@@ -131,7 +136,7 @@ class TrialData():
             'forearm (front/wrist)', 'forearm (back)', 'biceps', 'triceps'
         ]
         amg_freq = 2000
-        amg_offset = 0 #TODO: calculate these
+        amg_offset = td.offset_from_peak(amg_peak, amg_freq)
         td.data_amg = TimeSeriesData.from_array('AMG', amg_data, amg_labels,
                                                 amg_freq, amg_offset)
 
@@ -139,7 +144,7 @@ class TrialData():
         force_data = data_struct['forceHandle'][0, 0]
         force_labels = ['F_x', 'F_y', 'F_z', 'T_x', 'T_y', 'T_z']
         force_freq = 2400
-        force_offset = 0
+        force_offset = td.offset_from_peak(force_peak, force_freq)
         td.data_force = TimeSeriesData.from_array('force', force_data,
                                                   force_labels, force_freq,
                                                   force_offset)
@@ -156,7 +161,7 @@ class TrialData():
         # set ultrasound data
         us_labels = ['CSA']
         us_freq = 8.3856 #TODO: note on empirical calculation
-        us_offset = 0
+        us_offset = td.offset_from_peak(us_peak, us_freq)
         td.data_ultrasound = TimeSeriesData.from_file('US', filename_us,
                                                       us_labels, us_freq,
                                                       us_offset)
@@ -195,7 +200,7 @@ class TrialData():
         print(us_series)
 
         # build EMG data series
-        emg_len = self.data_emg.data.shape[0]
+        emg_len = self.data_emg.data_from_offset.shape[0]
         emg_freq_pd_str = self.as_pd_freq(self.data_emg.freq)
         emg_index = pd.timedelta_range(0, periods=emg_len, freq=emg_freq_pd_str)
         emg_series = pd.Series(self.data_emg.data_from_offset[:, 1], emg_index)
@@ -239,6 +244,12 @@ class TrialData():
         freq_pd = int(1e6/freq)
         freq_pd_str = str(freq_pd) + 'U'
         return freq_pd_str
+
+
+    def offset_from_peak(self, peak_ind, freq, prepeak=3):
+        offset = int(peak_ind - prepeak*freq)
+        print(offset)
+        return offset
 
 
     def _compute_abs_force(self):

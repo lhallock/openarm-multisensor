@@ -23,7 +23,11 @@ READ_PATH_US = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisen
 
 def main():
     """Execute all EMBC 2020 data analysis."""
-    data1 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT, READ_PATH_US, 'Sub1', 1)
+    data1 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
+                                                    READ_PATH_US, 'Sub1', 1,
+                                                    emg_peak=5500,
+                                                    amg_peak=13290,
+                                                    force_peak=3721, us_peak=51)
     print(data1.data_emg.data.shape)
 
 #    sns.set()
