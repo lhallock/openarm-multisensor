@@ -26,16 +26,16 @@ def main():
     data1 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT, READ_PATH_US, 'Sub1', 1)
     print(data1.data_emg.data.shape)
 
-    sns.set()
-
-    fig, axs = plt.subplots(4)
-    fig.suptitle('test plot')
-    axs[0].plot(data1.data_emg.data)
-    axs[1].plot(data1.data_amg.data)
-    axs[2].plot(data1.data_force.data)
-    axs[3].plot(data1.data_ultrasound.data)
-
-    plt.show()
+#    sns.set()
+#
+#    fig, axs = plt.subplots(4)
+#    fig.suptitle('test plot')
+#    axs[0].plot(data1.data_emg.data)
+#    axs[1].plot(data1.data_amg.data)
+#    axs[2].plot(data1.data_force.data)
+#    axs[3].plot(data1.data_ultrasound.data)
+#
+#    plt.show()
 
 
 if __name__ == "__main__":
