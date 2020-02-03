@@ -15,10 +15,11 @@ import seaborn as sns
 
 from multisensorimport.dataobj import trialdata as td
 
-READ_PATH_MAT = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/seg_data_US.mat'
+DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
 
-READ_PATH_US = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/ultrasound_t5w1/csa.csv'
+READ_PATH_MAT = DATA_DIR + 'seg_data_US.mat'
 
+READ_PATH_US = DATA_DIR + 'wp1t5'
 
 
 def main():

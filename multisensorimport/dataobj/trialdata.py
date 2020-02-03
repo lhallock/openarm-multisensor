@@ -35,8 +35,12 @@ class TrialData():
             robot handle
         data_force_abs (TimeSeriesData): 1D force data containing absolute
             value of output force only
-        data_ultrasound (TimeSeriesData): ultrasound time series data,
-            extracted using FUNCTION TODO
+        data_us_csa (TimeSeriesData): ultrasound-extracted time series data of
+            muscle cross-sectional area, extracted using FUNCTION TODO
+        data_us_thickness (TimeSeriesData): ultrasound-extracted time series
+            data of muscle thickness, extracted using FUNCTION TODO
+        data_us_th_rat (TimeSeriesData): ultrasound-extracted time series data
+            of maximum length/width ration, extracted using FUNCTION TODO
     """
 
     def __init__(self):
@@ -53,10 +57,12 @@ class TrialData():
         self.data_amg = None
         self.data_force = None
         self.data_force_abs = None
-        self.data_ultrasound = None
+        self.data_us_csa = None
+        self.data_us_thickness = None
+        self.data_us_th_rat = None
 
     @classmethod
-    def from_preprocessed_mat_file(cls, filename_mat, filename_us, subj,
+    def from_preprocessed_mat_file(cls, filename_mat, filedir_us, subj,
                                    struct_no, emg_peak=0, amg_peak=0,
                                    force_peak=0, us_peak=0):
         """Initialize TrialData object from specialized MATLAB .mat file.
@@ -66,7 +72,7 @@ class TrialData():
 
         Args:
             filename_mat (str): path to MATLAB .mat data file
-            filename_us (str): path to ultrasound .csv data file
+            filedir_us (str): path to ultrasound .csv data directory
             subj (str): desired subject identifier
             struct_no (int): cell to access within the saved MATLAB struct
                 (NOTE: zero-indexed, e.g., 0-12)
@@ -157,13 +163,27 @@ class TrialData():
                                                       force_abs_labels,
                                                       force_freq, force_offset)
 
-
-        # set ultrasound data
-        us_labels = ['CSA']
+        # set ultrasound CSA data
+        us_csa_labels = ['CSA']
         us_freq = 8.3856 #TODO: note on empirical calculation
         us_offset = td.offset_from_peak(us_peak, us_freq)
-        td.data_ultrasound = TimeSeriesData.from_file('US', filename_us,
-                                                      us_labels, us_freq,
+        filename_us_csa = filedir_us + '/ground_truth_csa.csv'
+        td.data_us_csa = TimeSeriesData.from_file('US-CSA', filename_us_csa,
+                                                      us_csa_labels, us_freq,
+                                                      us_offset)
+
+        # set ultrasound thickness data
+        us_t_labels = ['T']
+        filename_us_t = filedir_us + '/ground_truth_thickness.csv'
+        td.data_us_thickness = TimeSeriesData.from_file('US-T', filename_us_t,
+                                                      us_t_labels, us_freq,
+                                                      us_offset)
+
+        # set ultrasound thickness ratio data
+        us_tr_labels = ['TR']
+        filename_us_tr = filedir_us + '/ground_truth_thickness_ratio.csv'
+        td.data_us_th_rat = TimeSeriesData.from_file('US-TR', filename_us_tr,
+                                                      us_tr_labels, us_freq,
                                                       us_offset)
 
         td.build_synced_dataframe(us_freq)
@@ -193,11 +213,15 @@ class TrialData():
         print(force_series)
 
         # build ultrasound data series
-        us_len = self.data_ultrasound.data_from_offset.shape[0]
-        us_freq_pd_str = self.as_pd_freq(self.data_ultrasound.freq)
+        us_len = self.data_us_csa.data_from_offset.shape[0]
+        us_freq_pd_str = self.as_pd_freq(self.data_us_csa.freq)
         us_index = pd.timedelta_range(0, periods=us_len, freq=us_freq_pd_str)
-        us_series = pd.Series(self.data_ultrasound.data_from_offset[:, 0], us_index)
-        print(us_series)
+        us_csa_series = pd.Series(self.data_us_csa.data_from_offset[:, 0], us_index)
+        us_t_series = pd.Series(self.data_us_thickness.data_from_offset[:, 0], us_index)
+        us_tr_series = pd.Series(self.data_us_th_rat.data_from_offset[:, 0], us_index)
+        print(us_csa_series)
+        print(us_t_series)
+        print(us_tr_series)
 
         # build EMG data series
         emg_len = self.data_emg.data_from_offset.shape[0]
@@ -209,12 +233,13 @@ class TrialData():
 
         sns.set()
 
-        fig, axs = plt.subplots(4)
+        fig, axs = plt.subplots(5)
         fig.suptitle('test pandas plot')
         axs[0].plot(force_series)
         axs[1].plot(emg_series)
-        axs[2].plot(us_series)
-        axs[3].plot(us_series)
+        axs[2].plot(us_csa_series)
+        axs[3].plot(us_t_series)
+        axs[4].plot(us_tr_series)
 
         plt.show()
 
