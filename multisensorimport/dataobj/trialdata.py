@@ -65,7 +65,7 @@ class TrialData():
     @classmethod
     def from_preprocessed_mat_file(cls, filename_mat, filedir_us, subj,
                                    struct_no, emg_peak=0, amg_peak=0,
-                                   force_peak=0, us_peak=0):
+                                   force_peak=0, us_peak=0, force_only=False):
         """Initialize TrialData object from specialized MATLAB .mat file.
 
         This initializer is designed for use with publication-specific
@@ -80,6 +80,7 @@ class TrialData():
             {emg,amg,force,us}_peak (int): location of first peak in each data
                 series, used for alignment across series (specified as index
                 within array)
+            force_only (bool): build frame using force and ultrasound data only
 
         Returns:
             TrialData object containing data from file
@@ -129,23 +130,25 @@ class TrialData():
         td.trial_no = wp_to_trial[str(td.wp)]
         td.ang = wp_to_angle[str(td.wp)]
 
-        # set EMG data
-        emg_data = data_struct['filtEmg'][0, 0]
-        emg_labels = ['forearm', 'biceps', 'triceps', 'NONE']
-        emg_freq = 1000
-        emg_offset = td.offset_from_peak(emg_peak, emg_freq)
-        td.data_emg = TimeSeriesData.from_array('sEMG', emg_data, emg_labels,
-                                                emg_freq, emg_offset)
+        if not force_only:
 
-        # set AMG data
-        amg_data = data_struct['rawAmg'][0, 0]
-        amg_labels = [
-            'forearm (front/wrist)', 'forearm (back)', 'biceps', 'triceps'
-        ]
-        amg_freq = 2000
-        amg_offset = td.offset_from_peak(amg_peak, amg_freq)
-        td.data_amg = TimeSeriesData.from_array('AMG', amg_data, amg_labels,
-                                                amg_freq, amg_offset)
+            # set EMG data
+            emg_data = data_struct['filtEmg'][0, 0]
+            emg_labels = ['forearm', 'biceps', 'triceps', 'NONE']
+            emg_freq = 1000
+            emg_offset = td.offset_from_peak(emg_peak, emg_freq)
+            td.data_emg = TimeSeriesData.from_array('sEMG', emg_data,
+                                                    emg_labels, emg_freq,
+                                                    emg_offset)
+
+            # set AMG data
+            amg_data = data_struct['rawAmg'][0, 0]
+            amg_labels = ['forearm (front/wrist)', 'forearm (back)', 'biceps',
+                          'triceps']
+            amg_freq = 2000
+            amg_offset = td.offset_from_peak(amg_peak, amg_freq)
+            td.data_amg = TimeSeriesData.from_array('AMG', amg_data, amg_labels,
+                                                    amg_freq, amg_offset)
 
         # set force data
         force_data = data_struct['forceHandle'][0, 0]
@@ -187,11 +190,11 @@ class TrialData():
                                                       us_tr_labels, us_freq,
                                                       us_offset)
 
-        td.build_synced_dataframe(us_freq)
+        td.build_synced_dataframe(force_only)
 
         return td
 
-    def build_synced_dataframe(self, new_freq):
+    def build_synced_dataframe(self, force_only):
         """Build pandas dataframe with all data processed and synced.
 
         This method builds a pandas dataframe in which all desired time series
@@ -200,8 +203,8 @@ class TrialData():
         series).
 
         Args:
-            new_freq (float): desired sampling frequency for data series, in Hz
-
+            force_only (bool): whether only force and ultrasound data should be
+                computed
         Returns:
             pandas dataframe with publication-relevant data streams
         """

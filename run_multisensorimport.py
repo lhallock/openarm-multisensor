@@ -37,7 +37,7 @@ def main():
                                                     emg_peak=5500,
                                                     amg_peak=13290,
                                                     force_peak=3721, us_peak=51)
-#    raise ValueError("poor man's breakpoint")
+    raise ValueError("poor man's breakpoint")
 
     # wp2
     data2 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
