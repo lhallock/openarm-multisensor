@@ -222,9 +222,6 @@ class TrialData():
         us_csa_series = us_csa_series.multiply(math.pow(us_res, 2))
         us_t_series = us_t_series.multiply(us_res)
 
-        # create processed ultrasound data streams
-        #us_t_sq_series = us_t_series.pow(2)
-
         # build ultrasound dataframe
         us_series_dict = {'us-csa': us_csa_series, 'us-t': us_t_series,
                           'us-tr': us_tr_series}
@@ -268,14 +265,51 @@ class TrialData():
         # interpolate values
         df = df.interpolate(method='linear')
         print(df)
-        print(df.corr())
-
-        # remove values where US contour wasn't found
-        #df = df.loc[df['us-csa'] > 0.0].copy()
-        #print(df)
 
         # create df for detrending
         df_dt = df.loc[df['force'] <= 5.0]
+
+        # create time index for fitting
+        #df_dt = df_dt.set_index('date', append=False)
+        x_times_pd = df_dt.index.to_julian_date()
+        print(df_dt)
+        x_times = x_times_pd.to_numpy()
+
+        # series to fit
+        y_us_csa = df_dt['us-csa'].to_numpy()
+        y_us_t = df_dt['us-t'].to_numpy()
+        y_us_tr = df_dt['us-tr'].to_numpy()
+
+        # calculate polynomial fit
+        p_order = 8
+        p_us_csa = np.poly1d(np.polyfit(x_times, y_us_csa, p_order))
+        p_us_t = np.poly1d(np.polyfit(x_times, y_us_t, p_order))
+        p_us_tr = np.poly1d(np.polyfit(x_times, y_us_tr, p_order))
+
+        # generate polyfit line size of untruncated data frame
+        x_times_full = df.index.to_julian_date().to_numpy()
+        us_csa_fitdata = p_us_csa(x_times_full)
+        us_t_fitdata = p_us_t(x_times_full)
+        us_tr_fitdata = p_us_tr(x_times_full)
+
+        # add polyfits to data frame
+        df['us-csa-fit'] = us_csa_fitdata
+        df['us-t-fit'] = us_t_fitdata
+        df['us-tr-fit'] = us_tr_fitdata
+
+        # add detrended data to data frame
+        df['us-csa-dt'] = df['us-csa'] - df['us-csa-fit']
+        df['us-t-dt'] = df['us-t'] - df['us-t-fit']
+        df['us-tr-dt'] = df['us-tr'] - df['us-tr-fit']
+
+        # try thickness squared too
+        df['us-t-dt-sq'] = df['us-t-dt'].pow(2)
+
+        df_corr = df.corr()
+        print(df_corr)
+        corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/sub1/' + str(self.wp) + '.csv'
+        df_corr.to_csv(corr_out_path)
+
 
         # TO REMOVE
 #        df = df_dt.copy()
@@ -295,12 +329,15 @@ class TrialData():
         axs[2].set(ylabel='emg-abs')
         axs[3].plot(df['us-csa'])
         axs[3].set(ylabel='us-csa')
+        axs[3].plot(df['us-csa-fit'], 'r-')
         axs[4].plot(df['us-t'])
         axs[4].set(ylabel='us-t')
-        axs[5].plot(df['us-t'])
-        axs[5].set(ylabel='PLACEHOLDER')
+        axs[4].plot(df['us-t-fit'], 'r-')
+        axs[5].plot(df['us-t-dt'])
+        axs[5].set(ylabel='us-t-dt')
         axs[6].plot(df['us-tr'])
         axs[6].set(ylabel='us-tr')
+        axs[6].plot(df['us-tr-fit'], 'r-')
 #        axs[0].plot(force_series)
 #        axs[1].plot(emg_series)
 #        axs[2].plot(us_csa_series)
