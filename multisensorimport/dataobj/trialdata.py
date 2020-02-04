@@ -15,6 +15,8 @@ import pandas as pd
 import matplotlib.pyplot as plt #TODO: won't need these after refactor
 import seaborn as sns
 from scipy.io import loadmat
+#from numpy.polynomial import Polynomial as Poly
+import numpy.polynomial.polynomial as poly
 #from sklearn.preprocessing import PolynomialFeatures
 
 from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
@@ -271,8 +273,10 @@ class TrialData():
         df_dt = df.loc[df['force'] <= 5.0]
 
         # create time index for fitting
-        x_times_pd = df_dt.index.to_julian_date()
-        print(df_dt)
+        x_times_pd = df_dt.index.to_julian_date()-2457780
+#        x_times_test = df_dt.index.astype(float)
+        print(x_times_pd)
+#        print(x_times_test)
         x_times = x_times_pd.to_numpy()
 
         # series to fit
@@ -281,16 +285,32 @@ class TrialData():
         y_us_tr = df_dt['us-tr'].to_numpy()
 
         # calculate polynomial fit
-        p_order = 8
-        p_us_csa = np.poly1d(np.polyfit(x_times, y_us_csa, p_order))
-        p_us_t = np.poly1d(np.polyfit(x_times, y_us_t, p_order))
-        p_us_tr = np.poly1d(np.polyfit(x_times, y_us_tr, p_order))
+        p_order = 30
+        p_us_csa_coeffs = poly.polyfit(x_times, y_us_csa, p_order)
+        p_us_t_coeffs = poly.polyfit(x_times, y_us_t, p_order)
+        p_us_tr_coeffs = poly.polyfit(x_times, y_us_tr, p_order)
+        print(p_us_csa_coeffs)
+
+#        p_us_csa = np.poly1d(np.polyfit(x_times, y_us_csa, p_order))
+#        p_us_t = np.poly1d(np.polyfit(x_times, y_us_t, p_order))
+#        p_us_tr = np.poly1d(np.polyfit(x_times, y_us_tr, p_order))
+#        p_us_csa = Poly.fit(x_times, y_us_csa, p_order)
+#        print(p_us_csa)
+#        p_us_t = Poly.fit(x_times, y_us_t, p_order)
+#        p_us_tr = Poly.fit(x_times, y_us_tr, p_order)
+
 
         # generate polyfit line size of untruncated data frame
-        x_times_full = df.index.to_julian_date().to_numpy()
-        us_csa_fitdata = p_us_csa(x_times_full)
-        us_t_fitdata = p_us_t(x_times_full)
-        us_tr_fitdata = p_us_tr(x_times_full)
+        x_times_full = df.index.to_julian_date().to_numpy()-2457780
+        us_csa_fitdata = poly.polyval(x_times_full, p_us_csa_coeffs)
+        us_t_fitdata = poly.polyval(x_times_full, p_us_t_coeffs)
+        us_tr_fitdata = poly.polyval(x_times_full, p_us_tr_coeffs)
+#        us_csa_fitdata = p_us_csa(x_times_full)
+#        us_t_fitdata = p_us_t(x_times_full)
+#        us_tr_fitdata = p_us_tr(x_times_full)
+#        us_csa_fitdata = Poly.polyval(x_times_full, p_us_csa)
+#        us_t_fitdata = Poly.polyval(x_times_full, p_us_t)
+#        us_tr_fitdata = Poly.polyval(x_times_full, p_us_tr)
 
         # add polyfits to data frame
         df['us-csa-fit'] = us_csa_fitdata
@@ -330,14 +350,17 @@ class TrialData():
             axs[2].set(ylabel='emg-abs')
             axs[3].plot(df['us-csa'])
             axs[3].set(ylabel='us-csa')
+            axs[3].plot(df_dt['us-csa'], 'g-')
             axs[3].plot(df['us-csa-fit'], 'r-')
             axs[4].plot(df['us-t'])
             axs[4].set(ylabel='us-t')
+            axs[4].plot(df_dt['us-t'], 'g-')
             axs[4].plot(df['us-t-fit'], 'r-')
             axs[5].plot(df['us-t-dt'])
             axs[5].set(ylabel='us-t-dt')
             axs[6].plot(df['us-tr'])
             axs[6].set(ylabel='us-tr')
+            axs[6].plot(df_dt['us-tr'], 'g-')
             axs[6].plot(df['us-tr-fit'], 'r-')
         else:
             fig, axs = plt.subplots(5)
@@ -346,14 +369,17 @@ class TrialData():
             axs[0].set(ylabel='force')
             axs[1].plot(df['us-csa'])
             axs[1].set(ylabel='us-csa')
+            axs[1].plot(df_dt['us-csa'], 'g-')
             axs[1].plot(df['us-csa-fit'], 'r-')
             axs[2].plot(df['us-t'])
             axs[2].set(ylabel='us-t')
+            axs[2].plot(df_dt['us-t'], 'g-')
             axs[2].plot(df['us-t-fit'], 'r-')
             axs[3].plot(df['us-t-dt'])
             axs[3].set(ylabel='us-t-dt')
             axs[4].plot(df['us-tr'])
             axs[4].set(ylabel='us-tr')
+            axs[4].plot(df_dt['us-tr'], 'g-')
             axs[4].plot(df['us-tr-fit'], 'r-')
 
         plt.show()

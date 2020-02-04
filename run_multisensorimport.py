@@ -75,7 +75,7 @@ def main():
                                                     READ_PATH_US_10, 'sub1', 9,
                                                     emg_peak=6000,
                                                     amg_peak=13290,
-                                                    force_peak=1460, us_peak=48)
+                                                    force_peak=4222, us_peak=48)
     # s2wp5
     data28 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_28,
                                                     READ_PATH_US_28, 'sub2', 0,
@@ -100,7 +100,7 @@ def main():
                                                     emg_peak=None,
                                                     amg_peak=None,
                                                     force_peak=10810,
-                                                    us_peak=98, force_only=True)
+                                                    us_peak=72, force_only=True)
 
     # s5wp5
     data37 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_37,
