@@ -5,6 +5,7 @@ from scipy import stats
 
 
 def apply_supporters_model(predicted_target_point, prev_feature_points, feature_points, feature_params, use_tracking, alpha):
+    # print('num supporters: ', len(feature_points))
     """
     Do model learning or prediction based on learned model, based on conditions of image tracking
     original_feature_points: numpy array of tuples/arrays of x, y coords for features from original image
@@ -61,20 +62,12 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
         numerator = 0
         denominator = 0
         displacements = []
-        for i in range(len(feature_points)):
-            feature_point = feature_points[i]
-            prev_feature_point = prev_feature_points[i]
-            displacement_norm = np.linalg.norm(feature_point - prev_feature_point)
-            displacements.append(displacement_norm)
-        displacements = np.array(displacements)
-        mean = displacements.mean()
-        variance = displacements.var()
 
         for i in range(len(feature_points)):
             feature_point = feature_points[i]
             prev_feature_point = prev_feature_points[i]
             displacement_norm = np.linalg.norm(feature_point - prev_feature_point)
-            weight = weight_function(displacement_norm, mean, variance)
+            weight = weight_function(displacement_norm)
             covariance = feature_params[i][1]
             displacement = feature_params[i][0]
             numerator += (weight * (displacement + feature_point))/np.linalg.det(covariance)
@@ -107,16 +100,16 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
 
 
 
-def weight_function(displacement_norm, mean, variance):
-    alpha = 5
+def weight_function(displacement_norm):
+    alpha = 30
     # print("DISP NORM: ", displacement_norm)
     # return alpha * displacement_norm + (1 - alpha)
-    rv = scipy.stats.multivariate_normal(mean = mean, cov = variance)
+    # rv = scipy.stats.multivariate_normal(mean = mean, cov = variance)
     # return rv.pdf(displacement_norm)
     # return displacement_norm
     #return displacement_norm
     # return alpha * displacement_norm + (1 - alpha)
-    return 1 + alpha * displacement_norm
+    return 1 + (alpha * displacement_norm)
 
     # return 1
 
@@ -147,10 +140,6 @@ def format_supporters(supporter_points):
     for i in range(len(supporter_points)):
         supporters.append(supporter_points[i][0])
     return supporters
-
-def angle(vec1, vec2):
-    inter = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
-    return np.arccos(inter)
 
 
 

@@ -20,23 +20,24 @@ from multisensorimport.tracking import supporters_simple as supporters_simple
 from multisensorimport.tracking import us_tracking_utils as track
 
 # READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_t5w1_expanded/'
-READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_t5w1_for_testing/'
-SEG_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/ultrasound_t5w1/'
+READ_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/sub1/t5w1/ultrasound_t5w1/'
+SEG_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/sub1/t5w1/segmented_t5w1/'
+OUT_PATH = '/Users/akashvelu/Documents/Research_HART2/tracking_data/sub1/t5w1/data_t5w1/'
 
 
 
 def main():
     """Execute ultrasound image tracking visualization."""
-    window_size = 17
+    window_size = 35
     # set Lucas-Kanade optical flow parameters
-    lk_params = dict(winSize=(17, 17),
+    lk_params = dict(winSize=(window_size, window_size),
                      maxLevel=3,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
     # params for ShiTomasi corner detection
     feature_params = dict(maxCorners = 300,
-                          qualityLevel = 0.25,
+                          qualityLevel = 0.2,
                           minDistance = 2,
                           blockSize = 7)
 
@@ -70,7 +71,6 @@ def main():
     # init_path = READ_PATH + '256.122143234.pgm'
     init_path = READ_PATH + '1495.pgm'
     init_img = cv2.imread(init_path, -1)
-
     filtered_init_img = track.course_bilateral_filter(init_img)
 
     # filter to be used (1: median filter, 2: bilateral filter, 3: course bilateral, 4: anisotropicDiffuse anything else no filter )
@@ -78,21 +78,62 @@ def main():
     courseFilterNum = 3
 
     # extract initial contour from keyframe
-    keyframe_path = READ_PATH + '0.png'
+    keyframe_path = SEG_PATH + '1495.pgm'
 
 
-    course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, supporter_params = track.initialize_points(READ_PATH, keyframe_path, init_img, feature_params, lk_params, 1)
+    course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = track.initialize_points(READ_PATH, keyframe_path, init_img, feature_params, lk_params, 2)
+    # filter supporter points
+    #indeces_of_supporters_to_keep = track.filter_supporters(supporters_tracking, READ_PATH, lk_params)
+    #supporters_tracking = supporters_tracking[indeces_of_supporters_to_keep]
 
+    print(course_filtered_points)
+
+    supporter_params = []
+    for i in range(len(course_filtered_points)):
+        point = course_filtered_points[i][0]
+        _, params = supporters_simple.initialize_supporters(supporters_tracking, point, 10)
+        supporter_params.append(params)
     # track points
 
-    contour_areas = track.track_pts(SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, supporters_tracking, supporter_params, lk_params, feature_params, True, fine_filter_type=fineFilterNum, course_filter_type=courseFilterNum)
+    tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, predicted_thickness, predicted_thickness_ratio, iou_error = track.track_pts(SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, supporters_tracking, supporter_params, lk_params, True, feature_params, True, fine_filter_type=fineFilterNum, course_filter_type=courseFilterNum)
 
+    thickness_error = np.linalg.norm(np.array([ground_truth_thickness]) - np.array([predicted_thickness])) / len(predicted_thickness)
+    thickness_ratio_error = np.linalg.norm(np.array([ground_truth_thickness_ratio]) - np.array([predicted_thickness_ratio])) / len(predicted_thickness_ratio)
+
+    print("THICKNESS ERROR: ", thickness_error)
+    print("THICKNESS RATIO ERROR: ", thickness_ratio_error)
     # write contour areas to csv file
-    out_path = READ_PATH + 'csa.csv'
-    with open(out_path, 'w') as outfile:
-        for ctr in contour_areas:
+
+    # change to True if ground truth needs to be written
+    write_ground_truth = False
+
+    if write_ground_truth:
+        out_path_ground_truth = OUT_PATH + 'ground_truth_csa.csv'
+        with open(out_path_ground_truth, 'w') as outfile:
+            for ctr in ground_truth_contour_areas:
+                outfile.write(str(ctr))
+                outfile.write('\n')
+
+    out_path_tracking = OUT_PATH + 'tracking_csa.csv'
+    with open(out_path_tracking, 'w') as outfile:
+        for ctr in tracking_contour_areas:
             outfile.write(str(ctr))
             outfile.write('\n')
+
+    if write_ground_truth:
+        out_path_thickness_ground_truth = OUT_PATH + 'ground_truth_thickness.csv'
+        with open(out_path_thickness_ground_truth, 'w') as outfile:
+            for thickness in ground_truth_thickness:
+                outfile.write(str(thickness))
+                outfile.write('\n')
+
+    out_path_thickness_ratio_ground_truth = OUT_PATH + 'ground_truth_thickness_ratio.csv'
+    with open(out_path_thickness_ratio_ground_truth, 'w') as outfile:
+        for thickness_ratio in ground_truth_thickness_ratio:
+            outfile.write(str(thickness_ratio))
+            outfile.write('\n')
+
+    print("FINAL AVERAGE ERROR: ", iou_error)
 
 def matchPoints(contourPoints, goodPoints):
     epsilon = 10
