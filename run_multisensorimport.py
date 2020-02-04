@@ -15,21 +15,60 @@ import seaborn as sns
 
 from multisensorimport.dataobj import trialdata as td
 
-DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
+DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/sub1/'
 
-READ_PATH_MAT = DATA_DIR + 'seg_data_US.mat'
+READ_PATH_MAT = DATA_DIR + 'seg_data.mat'
 
-READ_PATH_US = DATA_DIR + 'wp1t5'
+READ_PATH_US_1 = DATA_DIR + 'wp1t5'
+READ_PATH_US_2 = DATA_DIR + 'wp2t6'
+READ_PATH_US_5 = DATA_DIR + 'wp5t11'
+READ_PATH_US_8 = DATA_DIR + 'wp8t15'
+READ_PATH_US_10 = DATA_DIR + 'wp10t25'
 
 
 def main():
     """Execute all EMBC 2020 data analysis."""
+
+    # TODO: amg peaks
+
+    # wp1
     data1 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
-                                                    READ_PATH_US, 'Sub1', 1,
+                                                    READ_PATH_US_1, 'Sub1', 0,
                                                     emg_peak=5500,
                                                     amg_peak=13290,
                                                     force_peak=3721, us_peak=51)
-    print(data1.data_emg.data.shape)
+#    raise ValueError("poor man's breakpoint")
+
+    # wp2
+    data2 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
+                                                    READ_PATH_US_2, 'Sub1', 1,
+                                                    emg_peak=5500,
+                                                    amg_peak=13290,
+                                                    force_peak=5800, us_peak=46)
+#    raise ValueError("poor man's breakpoint")
+
+
+    # wp5
+    data5 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
+                                                    READ_PATH_US_5, 'Sub1', 4,
+                                                    emg_peak=5800,
+                                                    amg_peak=13290,
+                                                    force_peak=4476, us_peak=50)
+
+    # wp8
+    data8 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
+                                                    READ_PATH_US_8, 'Sub1', 7,
+                                                    emg_peak=5700,
+                                                    amg_peak=13290,
+                                                    force_peak=2469, us_peak=49)
+
+    # wp10
+    data10 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
+                                                    READ_PATH_US_10, 'Sub1', 9,
+                                                    emg_peak=6000,
+                                                    amg_peak=13290,
+                                                    force_peak=1460, us_peak=48)
+
 
 #    sns.set()
 #

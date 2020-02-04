@@ -15,6 +15,7 @@ import pandas as pd
 import matplotlib.pyplot as plt #TODO: won't need these after refactor
 import seaborn as sns
 from scipy.io import loadmat
+#from sklearn.preprocessing import PolynomialFeatures
 
 from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
 
@@ -204,42 +205,108 @@ class TrialData():
         Returns:
             pandas dataframe with publication-relevant data streams
         """
-        # build force data series
-        force_len = self.data_force.data_from_offset.shape[0]
-        force_freq_pd_str = self.as_pd_freq(self.data_force.freq)
-        force_index = pd.timedelta_range(0, periods=force_len,
-                                         freq=force_freq_pd_str)
-        force_series = pd.Series(self.data_force_abs.data_from_offset[:, 0], force_index)
-        print(force_series)
-
         # build ultrasound data series
         us_len = self.data_us_csa.data_from_offset.shape[0]
         us_freq_pd_str = self.as_pd_freq(self.data_us_csa.freq)
-        us_index = pd.timedelta_range(0, periods=us_len, freq=us_freq_pd_str)
-        us_csa_series = pd.Series(self.data_us_csa.data_from_offset[:, 0], us_index)
-        us_t_series = pd.Series(self.data_us_thickness.data_from_offset[:, 0], us_index)
-        us_tr_series = pd.Series(self.data_us_th_rat.data_from_offset[:, 0], us_index)
-        print(us_csa_series)
-        print(us_t_series)
-        print(us_tr_series)
+        us_index = pd.date_range('2017-01-27', periods=us_len,
+                                 freq=us_freq_pd_str)
+        us_csa_series = pd.Series(self.data_us_csa.data_from_offset[:, 0],
+                                  us_index)
+        us_t_series = pd.Series(self.data_us_thickness.data_from_offset[:, 0],
+                                us_index)
+        us_tr_series = pd.Series(self.data_us_th_rat.data_from_offset[:, 0],
+                                 us_index)
+
+        # change ultrasound data series to appropriate units (pixel --> mm^2)
+        us_res = 0.157676
+        us_csa_series = us_csa_series.multiply(math.pow(us_res, 2))
+        us_t_series = us_t_series.multiply(us_res)
+
+        # create processed ultrasound data streams
+        #us_t_sq_series = us_t_series.pow(2)
+
+        # build ultrasound dataframe
+        us_series_dict = {'us-csa': us_csa_series, 'us-t': us_t_series,
+                          'us-tr': us_tr_series}
+        df_us = pd.DataFrame(us_series_dict)
+
+        # crop out zero values (i.e., where detection failed)
+        df_us = df_us.loc[df_us['us-csa'] > 0]
+
+        # build force data series
+        force_len = self.data_force.data_from_offset.shape[0]
+        force_freq_pd_str = self.as_pd_freq(self.data_force.freq)
+        force_index = pd.date_range('2017-01-27', periods=force_len,
+                                         freq=force_freq_pd_str)
+        force_series = pd.Series(self.data_force_abs.data_from_offset[:, 0],
+                                 force_index)
 
         # build EMG data series
         emg_len = self.data_emg.data_from_offset.shape[0]
         emg_freq_pd_str = self.as_pd_freq(self.data_emg.freq)
-        emg_index = pd.timedelta_range(0, periods=emg_len, freq=emg_freq_pd_str)
+        emg_index = pd.date_range('2017-01-27', periods=emg_len,
+                                  freq=emg_freq_pd_str)
         emg_series = pd.Series(self.data_emg.data_from_offset[:, 1], emg_index)
         #TODO: choose forearm (0) or biceps (1)
-        print(emg_series)
+        emg_abs_series = emg_series.abs().ewm(span=500).mean()
+
+        # combine all series into dataframe
+        us_csa_series_nz = df_us['us-csa']
+        us_t_series_nz = df_us['us-t']
+        us_tr_series_nz = df_us['us-tr']
+        series_dict = {'force': force_series, 'emg': emg_series, 'emg-abs':
+                       emg_abs_series, 'us-csa': us_csa_series_nz, 'us-t':
+                       us_t_series_nz, 'us-tr': us_tr_series_nz}
+        df = pd.DataFrame(series_dict)
+
+        # truncate data series to the same length
+        min_time_completed = min(max(force_index), max(us_index),
+                                 max(emg_index))
+        df = df.truncate(after=min_time_completed)
+        print(df)
+
+        # interpolate values
+        df = df.interpolate(method='linear')
+        print(df)
+        print(df.corr())
+
+        # remove values where US contour wasn't found
+        #df = df.loc[df['us-csa'] > 0.0].copy()
+        #print(df)
+
+        # create df for detrending
+        df_dt = df.loc[df['force'] <= 5.0]
+
+        # TO REMOVE
+#        df = df_dt.copy()
+
 
         sns.set()
 
-        fig, axs = plt.subplots(5)
-        fig.suptitle('test pandas plot')
-        axs[0].plot(force_series)
-        axs[1].plot(emg_series)
-        axs[2].plot(us_csa_series)
-        axs[3].plot(us_t_series)
-        axs[4].plot(us_tr_series)
+        tstring = 'test plot, wp' + str(self.wp)
+
+        fig, axs = plt.subplots(7)
+        fig.suptitle(tstring)
+        axs[0].plot(df['force'])
+        axs[0].set(ylabel='force')
+        axs[1].plot(df['emg'])
+        axs[1].set(ylabel='emg')
+        axs[2].plot(df['emg-abs'])
+        axs[2].set(ylabel='emg-abs')
+        axs[3].plot(df['us-csa'])
+        axs[3].set(ylabel='us-csa')
+        axs[4].plot(df['us-t'])
+        axs[4].set(ylabel='us-t')
+        axs[5].plot(df['us-t'])
+        axs[5].set(ylabel='PLACEHOLDER')
+        axs[6].plot(df['us-tr'])
+        axs[6].set(ylabel='us-tr')
+#        axs[0].plot(force_series)
+#        axs[1].plot(emg_series)
+#        axs[2].plot(us_csa_series)
+#        axs[3].plot(us_t_series)
+#        axs[4].plot(us_tr_series)
+
 
         plt.show()
 
@@ -273,7 +340,7 @@ class TrialData():
 
     def offset_from_peak(self, peak_ind, freq, prepeak=3):
         offset = int(peak_ind - prepeak*freq)
-        print(offset)
+        #print(offset)
         return offset
 
 
