@@ -209,16 +209,9 @@ class TrialData():
             pandas dataframe with publication-relevant data streams
         """
         # build ultrasound data series
-        us_len = self.data_us_csa.data_from_offset.shape[0]
-        us_freq_pd_str = self.as_pd_freq(self.data_us_csa.freq)
-        us_index = pd.date_range('2017-01-27', periods=us_len,
-                                 freq=us_freq_pd_str)
-        us_csa_series = pd.Series(self.data_us_csa.data_from_offset[:, 0],
-                                  us_index)
-        us_t_series = pd.Series(self.data_us_thickness.data_from_offset[:, 0],
-                                us_index)
-        us_tr_series = pd.Series(self.data_us_th_rat.data_from_offset[:, 0],
-                                 us_index)
+        us_csa_series = self.build_data_series(self.data_us_csa)
+        us_t_series = self.build_data_series(self.data_us_thickness)
+        us_tr_series = self.build_data_series(self.data_us_th_rat)
 
         # change ultrasound data series to appropriate units (pixel --> mm^2)
         us_res = 0.157676
@@ -234,46 +227,50 @@ class TrialData():
         df_us = df_us.loc[df_us['us-csa'] > 0]
 
         # build force data series
-        force_len = self.data_force.data_from_offset.shape[0]
-        force_freq_pd_str = self.as_pd_freq(self.data_force.freq)
-        force_index = pd.date_range('2017-01-27', periods=force_len,
-                                         freq=force_freq_pd_str)
-        force_series = pd.Series(self.data_force_abs.data_from_offset[:, 0],
-                                 force_index)
+        force_series = self.build_data_series(self.data_force_abs)
 
-        # build EMG data series
-        emg_len = self.data_emg.data_from_offset.shape[0]
-        emg_freq_pd_str = self.as_pd_freq(self.data_emg.freq)
-        emg_index = pd.date_range('2017-01-27', periods=emg_len,
-                                  freq=emg_freq_pd_str)
-        emg_series = pd.Series(self.data_emg.data_from_offset[:, 1], emg_index)
-        #TODO: choose forearm (0) or biceps (1)
-        emg_abs_series = emg_series.abs().ewm(span=500).mean()
+        if not force_only:
+            # build EMG data series
+            emg_series = self.build_data_series(self.data_emg, 1)
+            #TODO: choose forearm (0) or biceps (1)
+            emg_abs_series = emg_series.abs().ewm(span=500).mean()
 
         # combine all series into dataframe
         us_csa_series_nz = df_us['us-csa']
         us_t_series_nz = df_us['us-t']
         us_tr_series_nz = df_us['us-tr']
-        series_dict = {'force': force_series, 'emg': emg_series, 'emg-abs':
-                       emg_abs_series, 'us-csa': us_csa_series_nz, 'us-t':
-                       us_t_series_nz, 'us-tr': us_tr_series_nz}
+
+        if not force_only:
+            series_dict = {'force': force_series, 'emg': emg_series, 'emg-abs':
+                           emg_abs_series, 'us-csa': us_csa_series_nz, 'us-t':
+                           us_t_series_nz, 'us-tr': us_tr_series_nz}
+        else:
+            series_dict = {'force': force_series, 'us-csa': us_csa_series_nz,
+                           'us-t': us_t_series_nz, 'us-tr': us_tr_series_nz}
+
         df = pd.DataFrame(series_dict)
 
         # truncate data series to the same length
-        min_time_completed = min(max(force_index), max(us_index),
-                                 max(emg_index))
+        if not force_only:
+            min_time_completed = min(max(us_csa_series.index),
+                                     max(force_series.index),
+                                     max(emg_series.index))
+        else:
+            min_time_completed = min(max(us_csa_series.index),
+                                     max(force_series.index))
+
         df = df.truncate(after=min_time_completed)
         print(df)
 
         # interpolate values
         df = df.interpolate(method='linear')
+        #TODO: choose interpolation method/order
         print(df)
 
         # create df for detrending
         df_dt = df.loc[df['force'] <= 5.0]
 
         # create time index for fitting
-        #df_dt = df_dt.set_index('date', append=False)
         x_times_pd = df_dt.index.to_julian_date()
         print(df_dt)
         x_times = x_times_pd.to_numpy()
@@ -310,7 +307,7 @@ class TrialData():
 
         df_corr = df.corr()
         print(df_corr)
-        corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/sub1/' + str(self.wp) + '.csv'
+        corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/' + self.subj + '/wp' + str(self.wp) + '.csv'
         df_corr.to_csv(corr_out_path)
 
 
@@ -320,36 +317,55 @@ class TrialData():
 
         sns.set()
 
-        tstring = 'test plot, wp' + str(self.wp)
+        tstring = self.subj + ' test plot, wp' + str(self.wp)
 
-        fig, axs = plt.subplots(7)
-        fig.suptitle(tstring)
-        axs[0].plot(df['force'])
-        axs[0].set(ylabel='force')
-        axs[1].plot(df['emg'])
-        axs[1].set(ylabel='emg')
-        axs[2].plot(df['emg-abs'])
-        axs[2].set(ylabel='emg-abs')
-        axs[3].plot(df['us-csa'])
-        axs[3].set(ylabel='us-csa')
-        axs[3].plot(df['us-csa-fit'], 'r-')
-        axs[4].plot(df['us-t'])
-        axs[4].set(ylabel='us-t')
-        axs[4].plot(df['us-t-fit'], 'r-')
-        axs[5].plot(df['us-t-dt'])
-        axs[5].set(ylabel='us-t-dt')
-        axs[6].plot(df['us-tr'])
-        axs[6].set(ylabel='us-tr')
-        axs[6].plot(df['us-tr-fit'], 'r-')
-#        axs[0].plot(force_series)
-#        axs[1].plot(emg_series)
-#        axs[2].plot(us_csa_series)
-#        axs[3].plot(us_t_series)
-#        axs[4].plot(us_tr_series)
-
+        if not force_only:
+            fig, axs = plt.subplots(7)
+            fig.suptitle(tstring)
+            axs[0].plot(df['force'])
+            axs[0].set(ylabel='force')
+            axs[1].plot(df['emg'])
+            axs[1].set(ylabel='emg')
+            axs[2].plot(df['emg-abs'])
+            axs[2].set(ylabel='emg-abs')
+            axs[3].plot(df['us-csa'])
+            axs[3].set(ylabel='us-csa')
+            axs[3].plot(df['us-csa-fit'], 'r-')
+            axs[4].plot(df['us-t'])
+            axs[4].set(ylabel='us-t')
+            axs[4].plot(df['us-t-fit'], 'r-')
+            axs[5].plot(df['us-t-dt'])
+            axs[5].set(ylabel='us-t-dt')
+            axs[6].plot(df['us-tr'])
+            axs[6].set(ylabel='us-tr')
+            axs[6].plot(df['us-tr-fit'], 'r-')
+        else:
+            fig, axs = plt.subplots(5)
+            fig.suptitle(tstring)
+            axs[0].plot(df['force'])
+            axs[0].set(ylabel='force')
+            axs[1].plot(df['us-csa'])
+            axs[1].set(ylabel='us-csa')
+            axs[1].plot(df['us-csa-fit'], 'r-')
+            axs[2].plot(df['us-t'])
+            axs[2].set(ylabel='us-t')
+            axs[2].plot(df['us-t-fit'], 'r-')
+            axs[3].plot(df['us-t-dt'])
+            axs[3].set(ylabel='us-t-dt')
+            axs[4].plot(df['us-tr'])
+            axs[4].set(ylabel='us-tr')
+            axs[4].plot(df['us-tr-fit'], 'r-')
 
         plt.show()
 
+
+    def build_data_series(self, data, col=0):
+        """
+        """
+        length = data.data_from_offset.shape[0]
+        freq_pd_str = self.as_pd_freq(data.freq)
+        index = pd.date_range('2017-01-27', periods=length, freq=freq_pd_str)
+        return pd.Series(data.data_from_offset[:, col], index)
 
     def as_pd_freq(self, freq):
         """Convert frequency expressed in Hz to pandas-compatible frequency.

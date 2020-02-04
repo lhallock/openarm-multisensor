@@ -15,59 +15,101 @@ import seaborn as sns
 
 from multisensorimport.dataobj import trialdata as td
 
-DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/sub1/'
+DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
 
-READ_PATH_MAT = DATA_DIR + 'seg_data.mat'
+READ_PATH_MAT = DATA_DIR + 'sub1/seg_data.mat'
+READ_PATH_MAT_28 = DATA_DIR + 'sub2/seg_data.mat'
+READ_PATH_MAT_33 = DATA_DIR + 'sub3/seg_data.mat'
+READ_PATH_MAT_34 = DATA_DIR + 'sub4/seg_data.mat'
+READ_PATH_MAT_37 = DATA_DIR + 'sub5/seg_data.mat'
 
-READ_PATH_US_1 = DATA_DIR + 'wp1t5'
-READ_PATH_US_2 = DATA_DIR + 'wp2t6'
-READ_PATH_US_5 = DATA_DIR + 'wp5t11'
-READ_PATH_US_8 = DATA_DIR + 'wp8t15'
-READ_PATH_US_10 = DATA_DIR + 'wp10t25'
+READ_PATH_US_1 = DATA_DIR + 'sub1/wp1t5'
+READ_PATH_US_2 = DATA_DIR + 'sub1/wp2t6'
+READ_PATH_US_5 = DATA_DIR + 'sub1/wp5t11'
+READ_PATH_US_8 = DATA_DIR + 'sub1/wp8t15'
+READ_PATH_US_10 = DATA_DIR + 'sub1/wp10t25'
+READ_PATH_US_28 = DATA_DIR + 'sub2/wp5t28'
+READ_PATH_US_33 = DATA_DIR + 'sub3/wp5t33'
+READ_PATH_US_34 = DATA_DIR + 'sub4/wp5t34'
+READ_PATH_US_37 = DATA_DIR + 'sub5/wp5t37'
 
 
 def main():
     """Execute all EMBC 2020 data analysis."""
 
-    # TODO: amg peaks
+    # TODO: AMG peaks are inaccurate
 
-    # wp1
+    # s1wp1
     data1 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
-                                                    READ_PATH_US_1, 'Sub1', 0,
+                                                    READ_PATH_US_1, 'sub1', 0,
                                                     emg_peak=5500,
                                                     amg_peak=13290,
                                                     force_peak=3721, us_peak=51)
-    raise ValueError("poor man's breakpoint")
+#    raise ValueError("poor man's breakpoint")
 
-    # wp2
+    # s1wp2
     data2 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
-                                                    READ_PATH_US_2, 'Sub1', 1,
+                                                    READ_PATH_US_2, 'sub1', 1,
                                                     emg_peak=5500,
                                                     amg_peak=13290,
                                                     force_peak=5800, us_peak=46)
 #    raise ValueError("poor man's breakpoint")
 
 
-    # wp5
+    # s1wp5
     data5 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
-                                                    READ_PATH_US_5, 'Sub1', 4,
+                                                    READ_PATH_US_5, 'sub1', 4,
                                                     emg_peak=5800,
                                                     amg_peak=13290,
                                                     force_peak=4476, us_peak=50)
 
-    # wp8
+    # s1wp8
     data8 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
-                                                    READ_PATH_US_8, 'Sub1', 7,
+                                                    READ_PATH_US_8, 'sub1', 7,
                                                     emg_peak=5700,
                                                     amg_peak=13290,
                                                     force_peak=2469, us_peak=49)
 
-    # wp10
+    # s1wp10
     data10 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
-                                                    READ_PATH_US_10, 'Sub1', 9,
+                                                    READ_PATH_US_10, 'sub1', 9,
                                                     emg_peak=6000,
                                                     amg_peak=13290,
                                                     force_peak=1460, us_peak=48)
+    # s2wp5
+    data28 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_28,
+                                                    READ_PATH_US_28, 'sub2', 0,
+                                                    emg_peak=None,
+                                                    amg_peak=None,
+                                                    force_peak=4033,
+                                                    us_peak=53,
+                                                    force_only=True)
+
+    # s3wp5
+    data33 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_33,
+                                                    READ_PATH_US_33, 'sub3', 0,
+                                                    emg_peak=None,
+                                                    amg_peak=None,
+                                                    force_peak=7113,
+                                                    us_peak=63,
+                                                    force_only=True)
+
+    # s4wp5
+    data34 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_34,
+                                                    READ_PATH_US_34, 'sub4', 0,
+                                                    emg_peak=None,
+                                                    amg_peak=None,
+                                                    force_peak=10810,
+                                                    us_peak=98, force_only=True)
+
+    # s5wp5
+    data37 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_37,
+                                                    READ_PATH_US_37, 'sub5', 0,
+                                                    emg_peak=None,
+                                                    amg_peak=None,
+                                                    force_peak=0, us_peak=36,
+                                                    force_only=True)
+
 
 
 #    sns.set()
