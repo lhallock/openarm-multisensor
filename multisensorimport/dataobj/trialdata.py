@@ -19,8 +19,8 @@ from scipy.io import loadmat
 import numpy.polynomial.polynomial as poly
 #from sklearn.preprocessing import PolynomialFeatures
 
+import multisensorimport.dataobj.data_utils as utils
 from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
-
 
 class TrialData():
     """Class containing muscle time series data and associated metadata.
@@ -138,7 +138,7 @@ class TrialData():
             emg_data = data_struct['filtEmg'][0, 0]
             emg_labels = ['forearm', 'biceps', 'triceps', 'NONE']
             emg_freq = 1000
-            emg_offset = td.offset_from_peak(emg_peak, emg_freq)
+            emg_offset = utils.offset_from_peak(emg_peak, emg_freq)
             td.data_emg = TimeSeriesData.from_array('sEMG', emg_data,
                                                     emg_labels, emg_freq,
                                                     emg_offset)
@@ -148,7 +148,7 @@ class TrialData():
             amg_labels = ['forearm (front/wrist)', 'forearm (back)', 'biceps',
                           'triceps']
             amg_freq = 2000
-            amg_offset = td.offset_from_peak(amg_peak, amg_freq)
+            amg_offset = utils.offset_from_peak(amg_peak, amg_freq)
             td.data_amg = TimeSeriesData.from_array('AMG', amg_data, amg_labels,
                                                     amg_freq, amg_offset)
 
@@ -156,7 +156,7 @@ class TrialData():
         force_data = data_struct['forceHandle'][0, 0]
         force_labels = ['F_x', 'F_y', 'F_z', 'T_x', 'T_y', 'T_z']
         force_freq = 2400
-        force_offset = td.offset_from_peak(force_peak, force_freq)
+        force_offset = utils.offset_from_peak(force_peak, force_freq)
         td.data_force = TimeSeriesData.from_array('force', force_data,
                                                   force_labels, force_freq,
                                                   force_offset)
@@ -172,7 +172,7 @@ class TrialData():
         # set ultrasound CSA data
         us_csa_labels = ['CSA']
         us_freq = 8.3856 #TODO: note on empirical calculation
-        us_offset = td.offset_from_peak(us_peak, us_freq)
+        us_offset = utils.offset_from_peak(us_peak, us_freq)
         filename_us_csa = filedir_us + '/ground_truth_csa.csv'
         td.data_us_csa = TimeSeriesData.from_file('US-CSA', filename_us_csa,
                                                       us_csa_labels, us_freq,
@@ -211,9 +211,9 @@ class TrialData():
             pandas dataframe with publication-relevant data streams
         """
         # build ultrasound data series
-        us_csa_series = self.build_data_series(self.data_us_csa)
-        us_t_series = self.build_data_series(self.data_us_thickness)
-        us_tr_series = self.build_data_series(self.data_us_th_rat)
+        us_csa_series = utils.build_data_series(self.data_us_csa)
+        us_t_series = utils.build_data_series(self.data_us_thickness)
+        us_tr_series = utils.build_data_series(self.data_us_th_rat)
 
         # change ultrasound data series to appropriate units (pixel --> mm^2)
         us_res = 0.157676
@@ -229,11 +229,11 @@ class TrialData():
         df_us = df_us.loc[df_us['us-csa'] > 0]
 
         # build force data series
-        force_series = self.build_data_series(self.data_force_abs)
+        force_series = utils.build_data_series(self.data_force_abs)
 
         if not force_only:
             # build EMG data series
-            emg_series = self.build_data_series(self.data_emg, 1)
+            emg_series = utils.build_data_series(self.data_emg, 1)
             #TODO: choose forearm (0) or biceps (1)
             emg_abs_series = emg_series.abs().ewm(span=500).mean()
 
@@ -291,26 +291,11 @@ class TrialData():
         p_us_tr_coeffs = poly.polyfit(x_times, y_us_tr, p_order)
         print(p_us_csa_coeffs)
 
-#        p_us_csa = np.poly1d(np.polyfit(x_times, y_us_csa, p_order))
-#        p_us_t = np.poly1d(np.polyfit(x_times, y_us_t, p_order))
-#        p_us_tr = np.poly1d(np.polyfit(x_times, y_us_tr, p_order))
-#        p_us_csa = Poly.fit(x_times, y_us_csa, p_order)
-#        print(p_us_csa)
-#        p_us_t = Poly.fit(x_times, y_us_t, p_order)
-#        p_us_tr = Poly.fit(x_times, y_us_tr, p_order)
-
-
         # generate polyfit line size of untruncated data frame
         x_times_full = df.index.to_julian_date().to_numpy()-2457780
         us_csa_fitdata = poly.polyval(x_times_full, p_us_csa_coeffs)
         us_t_fitdata = poly.polyval(x_times_full, p_us_t_coeffs)
         us_tr_fitdata = poly.polyval(x_times_full, p_us_tr_coeffs)
-#        us_csa_fitdata = p_us_csa(x_times_full)
-#        us_t_fitdata = p_us_t(x_times_full)
-#        us_tr_fitdata = p_us_tr(x_times_full)
-#        us_csa_fitdata = Poly.polyval(x_times_full, p_us_csa)
-#        us_t_fitdata = Poly.polyval(x_times_full, p_us_t)
-#        us_tr_fitdata = Poly.polyval(x_times_full, p_us_tr)
 
         # add polyfits to data frame
         df['us-csa-fit'] = us_csa_fitdata
@@ -329,11 +314,6 @@ class TrialData():
         print(df_corr)
         corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/' + self.subj + '/wp' + str(self.wp) + '.csv'
         df_corr.to_csv(corr_out_path)
-
-
-        # TO REMOVE
-#        df = df_dt.copy()
-
 
         sns.set()
 
@@ -383,47 +363,6 @@ class TrialData():
             axs[4].plot(df['us-tr-fit'], 'r-')
 
         plt.show()
-
-
-    def build_data_series(self, data, col=0):
-        """
-        """
-        length = data.data_from_offset.shape[0]
-        freq_pd_str = self.as_pd_freq(data.freq)
-        index = pd.date_range('2017-01-27', periods=length, freq=freq_pd_str)
-        return pd.Series(data.data_from_offset[:, col], index)
-
-    def as_pd_freq(self, freq):
-        """Convert frequency expressed in Hz to pandas-compatible frequency.
-
-        When pandas says they want frequency, what they're actually asking for
-        is period, which is stupid and confusing. This method converts a
-        frequency expressed in Hz to its equivalent pandas frequency, aka its
-        period in microseconds. WARNING: Don't use this with data sample at
-        >1MHz, since this will run into precision errors!
-
-        Args:
-            freq (float): data series frequency (in Hz), <1e6
-
-        Returns:
-            str pandas frequency corresponding to freq
-
-        Raises:
-            ValueError if freq is >1e6
-        """
-        if freq > 1e6:
-            raise ValueError('Specified frequency is too high for this method',
-                             'and will result in catastrophic precision loss.')
-
-        freq_pd = int(1e6/freq)
-        freq_pd_str = str(freq_pd) + 'U'
-        return freq_pd_str
-
-
-    def offset_from_peak(self, peak_ind, freq, prepeak=3):
-        offset = int(peak_ind - prepeak*freq)
-        #print(offset)
-        return offset
 
 
     def _compute_abs_force(self):
