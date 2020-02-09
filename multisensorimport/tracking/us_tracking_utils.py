@@ -18,7 +18,7 @@ import numpy as np
 import scipy
 
 from multisensorimport.tracking import supporters_simple as supporters_simple
-
+from multisensorimport.tracking import params as parameters
 
 def extract_contour_pts(filename):
     """Extract points from largest contour in PNG image.
@@ -88,33 +88,7 @@ def extract_contour_pts_two(filename):
     return np_points
 
 
-def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_pts_inds, supporter_pts, supporter_params, lk_params, reset_supporters, feature_params,viz=True, fine_filter_type=0, course_filter_type=0):
-    """Track specified points through all (ordered) images in directory.
-
-    This function is used to track, record, and visualize points through a full
-    directory of images, recording values of interest at each frame. In
-    particular, this function is used to calculate the cross-sectional area of
-    the brachioradialis muscle at each frame.
-
-    Args:
-        filedir (str): directory in which files are stored, including final '/'
-        fine_pts (numpy.ndarray): list of points with higher corner scores, from an aggressively filtered image, to track; assumed to correspond to
-            the first image file in filedir, and to be in counter-clockwise
-            order (TODO: check this)
-        course_pts (numpy.ndarray): list of points with higher corner scores, from a less filtered image, to track; assumed to correspond to
-            the first image file in filedir, and to be in counter-clockwise.
-            order (TODO: check this)
-        lk_params (dict): parameters for Lucas-Kanade image tracking in OpenCV
-            TODO: set appropriate default values
-        viz (bool): whether to visualize the tracking process
-        fine_filter_type (int): what kind of filter to use to "finely" filter points (more aggressive filter) (0 for none, 1 for median, 2 for fine bilateral, 3 for course bilateral, 4 for anisotropic diffusion)
-        course_filter_type (int): same as fine_filter_type, but less aggressive, used to "coursely" filter points (keeps more top right points)
-
-    Returns:
-        list of contour areas of each frame
-    """
-    # combine course and fine points (maintaining clockwise ordering so OpenCV can interprate contours
-    pts = order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds)
+def track_pts_lucas_kanade(seg_filedir, filedir, pts, lk_params, viz = True, filter_type=0):
 
     # keep track of contour areas that are being tracked
     predicted_contour_areas = []
@@ -143,32 +117,6 @@ def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_
     ground_truth_thickness.append(first_thickness_x)
     ground_truth_thickness_ratio.append(first_thickness_x / first_thickness_y)
 
-    predicted_thickness.append(first_thickness_x)
-    predicted_thickness_ratio.append(first_thickness_x / first_thickness_y)
-
-
-
-
-    # create OpenCV window (if visualization is desired)
-    if viz:
-        cv2.namedWindow('Frame')
-
-    # set filters (course filter is a less aggressive filter, fine_filter more aggressive)
-    course_filter = get_filter_from_num(course_filter_type)
-    fine_filter = get_filter_from_num(fine_filter_type)
-
-    # how often we reset contour to a pre-segmented frame
-    reset_freq = 110
-
-    # track and display specified points through images
-    first_loop = True
-    frame_num = 0
-
-    # cumulative intersection over union error (sum over all frames)
-    cumulative_iou_error = 0
-
-    num_training_frames = 0
-
     image_filenames = os.listdir(filedir)
     segmented_filenames = os.listdir(seg_filedir)
 
@@ -185,6 +133,16 @@ def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_
     sorted_image_filenames = sorted(filtered_image_filenames, key=lambda s: int(s[0:len(s)-4]))
     sorted_segmented_filenames = sorted(filtered_segmented_filenames, key=lambda s: int(s[0:len(s)-4]))
 
+    predicted_thickness.append(first_thickness_x)
+    predicted_thickness_ratio.append(first_thickness_x / first_thickness_y)
+
+
+    # track and display specified points through images
+    first_loop = True
+    frame_num = 0
+
+    # cumulative intersection over union error (sum over all frames)
+    cumulative_iou_error = 0
 
     for num in range(len(sorted_image_filenames)):
         image_filename = sorted_image_filenames[num]
@@ -200,6 +158,190 @@ def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_
             # if it's the first image, we already have the contour area
             if first_loop:
                 old_frame = cv2.imread(filepath, -1)
+                first_loop = False
+
+            else:
+                # read in new frame
+                frame = cv2.imread(filepath, -1)
+
+                # obtain key frame, for re-initializing points and/or intersection/union computation
+                key_frame_path = seg_filedir + segmented_filename
+
+                tracked_contour, status, error = cv2.calcOpticalFlowPyrLK(old_frame, frame, pts, None, **lk_params)
+
+                segmented_contour = extract_contour_pts_two(key_frame_path)
+
+                frame_color = frame.copy()
+                # draw the predicted contour
+                #cv2.drawContours(frame_color, [segmented_contour.astype(int)], 0, (0, 255, 0), 3)
+                #cv2.drawContours(frame_color, [tracked_contour.astype(int)], 0, (255, 0, 0), 3)
+
+                segmented_area = cv2.contourArea(segmented_contour)
+
+                segmented_thickness_x, segmented_thickness_y = thickness(supporters_simple.format_supporters(segmented_contour))
+
+                predicted_thickness_x, predicted_thickness_y = thickness(supporters_simple.format_supporters(tracked_contour))
+
+                ground_truth_thickness.append(segmented_thickness_x)
+                ground_truth_thickness_ratio.append(segmented_thickness_x / segmented_thickness_y)
+
+                predicted_thickness.append(predicted_thickness_x)
+                predicted_thickness_ratio.append(predicted_thickness_x / predicted_thickness_y)
+
+
+
+                # append new predicted contour area
+                predicted_contour_areas.append(cv2.contourArea(tracked_contour))
+                ground_truth_contour_areas.append(cv2.contourArea(segmented_contour))
+
+                # calculate intersection over union
+
+                # initialize matrices of zeros
+                mat_predicted = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+                mat_segmented = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+
+                # fill the initialized matrices with nonzero numbers in the area of the contour
+                cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)], 255)
+                cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)], 255)
+
+                intersection = np.sum(np.logical_and(mat_predicted, mat_segmented))
+                union = np.sum(np.logical_or(mat_predicted, mat_segmented))
+
+                iou_error = intersection / union
+                print("intersection over union error: ", iou_error)
+                cumulative_iou_error += iou_error
+
+
+
+
+
+
+
+
+def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_pts_inds, supporter_pts, supporter_params, lk_params, reset_supporters, feature_params,viz=True, fine_filter_type=0, course_filter_type=0):
+    """Track specified points through all (ordered) images in directory.
+
+    This function is used to track, record, and visualize points through a full
+    directory of images, recording values of interest at each frame. In
+    particular, this function is used to calculate the cross-sectional area of
+    the brachioradialis muscle at each frame.
+
+    Args:
+        filedir (str): directory in which files are stored, including final '/'
+        fine_pts (numpy.ndarray): list of points with higher corner scores, from an aggressively filtered image, to track; assumed to correspond to
+            the first image file in filedir, and to be in counter-clockwise
+            order (TODO: check this)
+        course_pts (numpy.ndarray): list of points with higher corner scores, from a less filtered image, to track; assumed to correspond to
+            the first image file in filedir, and to be in counter-clockwise.
+            order (TODO: check this)
+        lk_params (dict): parameters for Lucas-Kanade image tracking in OpenCV
+            TODO: set appropriate default values
+        viz (bool): whether to visualize the tracking process
+        fine_filter_type (int): what kind of filter to use to "finely" filter points (more aggressive filter) (0 for none, 1 for median, 2 for fine bilateral, 3 for course bilateral, 4 for anisotropic diffusion)
+        course_filter_type (int): same as fine_filter_type, but less aggressive, used to "coursely" filter points (keeps more top right points)
+
+    Returns:
+        list of contour areas of each frame
+    """
+    # combine course and fine points (maintaining clockwise ordering so OpenCV can interprate contours
+    pts = order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds)
+
+    # keep track of ground truth contour areas
+    ground_truth_contour_areas = []
+
+    # keep track of ground truth thickness
+    ground_truth_thickness = []
+
+    # keep track of ground truth thickness ratio (x to y)
+    ground_truth_thickness_ratio = []
+
+    # keep track of contour areas that are being tracked
+    predicted_contour_areas = []
+
+    # keep track of tracked thickness
+    predicted_thickness = []
+
+    # keep track of tracked thickness ratio (x to y
+    predicted_thickness_ratio = []
+
+    # add first contour area
+    predicted_contour_areas.append(cv2.contourArea(pts))
+    ground_truth_contour_areas.append(cv2.contourArea(pts))
+
+    # add first thickness
+    first_thickness_x, first_thickness_y = thickness(supporters_simple.format_supporters(pts))
+    ground_truth_thickness.append(first_thickness_x)
+    ground_truth_thickness_ratio.append(first_thickness_x / first_thickness_y)
+
+    predicted_thickness.append(first_thickness_x)
+    predicted_thickness_ratio.append(first_thickness_x / first_thickness_y)
+
+    # track and display specified points through images
+    first_loop = True
+    frame_num = 0
+
+    # cumulative intersection over union error (sum over all frames)
+    cumulative_iou_error = 0
+
+    num_training_frames = 0
+
+    # get the filenames for the images
+    image_filenames = os.listdir(filedir)
+    segmented_filenames = os.listdir(seg_filedir)
+
+    filtered_image_filenames = []
+    filtered_segmented_filenames = []
+
+    # keep only the pgm images
+    for image_filename in image_filenames:
+        if (image_filename.endswith('.pgm')):
+            filtered_image_filenames.append(image_filename)
+    for segmented_filename in segmented_filenames:
+        if (segmented_filename.endswith('.pgm')):
+            filtered_segmented_filenames.append(segmented_filename)
+
+    # sort by the image number
+    sorted_image_filenames = sorted(filtered_image_filenames, key=lambda s: int(s[0:len(s)-4]))
+    sorted_segmented_filenames = sorted(filtered_segmented_filenames, key=lambda s: int(s[0:len(s)-4]))
+
+    # create OpenCV window (if visualization is desired)
+    if viz:
+        cv2.namedWindow('Frame')
+
+    # set filters (course filter is a less aggressive filter, fine_filter more aggressive)
+    course_filter = get_filter_from_num(course_filter_type)
+    fine_filter = get_filter_from_num(fine_filter_type)
+
+    # how often we reset contour to a pre-segmented frame (set to super high if no reset)
+    reset_freq = 100000
+
+    # track and display specified points through images
+    first_loop = True
+    frame_num = 0
+
+    # cumulative intersection over union error (sum over all frames)
+    cumulative_iou_error = 0
+
+    # number of frames to use for updating supporters model (0 for 1-shot learning)
+    num_training_frames = 0
+
+    for num in range(len(sorted_image_filenames)):
+        image_filename = sorted_image_filenames[num]
+        segmented_filename = sorted_segmented_filenames[num]
+        print("image_filename: ", image_filename)
+        print("segmented_filename: ", segmented_filename)
+
+        print("FRAME: ", frame_num)
+        if image_filename.endswith('.pgm') and segmented_filename.endswith('.pgm'):
+            # make sure segmented and image filenames are the same
+            assert(segmented_filename == image_filename)
+
+            # filepath to the image
+            filepath = filedir + image_filename
+
+            # if it's the first image, we already have the contour area
+            if first_loop:
+                old_frame = cv2.imread(filepath, -1)
                 # apply filters to frame
                 old_frame_course = course_filter(old_frame)
                 old_frame_fine = fine_filter(old_frame)
@@ -209,7 +351,7 @@ def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
 
-                # obtain key frame, for re-initializing points and/or intersection/union computation
+                # obtain key frame, for re-initializing points and/or iou computation
                 key_frame_path = seg_filedir + segmented_filename
 
                 # apply filters to frame
@@ -256,6 +398,8 @@ def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_
                     # whether to trust LK tracking or not
                     use_tracking = ((frame_num % reset_freq) <= num_training_frames)
 
+
+                    # TODO: check this
                     for i in range(len(predicted_course_pts)):
                         predicted_point = predicted_course_pts[i]
                         param_list = supporter_params[i]
@@ -295,18 +439,20 @@ def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_
 
 
                 # set the y coordinate of first and last point to 0 to fix downward boundary drift
-                first_contour_point = tracked_contour[0]
-                first_contour_point[0][1] = 0
 
-                last_contour_point = tracked_contour[len(tracked_contour) - 1]
-                last_contour_point[0][1] = 0
+                if parameters.fix_top:
+                    first_contour_point = tracked_contour[0]
+                    first_contour_point[0][1] = 0
+
+                    last_contour_point = tracked_contour[len(tracked_contour) - 1]
+                    last_contour_point[0][1] = 0
 
                 # contour from ground truth segmentaton
                 segmented_contour = extract_contour_pts_two(key_frame_path)
 
                 # draw the predicted contour
-                cv2.drawContours(frame_color, [segmented_contour.astype(int)], 0, (0, 255, 0), 3)
-                cv2.drawContours(frame_color, [tracked_contour.astype(int)], 0, (255, 0, 0), 3)
+                # cv2.drawContours(frame_color, [segmented_contour.astype(int)], 0, (0, 255, 0), 3)
+                # cv2.drawContours(frame_color, [tracked_contour.astype(int)], 0, (255, 0, 0), 3)
 
 
                 # display to frame
@@ -324,7 +470,10 @@ def track_pts(seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_
                 predicted_thickness_x, predicted_thickness_y = thickness(supporters_simple.format_supporters(tracked_contour))
 
                 ground_truth_thickness.append(segmented_thickness_x)
-                ground_truth_thickness_ratio.append(segmented_thickness_x / segmented_thickness_y)
+                if segmented_thickness_x == 0 or segmented_thickness_y == 0:
+                    ground_truth_thickness_ratio.append(0)
+                else:
+                    ground_truth_thickness_ratio.append(segmented_thickness_x / segmented_thickness_y)
 
                 predicted_thickness.append(predicted_thickness_x)
                 predicted_thickness_ratio.append(predicted_thickness_x / predicted_thickness_y)
@@ -618,7 +767,7 @@ def filter_points(window_size, pts, filter_type, img, percent, keep_bottom=False
 
 
     if keep_bottom:
-        for i in range(10):
+        for i in range(parameters.num_bottom):
             points_ind = sorted_y_mapping[i][0]
             filtered_points.append(pts[points_ind])
             filtered_points_ind.append(points_ind)
@@ -636,7 +785,16 @@ def initialize_points(READ_PATH, keyframe_path, init_img, feature_params, lk_par
     else:
         pts= extract_contour_pts_two(keyframe_path)
 
-    y = len(pts)
+    mean_x_pts = 0
+    mean_y_pts = 0
+
+    for supporter_tracked_point in pts:
+        x = supporter_tracked_point[0][0]
+        y = supporter_tracked_point[0][1]
+        mean_x_pts += x
+        mean_y_pts += y
+    mean_x_pts = mean_x_pts / len(pts)
+    mean_y_pts = mean_y_pts / len(pts)
 
     # filter to be used (1: median filter, 2: bilateral filter, 3: course bilateral, 4: anisotropicDiffuse anything else no filter )
     fineFilterNum = 2
@@ -646,24 +804,20 @@ def initialize_points(READ_PATH, keyframe_path, init_img, feature_params, lk_par
     filtered_init_img = course_filter(init_img)
 
     # remove points that have low corner scores (Shi Tomasi Corner scoring): these points will be kept for LK tracking
-    lucas_kanade_points, lucas_kanade_points_indeces = filter_points(7, pts, fineFilterNum, init_img, .7, keep_bottom=True)
+    lucas_kanade_points, lucas_kanade_points_indeces = filter_points(7, pts, fineFilterNum, init_img, parameters.fine_threshold, keep_bottom=True)
     # add the first point to LK tracking (top left)
     lucas_kanade_points = np.append(lucas_kanade_points, np.array([pts[0]]), axis=0)
     lucas_kanade_points_indeces = np.append(lucas_kanade_points_indeces, 0)
 
     # obtain points which need supporters to be tracked
-    supporter_tracked_points, supporter_tracked_points_indeces = filter_points(7, pts, courseFilterNum, init_img, 1)
+    supporter_tracked_points = pts.copy()
+    supporter_tracked_points_indeces = np.arange(0, len(pts))
 
-    # cv2.imshow("FRAME", init_img)
-    # cv2.waitKey()
-
-
-
-    # filter supporter tracked to be in desired region
+    # filter supporter tracked to be in desired region: should be in top right "quadrant" (greater than mean x, less than mean y)
     supporter_kept_indeces = set()
     for i in range(len(supporter_tracked_points)):
         supporter_tracked_point = supporter_tracked_points[i]
-        add = (supporter_tracked_point[0][0] > 90 and supporter_tracked_point[0][1] < 130)
+        add = (supporter_tracked_point[0][0] > mean_x_pts and supporter_tracked_point[0][1] < mean_y_pts)
         if add:
             supporter_kept_indeces.add(i)
 
@@ -679,15 +833,16 @@ def initialize_points(READ_PATH, keyframe_path, init_img, feature_params, lk_par
     supporter_tracked_points_indeces = np.array(supporter_tracked_to_keep_inds)
 
 
-    # find points which differ between supporter tracked and LK points
+    # find points which differ between supporter tracked and LK points: remove the LK points which match supporter points
     LK_kept_indeces = set()
     for i in range(len(lucas_kanade_points)):
         lucas_kanade_point = lucas_kanade_points[i]
         add = True
+        # go through the supporter points
         for j in range(len(supporter_tracked_points)):
             supporter_point = supporter_tracked_points[j]
-            # determine whether to keep supporter point as a supporter point (if it is the same as an LK point or if it is in wrong region)
-            if ((np.linalg.norm(lucas_kanade_point - supporter_point) < 0.001) or (lucas_kanade_point[0][0] > 90 and lucas_kanade_point[0][1] < 150)):
+            # go through supporter points: if the LK point is the same as a supporter point or it is in the top right zone, do not add
+            if ((np.linalg.norm(lucas_kanade_point - supporter_point) < 0.001) or (lucas_kanade_point[0][0] > mean_x_pts and lucas_kanade_point[0][1] < mean_y_pts)):
                 add = False
         if add:
             LK_kept_indeces.add(i)
@@ -705,18 +860,18 @@ def initialize_points(READ_PATH, keyframe_path, init_img, feature_params, lk_par
     lucas_kanade_points_indeces = np.array(LK_to_keep_inds)
 
     # find supporters based on good points
-    supporters_tracking = cv2.goodFeaturesToTrack(filtered_init_img, mask=None, **feature_params)
+    supporters = cv2.goodFeaturesToTrack(filtered_init_img, mask=None, **feature_params)
     # ind = filter_supporters(supporters_tracking, READ_PATH, lk_params)
     # supporters_tracking = supporters_tracking[ind]
 
     supporter_params = []
     for i in range(len(supporter_tracked_to_keep)):
-        point = supporter_tracked_to_keep[i][0]
+        supporter_tracked_point = supporter_tracked_to_keep[i][0]
         # 10 is variance
-        _, params = supporters_simple.initialize_supporters(supporters_tracking, point, 5)
+        _, params = supporters_simple.initialize_supporters(supporters, supporter_tracked_point, 10)
         supporter_params.append(params)
 
-    return supporter_tracked_points, supporter_tracked_points_indeces, lucas_kanade_points, lucas_kanade_points_indeces, supporters_tracking, supporter_params
+    return supporter_tracked_points, supporter_tracked_points_indeces, lucas_kanade_points, lucas_kanade_points_indeces, supporters, supporter_params
 
 
 def order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds):
@@ -794,9 +949,9 @@ def fine_bilateral_filter(img):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
     # hyperparameters
-    diam = 20
-    sigmaColor = 80
-    sigmaSpace = 80
+    diam = parameters.fine_diam
+    sigmaColor = parameters.fine_sigma_color
+    sigmaSpace = parameters.fine_sigma_space
     bilateralColor = cv2.bilateralFilter(img, diam, sigmaColor, sigmaSpace)
 
     # convert back to grayscale and return
@@ -806,9 +961,9 @@ def fine_bilateral_filter(img):
 def course_bilateral_filter(img):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     # hyperparameters
-    diam = 10
-    sigmaColor = 100
-    sigmaSpace = 100
+    diam = parameters.course_diam
+    sigmaColor = parameters.course_sigma_color
+    sigmaSpace = parameters.course_sigma_space
     bilateralColor = cv2.bilateralFilter(img, diam, sigmaColor, sigmaSpace)
     return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
 

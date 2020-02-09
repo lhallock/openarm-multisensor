@@ -2,10 +2,10 @@ import numpy as np
 import cv2
 import scipy
 from scipy import stats
+from multisensorimport.tracking import params as params
 
 
 def apply_supporters_model(predicted_target_point, prev_feature_points, feature_points, feature_params, use_tracking, alpha):
-    # print('num supporters: ', len(feature_points))
     """
     Do model learning or prediction based on learned model, based on conditions of image tracking
     original_feature_points: numpy array of tuples/arrays of x, y coords for features from original image
@@ -49,6 +49,7 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
 
             # maybe also try outer product:
             displacement_mean_diff = curr_displacement - new_displacement_average
+            # TODO: check this
             curr_covariance_matrix = displacement_mean_diff.reshape(2, 1) @ displacement_mean_diff.reshape(1, 2)
             # update covariance matrix using exponential forgetting principle
             prev_covariance_matrix = feature_params[i][1]
@@ -74,6 +75,9 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
             denominator += weight / np.linalg.det(covariance)
 
         target_point_final = numerator / denominator
+
+        # argmax over probability approach:
+
         # x_coords = np.arange(original_target_point[0] - window_size, original_target_point[1] + window_size)
         # y_coords = np.arange(original_target_point[1] - window_size, original_target_point[1] + window_size)
         #
@@ -101,7 +105,7 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
 
 
 def weight_function(displacement_norm):
-    alpha = 30
+    alpha = params.displacement_weight
     # print("DISP NORM: ", displacement_norm)
     # return alpha * displacement_norm + (1 - alpha)
     # rv = scipy.stats.multivariate_normal(mean = mean, cov = variance)
