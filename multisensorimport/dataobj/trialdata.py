@@ -300,9 +300,7 @@ class TrialData():
         df['us-t-dt'] = df['us-t'] - df['us-t-fit']
         df['us-tr-dt'] = df['us-tr'] - df['us-tr-fit']
 
-        # try thickness squared too
-        df['us-t-dt-sq'] = df['us-t-dt'].pow(2)
-
+        # set object values
         self.df = df
         self.df_dt = df_dt
 
