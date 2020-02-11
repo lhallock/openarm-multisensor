@@ -95,3 +95,41 @@ def offset_from_peak(peak_ind, freq, prepeak):
     offset = int(peak_ind - prepeak*freq)
     return offset
 
+
+def build_corr_table(data_list, correlate='force'):
+    """Build table containing correlation relationships from multiple trials.
+
+    Args:
+        data_list (list): list of TrialData objects whose correlations to plot
+        correlate (str): desired data series within each trial to correlate
+            with
+    """
+    first = True
+    for data in data_list:
+        # build correlation matrix and extract desired column
+        label = str(data.subj) + 'wp' + str(data.wp)
+        data_corr = data.df.corr()[correlate]
+
+        # initialize dataframe if necessary
+        if first:
+            df_corr = pd.DataFrame({label: data_corr})
+            first = False
+
+        # otherwise, add new data to dataframe
+        else:
+            df_corr[label] = data_corr
+
+    print(df_corr)
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -24,7 +24,7 @@ from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
 
 # MAGIC NUMBERS (fungible)
 FORCE_DETREND_CUTOFF = 5.0
-POLYNOMIAL_ORDER = 30
+POLYNOMIAL_ORDER = 3
 PREPEAK_VAL = 3
 
 class TrialData():
