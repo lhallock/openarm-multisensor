@@ -33,6 +33,8 @@ class TrialData():
     Attributes:
         subj (str): subject identifier
         trial_no (int): trial number
+        force_only (bool): whether data series contains only force and
+            ultrasound data (i.e., no sEMG or AMG)
         wp (int): kinematic waypoint (corresponds directly to elbow angle)
         ang (int): elbow angle in degrees of flexion (i.e., from "full
             flexion", which is technically impossible)
@@ -49,6 +51,10 @@ class TrialData():
             data of muscle thickness, extracted using FUNCTION TODO
         data_us_th_rat (TimeSeriesData): ultrasound-extracted time series data
             of maximum length/width ration, extracted using FUNCTION TODO
+        df (pandas.DataFrame): pandas dataframe containing all timesynced data
+            streams
+        df_dt (pandas.DataFrame): truncated version of df containing only
+            values for which force is below FORCE_DETREND_CUTOFF
     """
 
     def __init__(self):
@@ -59,6 +65,7 @@ class TrialData():
         """
         self.subj = None
         self.trial_no = None
+        self.force_only = None
         self.wp = None
         self.ang = None
         self.data_emg = None
@@ -68,6 +75,8 @@ class TrialData():
         self.data_us_csa = None
         self.data_us_thickness = None
         self.data_us_th_rat = None
+        self.df = None
+        self.df_dt = None
 
     @classmethod
     def from_preprocessed_mat_file(cls, filename_mat, filedir_us, subj,
@@ -94,6 +103,7 @@ class TrialData():
         """
         td = cls()
         td.subj = subj
+        td.force_only = force_only
 
         # define trial numbers and angle values for each waypoint (measured
         # during data collection)
@@ -198,23 +208,17 @@ class TrialData():
                                                       us_tr_labels, us_freq,
                                                       us_offset)
 
-        td.build_synced_dataframe(force_only)
+        td.build_synced_dataframe()
 
         return td
 
-    def build_synced_dataframe(self, force_only):
+    def build_synced_dataframe(self):
         """Build pandas dataframe with all data processed and synced.
 
         This method builds a pandas dataframe in which all desired time series
         data is correctly aligned and sampled at the same specified frequency
         (generally, the lowest sampling frequency of the comprising data
         series).
-
-        Args:
-            force_only (bool): whether only force and ultrasound data should be
-                computed
-        Returns:
-            pandas dataframe with publication-relevant data streams
         """
         # build ultrasound data series
         us_csa_series = utils.build_data_series(self.data_us_csa)
@@ -237,7 +241,7 @@ class TrialData():
         # build force data series
         force_series = utils.build_data_series(self.data_force_abs)
 
-        if not force_only:
+        if not self.force_only:
             # build EMG data series
             emg_series = utils.build_data_series(self.data_emg, 1)
             #TODO: choose forearm (0) or biceps (1)
@@ -248,7 +252,7 @@ class TrialData():
         us_t_series_nz = df_us['us-t']
         us_tr_series_nz = df_us['us-tr']
 
-        if not force_only:
+        if not self.force_only:
             series_dict = {'force': force_series, 'emg': emg_series, 'emg-abs':
                            emg_abs_series, 'us-csa': us_csa_series_nz, 'us-t':
                            us_t_series_nz, 'us-tr': us_tr_series_nz}
@@ -259,7 +263,7 @@ class TrialData():
         df = pd.DataFrame(series_dict)
 
         # truncate data series to the same length
-        if not force_only:
+        if not self.force_only:
             min_time_completed = min(max(us_csa_series.index),
                                      max(force_series.index),
                                      max(emg_series.index))
@@ -286,7 +290,6 @@ class TrialData():
         us_tr_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-tr'],
                                              df.index, POLYNOMIAL_ORDER)
 
-
         # add polyfits to data frame
         df['us-csa-fit'] = us_csa_fitdata
         df['us-t-fit'] = us_t_fitdata
@@ -300,57 +303,64 @@ class TrialData():
         # try thickness squared too
         df['us-t-dt-sq'] = df['us-t-dt'].pow(2)
 
-        df_corr = df.corr()
-        print(df_corr)
-        corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/' + self.subj + '/wp' + str(self.wp) + '.csv'
-        df_corr.to_csv(corr_out_path)
+        self.df = df
+        self.df_dt = df_dt
+
+    def plot(self):
+        """Plot all data series and trendlines.
+        """
+
+        #df_corr = df.corr()
+        #print(df_corr['force'])
+        #corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/' + self.subj + '/wp' + str(self.wp) + '.csv'
+        #df_corr.to_csv(corr_out_path)
 
         sns.set()
 
         tstring = self.subj + ' test plot, wp' + str(self.wp)
 
-        if not force_only:
+        if not self.force_only:
             fig, axs = plt.subplots(7)
             fig.suptitle(tstring)
-            axs[0].plot(df['force'])
+            axs[0].plot(self.df['force'])
             axs[0].set(ylabel='force')
-            axs[1].plot(df['emg'])
+            axs[1].plot(self.df['emg'])
             axs[1].set(ylabel='emg')
-            axs[2].plot(df['emg-abs'])
+            axs[2].plot(self.df['emg-abs'])
             axs[2].set(ylabel='emg-abs')
-            axs[3].plot(df['us-csa'])
+            axs[3].plot(self.df['us-csa'])
             axs[3].set(ylabel='us-csa')
-            axs[3].plot(df_dt['us-csa'], 'g-')
-            axs[3].plot(df['us-csa-fit'], 'r-')
-            axs[4].plot(df['us-t'])
+            axs[3].plot(self.df_dt['us-csa'], 'g-')
+            axs[3].plot(self.df['us-csa-fit'], 'r-')
+            axs[4].plot(self.df['us-t'])
             axs[4].set(ylabel='us-t')
-            axs[4].plot(df_dt['us-t'], 'g-')
-            axs[4].plot(df['us-t-fit'], 'r-')
-            axs[5].plot(df['us-t-dt'])
+            axs[4].plot(self.df_dt['us-t'], 'g-')
+            axs[4].plot(self.df['us-t-fit'], 'r-')
+            axs[5].plot(self.df['us-t-dt'])
             axs[5].set(ylabel='us-t-dt')
-            axs[6].plot(df['us-tr'])
+            axs[6].plot(self.df['us-tr'])
             axs[6].set(ylabel='us-tr')
-            axs[6].plot(df_dt['us-tr'], 'g-')
-            axs[6].plot(df['us-tr-fit'], 'r-')
+            axs[6].plot(self.df_dt['us-tr'], 'g-')
+            axs[6].plot(self.df['us-tr-fit'], 'r-')
         else:
             fig, axs = plt.subplots(5)
             fig.suptitle(tstring)
-            axs[0].plot(df['force'])
+            axs[0].plot(self.df['force'])
             axs[0].set(ylabel='force')
-            axs[1].plot(df['us-csa'])
+            axs[1].plot(self.df['us-csa'])
             axs[1].set(ylabel='us-csa')
-            axs[1].plot(df_dt['us-csa'], 'g-')
-            axs[1].plot(df['us-csa-fit'], 'r-')
-            axs[2].plot(df['us-t'])
+            axs[1].plot(self.df_dt['us-csa'], 'g-')
+            axs[1].plot(self.df['us-csa-fit'], 'r-')
+            axs[2].plot(self.df['us-t'])
             axs[2].set(ylabel='us-t')
-            axs[2].plot(df_dt['us-t'], 'g-')
-            axs[2].plot(df['us-t-fit'], 'r-')
-            axs[3].plot(df['us-t-dt'])
+            axs[2].plot(self.df_dt['us-t'], 'g-')
+            axs[2].plot(self.df['us-t-fit'], 'r-')
+            axs[3].plot(self.df['us-t-dt'])
             axs[3].set(ylabel='us-t-dt')
-            axs[4].plot(df['us-tr'])
+            axs[4].plot(self.df['us-tr'])
             axs[4].set(ylabel='us-tr')
-            axs[4].plot(df_dt['us-tr'], 'g-')
-            axs[4].plot(df['us-tr-fit'], 'r-')
+            axs[4].plot(self.df_dt['us-tr'], 'g-')
+            axs[4].plot(self.df['us-tr-fit'], 'r-')
 
         plt.show()
 
