@@ -278,30 +278,14 @@ class TrialData():
         # create df for detrending
         df_dt = df.loc[df['force'] <= FORCE_DETREND_CUTOFF]
 
-        # create time index for fitting
-        x_times_pd = df_dt.index.to_julian_date()-2457780
-#        x_times_test = df_dt.index.astype(float)
-        print(x_times_pd)
-#        print(x_times_test)
-        x_times = x_times_pd.to_numpy()
+        # generate polynomial fits
+        us_csa_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-csa'],
+                                             df.index, POLYNOMIAL_ORDER)
+        us_t_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-t'],
+                                             df.index, POLYNOMIAL_ORDER)
+        us_tr_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-tr'],
+                                             df.index, POLYNOMIAL_ORDER)
 
-        # series to fit
-        y_us_csa = df_dt['us-csa'].to_numpy()
-        y_us_t = df_dt['us-t'].to_numpy()
-        y_us_tr = df_dt['us-tr'].to_numpy()
-
-        # calculate polynomial fit
-        p_order = POLYNOMIAL_ORDER
-        p_us_csa_coeffs = poly.polyfit(x_times, y_us_csa, p_order)
-        p_us_t_coeffs = poly.polyfit(x_times, y_us_t, p_order)
-        p_us_tr_coeffs = poly.polyfit(x_times, y_us_tr, p_order)
-        print(p_us_csa_coeffs)
-
-        # generate polyfit line size of untruncated data frame
-        x_times_full = df.index.to_julian_date().to_numpy()-2457780
-        us_csa_fitdata = poly.polyval(x_times_full, p_us_csa_coeffs)
-        us_t_fitdata = poly.polyval(x_times_full, p_us_t_coeffs)
-        us_tr_fitdata = poly.polyval(x_times_full, p_us_tr_coeffs)
 
         # add polyfits to data frame
         df['us-csa-fit'] = us_csa_fitdata

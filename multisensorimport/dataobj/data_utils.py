@@ -6,6 +6,8 @@ TimeSeriesData objects.
 """
 
 import pandas as pd
+import numpy.polynomial.polynomial as poly
+
 
 def build_data_series(data, col=0):
     """Build pandas Series object from column of TimeSeriesData object.
@@ -15,7 +17,7 @@ def build_data_series(data, col=0):
         col (int): column of series to extract
 
     Returns:
-        pandas Series corresponding to data object with time values based on
+        pandas.Series corresponding to data object with time values based on
             collection frequency; note that for published data, the data of
             collection is accurate but the start time is arbitrary
     """
@@ -23,6 +25,32 @@ def build_data_series(data, col=0):
     freq_pd_str = as_pd_freq(data.freq)
     index = pd.date_range('2017-01-27', periods=length, freq=freq_pd_str)
     return pd.Series(data.data_from_offset[:, col], index)
+
+
+def fit_data_poly(times_in, data_in, times_out, order):
+    """Fit polynomial to pandas series and return values for given out times.
+
+    Args:
+        times_in (pandas.DateTimeIndex): times corresponding to data_in values
+        data_in (pandas.Series): data used for fitting
+        times_out (pandas.DateTimeIndex): times at which to calculate value of
+            output polynomial series
+        order (int): desired order of polynomial to fit
+
+    Returns:
+        numpy.ndarray of data values of fitted polynomial at times times_out
+    """
+    # preprocess data, avoiding numerical instability
+    times_arr = times_in.to_julian_date().to_numpy()-2457780
+    data_arr = data_in.to_numpy()
+
+    # fit polynomial
+    p_coeffs = poly.polyfit(times_arr, data_arr, order)
+
+    # generate and return polynomial computed at times_out
+    times_out_arr = times_out.to_julian_date().to_numpy()-2457780
+    return poly.polyval(times_out_arr, p_coeffs)
+
 
 
 def as_pd_freq(freq):
