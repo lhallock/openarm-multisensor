@@ -52,7 +52,7 @@ def as_pd_freq(freq):
     return freq_pd_str
 
 
-def offset_from_peak(peak_ind, freq, prepeak=3):
+def offset_from_peak(peak_ind, freq, prepeak):
     """Compute data offset index from location of first peak.
 
     Args:

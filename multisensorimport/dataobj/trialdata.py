@@ -22,6 +22,11 @@ import numpy.polynomial.polynomial as poly
 import multisensorimport.dataobj.data_utils as utils
 from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
 
+# MAGIC NUMBERS (fungible)
+FORCE_DETREND_CUTOFF = 5.0
+POLYNOMIAL_ORDER = 30
+PREPEAK_VAL = 3
+
 class TrialData():
     """Class containing muscle time series data and associated metadata.
 
@@ -138,7 +143,7 @@ class TrialData():
             emg_data = data_struct['filtEmg'][0, 0]
             emg_labels = ['forearm', 'biceps', 'triceps', 'NONE']
             emg_freq = 1000
-            emg_offset = utils.offset_from_peak(emg_peak, emg_freq)
+            emg_offset = utils.offset_from_peak(emg_peak, emg_freq, PREPEAK_VAL)
             td.data_emg = TimeSeriesData.from_array('sEMG', emg_data,
                                                     emg_labels, emg_freq,
                                                     emg_offset)
@@ -148,7 +153,7 @@ class TrialData():
             amg_labels = ['forearm (front/wrist)', 'forearm (back)', 'biceps',
                           'triceps']
             amg_freq = 2000
-            amg_offset = utils.offset_from_peak(amg_peak, amg_freq)
+            amg_offset = utils.offset_from_peak(amg_peak, amg_freq, PREPEAK_VAL)
             td.data_amg = TimeSeriesData.from_array('AMG', amg_data, amg_labels,
                                                     amg_freq, amg_offset)
 
@@ -156,7 +161,8 @@ class TrialData():
         force_data = data_struct['forceHandle'][0, 0]
         force_labels = ['F_x', 'F_y', 'F_z', 'T_x', 'T_y', 'T_z']
         force_freq = 2400
-        force_offset = utils.offset_from_peak(force_peak, force_freq)
+        force_offset = utils.offset_from_peak(force_peak, force_freq,
+                                              PREPEAK_VAL)
         td.data_force = TimeSeriesData.from_array('force', force_data,
                                                   force_labels, force_freq,
                                                   force_offset)
@@ -172,7 +178,7 @@ class TrialData():
         # set ultrasound CSA data
         us_csa_labels = ['CSA']
         us_freq = 8.3856 #TODO: note on empirical calculation
-        us_offset = utils.offset_from_peak(us_peak, us_freq)
+        us_offset = utils.offset_from_peak(us_peak, us_freq, PREPEAK_VAL)
         filename_us_csa = filedir_us + '/ground_truth_csa.csv'
         td.data_us_csa = TimeSeriesData.from_file('US-CSA', filename_us_csa,
                                                       us_csa_labels, us_freq,
@@ -270,7 +276,7 @@ class TrialData():
         print(df)
 
         # create df for detrending
-        df_dt = df.loc[df['force'] <= 5.0]
+        df_dt = df.loc[df['force'] <= FORCE_DETREND_CUTOFF]
 
         # create time index for fitting
         x_times_pd = df_dt.index.to_julian_date()-2457780
@@ -285,7 +291,7 @@ class TrialData():
         y_us_tr = df_dt['us-tr'].to_numpy()
 
         # calculate polynomial fit
-        p_order = 30
+        p_order = POLYNOMIAL_ORDER
         p_us_csa_coeffs = poly.polyfit(x_times, y_us_csa, p_order)
         p_us_t_coeffs = poly.polyfit(x_times, y_us_t, p_order)
         p_us_tr_coeffs = poly.polyfit(x_times, y_us_tr, p_order)
