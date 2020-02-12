@@ -34,6 +34,8 @@ READ_PATH_US_33 = DATA_DIR + 'sub3/wp5t33'
 READ_PATH_US_34 = DATA_DIR + 'sub4/wp5t34'
 READ_PATH_US_37 = DATA_DIR + 'sub5/wp5t37'
 
+CORR_OUT_PATH = DATA_DIR + 'correlations.csv'
+
 PLOT = True
 
 def main():
@@ -48,7 +50,9 @@ def main():
                                                     amg_peak=13290,
                                                     force_peak=3721, us_peak=51)
 
-    #raise ValueError("poor man's breakpoint")
+    print(utils.calculate_pvalues(data1.df))
+    data1.plot()
+    raise ValueError("poor man's breakpoint")
 
     # s1wp2
     data2 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
@@ -122,7 +126,7 @@ def main():
 
 
     utils.build_corr_table([data1, data2, data5, data8, data10, data28, data33,
-                           data34, data37])
+                           data34, data37], CORR_OUT_PATH)
 
     if PLOT:
         data1.plot()

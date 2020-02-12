@@ -96,11 +96,12 @@ def offset_from_peak(peak_ind, freq, prepeak):
     return offset
 
 
-def build_corr_table(data_list, correlate='force'):
+def build_corr_table(data_list, out_path, correlate='force'):
     """Build table containing correlation relationships from multiple trials.
 
     Args:
         data_list (list): list of TrialData objects whose correlations to plot
+        out_path (str): out path for correlation table writing
         correlate (str): desired data series within each trial to correlate
             with
     """
@@ -119,10 +120,33 @@ def build_corr_table(data_list, correlate='force'):
         else:
             df_corr[label] = data_corr
 
+    df_corr.to_csv(out_path)
     print(df_corr)
 
 
+from scipy.stats import pearsonr
+import pandas as pd
 
+def calculate_pvalues(df):
+    """Calculate table of correlation p-values of given data frame.
+
+    This method outputs a table just like that of pandas' corr() function, but
+    with p-values instead of correlations. Stolen shamelessly from this post:
+    https://stackoverflow.com/questions/25571882/pandas-columns-correlation-with-statistical-significance.
+
+    Args:
+        df (pandas.DataFrame): table on which to compute correlation
+
+    Returns:
+        pandas.DataFrame containing p-values, in the style of corr()
+    """
+    df = df.dropna()._get_numeric_data()
+    dfcols = pd.DataFrame(columns=df.columns)
+    pvalues = dfcols.transpose().join(dfcols, how='outer')
+    for r in df.columns:
+        for c in df.columns:
+            pvalues[r][c] = round(pearsonr(df[r], df[c])[1], 4)
+    return pvalues
 
 
 

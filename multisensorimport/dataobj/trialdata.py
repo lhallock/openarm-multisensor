@@ -23,6 +23,7 @@ import multisensorimport.dataobj.data_utils as utils
 from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
 
 # MAGIC NUMBERS (fungible)
+EMG_EWM_SPAN = 500
 FORCE_DETREND_CUTOFF = 5.0
 POLYNOMIAL_ORDER = 3
 PREPEAK_VAL = 3
@@ -243,9 +244,11 @@ class TrialData():
 
         if not self.force_only:
             # build EMG data series
-            emg_series = utils.build_data_series(self.data_emg, 1)
-            #TODO: choose forearm (0) or biceps (1)
-            emg_abs_series = emg_series.abs().ewm(span=500).mean()
+            emg_series_brd = utils.build_data_series(self.data_emg, 0)
+            emg_abs_series_brd = emg_series_brd.abs().ewm(span=EMG_EWM_SPAN).mean()
+            emg_series_bic = utils.build_data_series(self.data_emg, 1)
+            emg_abs_series_bic = emg_series_bic.abs().ewm(span=EMG_EWM_SPAN).mean()
+
 
         # combine all series into dataframe
         us_csa_series_nz = df_us['us-csa']
@@ -253,9 +256,11 @@ class TrialData():
         us_tr_series_nz = df_us['us-tr']
 
         if not self.force_only:
-            series_dict = {'force': force_series, 'emg': emg_series, 'emg-abs':
-                           emg_abs_series, 'us-csa': us_csa_series_nz, 'us-t':
-                           us_t_series_nz, 'us-tr': us_tr_series_nz}
+            series_dict = {'force': force_series, 'emg-brd': emg_series_brd,
+                           'emg-abs-brd': emg_abs_series_brd, 'emg-bic':
+                           emg_series_bic, 'emg-abs-bic': emg_abs_series_bic,
+                           'us-csa': us_csa_series_nz, 'us-t': us_t_series_nz,
+                           'us-tr': us_tr_series_nz}
         else:
             series_dict = {'force': force_series, 'us-csa': us_csa_series_nz,
                            'us-t': us_t_series_nz, 'us-tr': us_tr_series_nz}
@@ -266,7 +271,7 @@ class TrialData():
         if not self.force_only:
             min_time_completed = min(max(us_csa_series.index),
                                      max(force_series.index),
-                                     max(emg_series.index))
+                                     max(emg_series_brd.index))
         else:
             min_time_completed = min(max(us_csa_series.index),
                                      max(force_series.index))
@@ -322,10 +327,12 @@ class TrialData():
             fig.suptitle(tstring)
             axs[0].plot(self.df['force'])
             axs[0].set(ylabel='force')
-            axs[1].plot(self.df['emg'])
-            axs[1].set(ylabel='emg')
-            axs[2].plot(self.df['emg-abs'])
-            axs[2].set(ylabel='emg-abs')
+            axs[1].plot(self.df['emg-brd'])
+            axs[1].plot(self.df['emg-abs-brd'])
+            axs[1].set(ylabel='emg-brd')
+            axs[2].plot(self.df['emg-bic'])
+            axs[2].plot(self.df['emg-abs-bic'])
+            axs[2].set(ylabel='emg-bic')
             axs[3].plot(self.df['us-csa'])
             axs[3].set(ylabel='us-csa')
             axs[3].plot(self.df_dt['us-csa'], 'g-')
