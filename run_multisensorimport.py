@@ -50,8 +50,8 @@ def main():
                                                     amg_peak=13290,
                                                     force_peak=3721, us_peak=51)
 
-    print(utils.calculate_pvalues(data1.df))
-    data1.plot()
+#    print(utils.calculate_pvalues(data1.df))
+    data1.plot_biorob()
     raise ValueError("poor man's breakpoint")
 
     # s1wp2

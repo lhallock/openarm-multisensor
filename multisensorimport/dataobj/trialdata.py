@@ -22,6 +22,11 @@ import numpy.polynomial.polynomial as poly
 import multisensorimport.dataobj.data_utils as utils
 from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
 
+from pandas.plotting import register_matplotlib_converters
+import matplotlib.dates as mdates
+
+PLOT_FONT = 'Open Sans'
+
 # MAGIC NUMBERS (fungible)
 EMG_EWM_SPAN = 500
 FORCE_DETREND_CUTOFF = 5.0
@@ -309,6 +314,55 @@ class TrialData():
         self.df = df
         self.df_dt = df_dt
 
+    def plot_biorob(self):
+        """Plot paper plots."""
+        register_matplotlib_converters()
+        sns.set()
+
+        num_subplots = 6
+
+        fig, axs = plt.subplots(num_subplots)
+
+        plot_ind = self.df.index.to_julian_date().to_numpy()-2457780.5
+        plot_ind = plot_ind*24*60*60
+
+        axs[0].plot(self.df['force'], 'k')
+        #axs[0].set(ylabel='force')
+        axs[1].plot(self.df['emg-bic']*1e3, color='#cccccc')
+        axs[1].plot(self.df['emg-abs-bic']*1e4, color='#fdae6b')
+        #axs[1].set(ylabel='emg-bic')
+        axs[2].plot(self.df['emg-brd']*1e3, color='#cccccc')
+        axs[2].plot(self.df['emg-abs-brd']*1e4, color='#f16913')
+        #axs[2].set(ylabel='emg-brd')
+        axs[3].plot(self.df['us-csa-dt'], color='#41b6c4')
+        #axs[3].set(ylabel='us-csa-dt')
+        axs[4].plot(self.df['us-t-dt'], color='#225ea8')
+        #axs[4].set(ylabel='us-t-dt')
+        axs[5].plot(plot_ind, self.df['us-tr-dt'], color='#081d58')
+        #axs[5].set(ylabel='us-tr-dt')
+        axs[5].set_xlabel('time (s)', fontname=PLOT_FONT)
+        axs[5].xaxis.set_label_coords(1.0, -0.15)
+
+        axs[0].xaxis.set_visible(False)
+        axs[1].xaxis.set_visible(False)
+        axs[2].xaxis.set_visible(False)
+        axs[3].xaxis.set_visible(False)
+        axs[4].xaxis.set_visible(False)
+        #axs[5].xaxis.set_major_formatter(mdates.DateFormatter("%s"))
+        #axs[5].xaxis.set_minor_formatter(mdates.DateFormatter("%s"))
+
+        for i in range(num_subplots):
+            for tick in axs[i].get_xticklabels():
+                tick.set_fontname(PLOT_FONT)
+            for tick in axs[i].get_yticklabels():
+                tick.set_fontname(PLOT_FONT)
+
+        plt.show()
+
+
+
+
+
     def plot(self):
         """Plot all data series and trendlines.
         """
@@ -317,7 +371,7 @@ class TrialData():
         #print(df_corr['force'])
         #corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/' + self.subj + '/wp' + str(self.wp) + '.csv'
         #df_corr.to_csv(corr_out_path)
-
+        register_matplotlib_converters()
         sns.set()
 
         tstring = self.subj + ' test plot, wp' + str(self.wp)
