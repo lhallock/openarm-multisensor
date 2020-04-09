@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 """Utility functions for ultrasound tracking, processing, and visualization.
 
-This module contains functions to extract desired contour points for tracking,
-track these points through ultrasound scans, and write desired time series
-muscle deformation parameters to CSV files compatible with the
-dataobj.TimeSeriesData class.
-
+This module contains algorithms to extract desired contour points for tracking, process and filter ultrasound images,  and track these points and their properties through ultrasound scans.
 """
 
 import time

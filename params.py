@@ -1,8 +1,6 @@
 import numpy as np
 import run_ultrasoundviz as run
 
-
-
 class ParamValues():
     """
     Class containing instance variables which are parameters used in various tracking algorithms and image filtering techniques, and a method to modify these variables. Used to easily change parameters for tuning.
@@ -91,7 +89,7 @@ def write_run():
         4: SBLK
     """
 
-    run_type = 2
+    run_type = 4
     run.run(parameter_values, run_type)
 
 
