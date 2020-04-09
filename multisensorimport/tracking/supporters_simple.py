@@ -1,26 +1,27 @@
 import numpy as np
-import cv2
 import scipy
 from scipy import stats
-from multisensorimport.tracking import params as params
 
 
-def apply_supporters_model(predicted_target_point, prev_feature_points, feature_points, feature_params, use_tracking, alpha):
+def apply_supporters_model(run_params, predicted_target_point, prev_feature_points, feature_points, feature_params, use_tracking, alpha):
     """
     Do model learning or prediction based on learned model, based on conditions of image tracking
-    original_feature_points: numpy array of tuples/arrays of x, y coords for features from original image
-    curr_image: 2d np array of current grayscale image
-    original_image: 2d np array of original grayscale image
-    predicted_target_point: numpy array (2-d) of x, y coord of tracking prediction of current target point
-    original_target_point: numpy array (2-d) of x, y coord of tracking target
-    features: numpy array of 3-tuples of current feature x, y coord (2d np array), displacement average, covariance matrix average
-    theta_correlation: threshold for how much current target neighborhood should be similar to original target neighborhood to trust tracking
-    theta_prediction: threshold for how much current supporter probability should be to accept tracking prediction
+
+    run_params: instance of ParamValues class holding relevent parameters
+    predicted_target_point: numpy array (2-element) of x, y coord of tracking prediction of current target point
+    prev_feature_points: list of (x,y) coordinates of the feature (supporter) points in previous frame
+    feature_points: list of [x,y] coordinate array of the feature (supporter) points in current frame
+    feature_params: list of 2-tuples of (displacement vector average, covariance matrix aveage) and  for each feature point
+    use_tracking: boolean determining whether to return the pure Lucas Kanade prediction or the supporters based prediction
     alpha: learning rate for exponential forgetting principle
-    window_size: HALF of window size for obtaining neighborhood of target
+
+    Returns: predicted location of target point, updated parameters corresponding for the supporter points
     """
+
+    # reformat feature points for easier processing
     feature_points = format_supporters(feature_points)
 
+    # round to integer so that the prediction lands on pixel coordinates
     predicted_target_point = np.round(predicted_target_point).astype(int)
 
     # initialize value to return
@@ -31,7 +32,6 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
 
     # tracking is to be used (first x amount of frames, x determined a priori)
     if use_tracking:
-        print("USING TRACKING RESULT, UPDATING SUPPORTERS")
 
         target_point_final = predicted_target_point
 
@@ -42,24 +42,22 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
             # displacement vector between the current feature and the target point
             curr_displacement = target_point_final - curr_feature_point
             # previous average for displacement
-            # print("PARAMS: ", feature_params)
             prev_displacement_average = feature_params[i][0]
             # update displacement average using exponential forgetting principle
             new_displacement_average = alpha * prev_displacement_average + (1 - alpha) * curr_displacement
 
-            # maybe also try outer product:
             displacement_mean_diff = curr_displacement - new_displacement_average
-            # TODO: check this
+            # compute current covariance matrix
             curr_covariance_matrix = displacement_mean_diff.reshape(2, 1) @ displacement_mean_diff.reshape(1, 2)
-            # update covariance matrix using exponential forgetting principle
+            # update covariance matrix average using exponential forgetting principle
             prev_covariance_matrix = feature_params[i][1]
             new_covariance_matrix = alpha * prev_covariance_matrix + (1 - alpha) * curr_covariance_matrix
 
             new_feature_params.append((new_displacement_average, new_covariance_matrix))
 
-    # right now, take a weighted average of the mean displacements + supporter positions, weighted by probability of supporter and prediction
-    # also consider taking argmax over multivariate gaussian
+    # Use supporter prediction: take a weighted average of the mean displacements + supporter positions, weighted by probability of supporter and prediction
     else:
+        # quantities used in calculation
         numerator = 0
         denominator = 0
         displacements = []
@@ -68,35 +66,19 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
             feature_point = feature_points[i]
             prev_feature_point = prev_feature_points[i]
             displacement_norm = np.linalg.norm(feature_point - prev_feature_point)
-            weight = weight_function(displacement_norm)
+            # determine the weight to assign to that point, as a function of displacement
+            weight = weight_function(run_params, displacement_norm)
             covariance = feature_params[i][1]
             displacement = feature_params[i][0]
+
             numerator += (weight * (displacement + feature_point))/np.linalg.det(covariance)
             denominator += weight / np.linalg.det(covariance)
 
+        # return weighted average
         target_point_final = numerator / denominator
 
-        # argmax over probability approach:
 
-        # x_coords = np.arange(original_target_point[0] - window_size, original_target_point[1] + window_size)
-        # y_coords = np.arange(original_target_point[1] - window_size, original_target_point[1] + window_size)
-        #
-        # X, Y = np.meshgrid(x_coords, y_coords)
-        # X = X.flatten()
-        # Y = Y.flatten()
-        #
-        # argmax = -1
-        # max_likelihood = -1
-        # for i in range(len(X)):
-        #     likelihood = point_likelihood(X[i], Y[i], feature_points, feature_params)
-        #     if likelihood > max_likelihood:
-        #         argmax = i
-        #         max_likelihood = likelihood
-        #
-        # target_point_final = np.array([X[argmax], Y[argmax]])
-
-
-    # TODO: check this
+    # if Supporters was used, return the old feature_params; else return the updated params
     if new_feature_params == []:
         return target_point_final, feature_params
     else:
@@ -104,49 +86,53 @@ def apply_supporters_model(predicted_target_point, prev_feature_points, feature_
 
 
 
-def weight_function(displacement_norm):
-    alpha = params.displacement_weight
-    # print("DISP NORM: ", displacement_norm)
-    # return alpha * displacement_norm + (1 - alpha)
-    # rv = scipy.stats.multivariate_normal(mean = mean, cov = variance)
-    # return rv.pdf(displacement_norm)
-    # return displacement_norm
-    #return displacement_norm
-    # return alpha * displacement_norm + (1 - alpha)
+def weight_function(run_params, displacement_norm):
+    """
+    Determines the weight to apply to each supporter point, as a function of the norm of the displacement vector for that point.
+
+    run_params: instance of ParamValues class holding relevent parameters
+    displacement_norm: L2 norm of the displacement vector of the supporter point being considered
+
+    Returns: weight to place for the supporter point being considered
+
+    """
+    alpha = run_params.displacement_weight
+
     return 1 + (alpha * displacement_norm)
-
-    # return 1
-
-def point_likelihood(x, y, feature_points, feature_params):
-    point = np.array([x, y])
-    probability = 0
-    for i in range(len(feature_points)):
-        displacement = point - feature_points[i]
-        displacement_mean = feature_params[i][0]
-        covariance = feature_params[i][1]
-        rv = scipy.stats.multivariate_normal(mean=displacement_mean, cov=covariance)
-        probability += rv.pdf(displacement)
-    return probability
-
 
 
 def initialize_supporters(supporter_points, target_point, variance):
+    """
+    Reformats list of given supporter points, and initializes parameters (displacement, covariance) for each supporter point, for a given target point
+
+    supporter_points: numpy array of 1 element numpy arrays, where the 1 element is a 2-element numpy array containing supporter point locations
+    target_point: numpy array containing x,y coordinates for the target point being tracked
+    variance: scalar value, indicates the initial variance for each element of the displacement
+
+    Returns: list of 2-element numpy arrays containing supporter point locations
+    """
+
+    # initialize empty lists
     supporters = []
     supporter_params = []
     for i in range(len(supporter_points)):
+        # extract numpy array of the supporter location
         supporter_point = supporter_points[i][0]
         supporters.append(supporter_point)
+        # initialize displacement average with initial displacement and a diagonal covariance matrix
         supporter_params.append((target_point - supporter_point, variance * np.eye(2)))
+
     return supporters, supporter_params
 
 def format_supporters(supporter_points):
+    """
+    Reformats list of given supporter points into a list of numpy arrays containing the supporter point locations
+
+    supporter_points: numpy array of 1 element numpy arrays, where the 1 element is a 2-element numpy array containing supporter point locations
+
+    Returns: list of 2-element numpy arrays containing supporter point locations
+    """
     supporters = []
     for i in range(len(supporter_points)):
         supporters.append(supporter_points[i][0])
     return supporters
-
-
-
-
-
-
