@@ -983,7 +983,7 @@ def write_us_csv(outfile, vals, val_labels=None):
     pass
 
 
-### IMAGE PROCESSING METHODS ###
+### POINT FILTERING METHODS ###
 
 def shi_tomasi_corner_score(point, block_size, img):
     """
@@ -1017,12 +1017,26 @@ def shi_tomasi_corner_score(point, block_size, img):
 
 def filter_points(run_params, window_size, pts, filter_type, img, percent, keep_bottom=False):
 
+    """
+    Filter the given contour points by removing those with low Shi-Tomasi corner scores.
+
+    Args:
+        run_params: instance of ParamValues class, contains values of parameters used in tracking
+        window_size: size of neighborhood around point to consider when calculating corner score
+        img: image used to calculate corner scores
+        percent: percent of points to keep (keep the top percent% of points based on corner score)
+        keep_bottom: boolean determining if the bottom-most should be kept regardless of their corner score
+
+    Returns: numpy array of the filtered points, and a numpy array of their corresponding indeces
+    """
+
     # select image filter, determined by filterType argument
     filter = get_filter_from_num(filter_type)
 
     # apply filter
     filtered_img = filter(img, run_params)
     x = (len(pts))
+
     # convert pts from np array to list for convenience, create dict for sorting
     pts = list(pts)
     ind_to_score_map = dict()
@@ -1036,17 +1050,18 @@ def filter_points(run_params, window_size, pts, filter_type, img, percent, keep_
     filtered_points = []
     filtered_points_ind = []
 
-    # converts map to a list of 2-tuples (key, value), which are in sorted order by value
+    # converts map to a list of 2-tuples (key, value), which are sorted in descending order by value
     # key is index of point in the pts list
     sorted_corner_mapping = sorted(ind_to_score_map.items(), key=lambda x: x[1], reverse=True)
     sorted_y_mapping = sorted(ind_to_y_map.items(), key=lambda x: x[1], reverse=True)
+
     # get top percent% of points
     for i in range(0, int(np.rint(percent * len(sorted_corner_mapping)))):
         points_ind = sorted_corner_mapping[i][0]
         filtered_points.append(pts[points_ind])
         filtered_points_ind.append(points_ind)
 
-
+    # keep bottom most points if needed (to make sure the contour includes the bottom of fascia)
     if keep_bottom:
         for i in range(run_params.num_bottom):
             points_ind = sorted_y_mapping[i][0]
@@ -1057,13 +1072,29 @@ def filter_points(run_params, window_size, pts, filter_type, img, percent, keep_
 
 
 def separate_points(run_params, img, pts):
+    """
+    Separate a given set of points into two subsets of those points, where each subset contains the points with the top X% of points (sorted by corner score), in the appropriately filtered images.
+
+    Args:
+        run_params: instance of ParamValues class, contains values of parameters used in tracking
+        img: image to use to determine corner scores
+        pts: numpy array of points to be filtered and separated
+
+    Returns:
+        numpy arrays of the fine_pts and their corresponding indeces in the overall contour list, and the course points and their corresponding indeces in the overall contour.
+    """
+
+    # determine the image filters to use (bilateral filters)
     fine_filter_type = 2
     course_filter_type = 3
 
-    fine_pts, fine_pts_inds = filter_points(run_params, 7, pts, fine_filter_type, img, run_params.percent_fine)
-    course_pts, course_pts_inds = filter_points(run_params, 7, pts, course_filter_type, img, run_params.percent_course)
+    corner_window_size = 7
 
+    # separate points into two potentially overlapping subsets of pts
+    fine_pts, fine_pts_inds = filter_points(run_params, corner_window_size, pts, fine_filter_type, img, run_params.percent_fine)
+    course_pts, course_pts_inds = filter_points(run_params, corner_window_size, pts, course_filter_type, img, run_params.percent_course)
 
+    # remove overlap between the two subsets; a point in both sets will be removed from the course_pts and kept in the fine_pts
     course_kept_indeces = set()
     for i in range(len(course_pts)):
         course_pt = course_pts[i]
@@ -1081,6 +1112,7 @@ def separate_points(run_params, img, pts):
         course_to_keep.append(course_pts[index])
         course_to_keep_inds.append(course_pts_inds[index])
 
+    # convert to numpy arrays and return
     course_pts = np.array(course_to_keep)
     course_pts_inds = np.array(course_to_keep_inds)
 
@@ -1091,10 +1123,24 @@ def separate_points(run_params, img, pts):
 
 
 def initialize_points_for_supporters(run_params, READ_PATH, keyframe_path, init_img, feature_params, lk_params, which_contour):
+    """
+    Separates contour points into those to be tracked via lucas kucas tracking, and those to be tracked via supporters, and also determine good supporter points and initialize their parameters.
 
-    # determines which points will get tracked by Lucas Kanade solely, and which will need supporter assistance
-    # also determines supporter points to use based on good corner features (Shi Tomasi)
+    Args:
+        run_params: instance of ParamValues class, contains values of parameters used in tracking
+        READ_PATH: path to raw ultrasound frames
+        key_frame_path: path to ground truth hand segmented frames
+        init_img: first frame in the video sequence
+        feature_params: parameters to find good features to track
+        lk_params: parameters for lucas kanade tracking
+        which_contour: integer determining whether image containing contour is a png (1) or a pgm (0)
 
+    Returns:
+        numpy array of points to be tracked via supporters and their corresponding indeces in the contour, numpy array of points to be tracked via Lucas Kanade and their corresponding indeces in the contour, list of supporter point locations, list of the parameters for each supporter points
+    """
+
+
+    # extract contour
     if which_contour == 1:
         pts = extract_contour_pts_png(keyframe_path)
     else:
@@ -1103,11 +1149,13 @@ def initialize_points_for_supporters(run_params, READ_PATH, keyframe_path, init_
     mean_x_pts = 0
     mean_y_pts = 0
 
-    for supporter_tracked_point in pts:
-        x = supporter_tracked_point[0][0]
-        y = supporter_tracked_point[0][1]
+    # find mean of the coordinates of the contour points
+    for contour_point in pts:
+        x = contour_point[0][0]
+        y = contour_point[0][1]
         mean_x_pts += x
         mean_y_pts += y
+
     mean_x_pts = mean_x_pts / len(pts)
     mean_y_pts = mean_y_pts / len(pts)
 
@@ -1163,43 +1211,57 @@ def initialize_points_for_supporters(run_params, READ_PATH, keyframe_path, init_
             LK_kept_indeces.add(i)
 
 
-    # only add the supporter_tracked points that we determined should be added
+    # only add the lucas kanade points that we determined should be added
     LK_to_keep = []
     LK_to_keep_inds = []
     for index in LK_kept_indeces:
         LK_to_keep.append(lucas_kanade_points[index])
         LK_to_keep_inds.append(lucas_kanade_points_indeces[index])
 
-    # reset the points to get tracked using supporters
+    # reset the points to be tracked using supporters
     lucas_kanade_points = np.array(LK_to_keep)
     lucas_kanade_points_indeces = np.array(LK_to_keep_inds)
 
     # find supporters based on good points
     supporters = cv2.goodFeaturesToTrack(filtered_init_img, mask=None, **feature_params)
-    # ind = filter_supporters(supporters_tracking, READ_PATH, lk_params)
-    # supporters_tracking = supporters_tracking[ind]
 
+    # initialize supporters
     supporter_params = []
     for i in range(len(supporter_tracked_to_keep)):
         supporter_tracked_point = supporter_tracked_to_keep[i][0]
-        # 10 is variance
-        _, run_params = supporters_simple.initialize_supporters(supporters, supporter_tracked_point, 10)
+        initial_variance = 10
+        _, run_params = supporters_simple.initialize_supporters(supporters, supporter_tracked_point, initial_variance)
         supporter_params.append(run_params)
 
     return supporter_tracked_points, supporter_tracked_points_indeces, lucas_kanade_points, lucas_kanade_points_indeces, supporters, supporter_params
 
 
-def order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds):
-    point_dict = dict()
-    for i in range(len(fine_pts)):
-        fine_pt = fine_pts[i]
-        fine_pt_ind = fine_pts_inds[i]
-        point_dict[fine_pt_ind] = fine_pt
-    for i in range(len(course_pts)):
-        course_pt = course_pts[i]
-        course_pt_ind = course_pts_inds[i]
-        point_dict[course_pt_ind] = course_pt
+def order_points(points_one, points_one_inds, points_two, points_two_inds):
+    """
+    Combines two subsets of contour points into one contour, while maintaining their original counter-clockwise order in the contour.
 
+    Args:
+        points_one: first subset of contour points
+        points_one_inds: Indeces of the first subset of points, in the original contour
+        points_two: second subset of contour points
+        points_two_inds: Indeces of the second subset of points, in the original contour
+
+    Returns:
+        numpy array combining points_one and points_two, in order of the original contour
+    """
+    # init dictionary mapping index to point
+    point_dict = dict()
+    # populate dictionary
+    for i in range(len(points_one)):
+        point = points_one[i]
+        point_ind = points_one_inds[i]
+        point_dict[point_ind] = point
+    for i in range(len(points_two)):
+        point = points_two[i]
+        point_ind = points_two_inds[i]
+        point_dict[point_ind] = point
+
+    # order dictionary by key and append points
     pts = []
     for key in sorted(point_dict.keys()):
         pts.append(point_dict[key])
@@ -1208,12 +1270,22 @@ def order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds):
 
 
 def thickness(points):
+    """
+    Finds thickness in x and y direction given a set of points. Thickness along a certain dimension is defined as the maximal difference between two point along that dimension (x or y)
+
+    Args:
+        points: numpy array of contour points
+
+    Returns: thickness along x direction, and thickness along y direction
+    """
+    # initialize min and max values
     min_x = float("inf")
     max_x = -1 * float("inf")
 
     min_y = float("inf")
     max_y = -1 * float("inf")
 
+    # find max and min of x and y
     for point in points:
         x = point[0]
         y = point[1]
@@ -1223,17 +1295,36 @@ def thickness(points):
         min_y = min(y, min_y)
         max_y = max(y, max_y)
 
-
+    # return difference
     return (max_x - min_x), (max_y - min_y)
 
 
 
 
 def get_image_value(x, y, img):
+    """
+    Helper method to get the pixel value at a specified x, y coordinate of an image.
+
+    Args:
+        x: horizontal pixel coordinate
+        y: vertical pixel coordinate
+
+    Returns:
+        pixel value at the specified coordinate
+    """
     return img[y][x]
 
 
 def get_filter_from_num(filter_type):
+    """
+    Maps numbers to corresponding image filters. Mapping is: 1 -> median filter, 2->aggressive (fine) bilateral filter, 3 -> less agressive (course) bilateral filter, 4 -> anisotropic diffusion filter, anything else -> no filter
+
+    Args:
+        filter_type: integer determining which filter to use
+    Returns:
+        image filter function. This function takes two arguments (img, run_params)
+    """
+
     filter = None
     if filter_type == 1:
         filter = median_filter
@@ -1250,6 +1341,17 @@ def get_filter_from_num(filter_type):
 
 # image filtering
 def no_filter(img, run_params):
+    """
+    Applies no filter to the image. Convert to grayscale if the image is color.
+
+    Args:
+        img: image to be potentially grayscaled
+        run_params: instance of ParamValues class, contains values of parameters used in tracking
+
+    Returns:
+        Grayscaled, non-filtered image
+    """
+
     # check if image is color or grayscale, return grayscale version
     if len(img.shape) > 2:
         return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -1258,12 +1360,31 @@ def no_filter(img, run_params):
 
 
 def median_filter(img, run_params):
-    # hyperparameter
+    """
+    Applies a median filter to the given image.
+
+    Args:
+        img: image to be filtered
+        run_params: instance of ParamValues class, contains values of parameters used in tracking
+
+    Returns: median filtered version of the img
+    """
+
     kernelSize = 5
     return cv2.medianBlur(img, kernelSize)
 
 
 def fine_bilateral_filter(img, run_params):
+    """
+    Applies an "aggressive" bilateral filter to the given image.
+
+    Args:
+        img: image to be filtered
+        run_params: instance of ParamValues class, contains values of parameters used in tracking
+
+    Returns: bilateral filtered version of the img
+    """
+
     # convert to color (what bilateral filter expects)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
@@ -1278,6 +1399,16 @@ def fine_bilateral_filter(img, run_params):
 
 
 def course_bilateral_filter(img, run_params):
+    """
+    Applies a "less aggressive" filter to the given image.
+
+    Args:
+        img: image to be filtered
+        run_params: instance of ParamValues class, contains values of parameters used in tracking
+
+    Returns: bilateral filtered version of the img
+    """
+
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     # hyperparameters
     diam = run_params.course_diam
@@ -1288,6 +1419,16 @@ def course_bilateral_filter(img, run_params):
 
 
 def anisotropic_diffuse(img, run_params):
+    """
+    Applies a Perona-Malik anisotropic diffusion filter to the given image.
+
+    Args:
+        img: image to be filtered
+        run_params: instance of ParamValues class, contains values of parameters used in tracking
+
+    Returns: anisotropic diffused version of the img
+    """
+
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     # hyperparameters
     alphaVar = 0.1
@@ -1298,10 +1439,28 @@ def anisotropic_diffuse(img, run_params):
 
 
 def otsu_binarization(gray_image):
+    """
+    Applies otsu binarization to the given image.
+
+    Args:
+        gray_img: grayscale image to be binarized
+
+    Returns: Binarized version of the img
+    """
+
     ret2, th2 = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return th2
 
 
 def canny(gray_image):
+    """
+    Applies Canny Edge Detection to the given image.
+
+    Args:
+        gray_img: grayscale image in which edges should be fine
+
+    Returns: Edges present in given image 
+    """
+
     edges = cv2.Canny(gray_image, 180, 200)
     return edges
