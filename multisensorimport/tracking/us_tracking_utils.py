@@ -69,7 +69,6 @@ def extract_contour_pts_pgm(filename):
     Returns:
         numpy.ndarray of contour points
     """
-    print("FILENAME: ", filename)
     # read in image
     img = cv2.imread(filename, -1)
     # convert image to grayscale if it is color
@@ -759,14 +758,10 @@ def track_pts_supporters(run_params, seg_filedir, filedir, fine_pts, fine_pts_in
                 union = np.sum(np.logical_or(mat_predicted, mat_segmented))
 
                 iou_error = intersection / union
-                # print("intersection over union error: ", iou_error)
                 cumulative_iou_error += iou_error
 
                 iou_accuracy_series.append(iou_error)
-                print(image_filename)
-                if image_filename == '619.pgm':
-                    cv2.imwrite("/Users/akashvelu/Documents/research_pics/SBLK.jpg", frame_color)
-                # print("here")
+
 
         frame_num += 1
 
@@ -1459,7 +1454,7 @@ def canny(gray_image):
     Args:
         gray_img: grayscale image in which edges should be fine
 
-    Returns: Edges present in given image 
+    Returns: Edges present in given image
     """
 
     edges = cv2.Canny(gray_image, 180, 200)
