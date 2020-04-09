@@ -128,7 +128,8 @@ def format_supporters(supporter_points):
     """
     Reformats list of given supporter points into a list of numpy arrays containing the supporter point locations
 
-    supporter_points: numpy array of 1 element numpy arrays, where the 1 element is a 2-element numpy array containing supporter point locations
+    Args:
+        supporter_points: numpy array of 1 element numpy arrays, where the 1 element is a 2-element numpy array containing supporter point locations
 
     Returns: list of 2-element numpy arrays containing supporter point locations
     """
