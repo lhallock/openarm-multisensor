@@ -1,9 +1,10 @@
 """
 Runner script containing parameters and main method to do tracking. Specify which algorithm to use via run_type.
 
-Run this via
-    $ python run_tracking.py --run_type <integer indicating algorithm to use here>
-    integer to algorithm mapping:
+Run this via:
+    $ python run_tracking.py --run_type <algorithm integer> --img_path <filepath to US frames> --seg_path <filepath to segmented images> --out_path <filepath to where output will be written> --init_img <name of first image in US frame series>
+
+    algorithm integer to algorithm mapping:
         1: LK
         2: FRLK
         3: BFLK
