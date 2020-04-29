@@ -1,5 +1,5 @@
 """
-Runner script containing parameters and main method to do tracking.
+Runner script containing parameters and main method to do tracking. Specify which algorithm to use via run_type. 
 
 Run this via
     $ python run_tracking.py
@@ -97,7 +97,7 @@ def write_run():
         4: SBLK
     """
 
-    run_type = 1
+    run_type = 4
     viz.tracking_run(parameter_values, run_type)
 
 

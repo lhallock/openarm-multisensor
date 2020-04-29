@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Executes and visualizes contour tracking of a series of ultrasound frames. 
+"""Executes and visualizes contour tracking of a series of ultrasound frames, using the specified algorithm.
 """
 
 import cv2
 import numpy as np
 
 from multisensorimport.tracking import supporters_simple as supporters_simple
-from multisensorimport.tracking import us_tracking_utils as track
+from multisensorimport.tracking import tracking_algorithms as track
 
 READ_PATH = '/Users/akashvelu/Documents/Research/Research_HART2/tracking_data/sub1/wp5t11/ultrasound_wp5t11/'
 SEG_PATH = '/Users/akashvelu/Documents/Research/Research_HART2/tracking_data/sub1/wp5t11/segmented_wp5t11/'
@@ -21,10 +21,10 @@ def tracking_run(run_params, run_type):
 
         run_params: instance of ParamValues class containing parameter values
         run_type: integer determining tracking algorithm to run.
-            1: vanilla LK
-            2: vanilla LK with filtered points
-            3: LK with two sets of points (two filters)
-            4: supporter based tracking
+            1: LK (Vanilla Lucas Kanade)
+            2: FRLK (Feature Refined Lucas Kanade)
+            3: BFLK (Bilaterally Filtered Lucas Kanade)
+            4: SBLK (Supporters Based Lucas Kanade)
 
     """
 
@@ -53,7 +53,7 @@ def tracking_run(run_params, run_type):
     if run_type == 1:
         print("LK tracking")
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_pts_lucas_kanade(run_params, SEG_PATH, READ_PATH, initial_contour_pts, lk_params, viz = True, filter_type=0)
+        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_LK(run_params, SEG_PATH, READ_PATH, initial_contour_pts, lk_params, viz = True, filter_type=0)
 
     elif run_type == 2:
         print("FRLK tracking")
@@ -67,7 +67,7 @@ def tracking_run(run_params, run_type):
         # order the contour points in counter-clockwise order for easier OpenCV contour analysis
         filtered_initial_contour = track.order_points(filtered_initial_contour, indeces, np.array([]), np.array([]))
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_pts_lucas_kanade(run_params, SEG_PATH, READ_PATH, filtered_initial_contour, lk_params, viz = True, filter_type=0, filtered_LK_run = True)
+        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_LK(run_params, SEG_PATH, READ_PATH, filtered_initial_contour, lk_params, viz = True, filter_type=0, filtered_LK_run = True)
 
     elif run_type == 3:
         print("BFLK tracking")
@@ -75,20 +75,20 @@ def tracking_run(run_params, run_type):
         fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds = track.separate_points(run_params, init_img, initial_contour_pts)
 
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_pts_lucas_kanade_two_filters(run_params, SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, lk_params)
+        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_BFLK(run_params, SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, lk_params)
 
     elif run_type == 4:
         print("SBLK tracking")
 
         # initialize contours and supporters
-        course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = track.initialize_points_for_supporters(
+        course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = supporters_simple.initialize_supporters(
             run_params, READ_PATH, keyframe_path, init_img, feature_params, lk_params, 2)
 
         # initialize supporters
         supporter_params = []
         for i in range(len(course_filtered_points)):
             point = course_filtered_points[i][0]
-            _, sup_params = supporters_simple.initialize_supporters(supporters_tracking, point, 10)
+            _, sup_params = supporters_simple.initialize_supporters_for_point(supporters_tracking, point, 10)
             supporter_params.append(sup_params)
 
         # determine image filters to apply on frames
@@ -96,7 +96,7 @@ def tracking_run(run_params, run_type):
         courseFilterNum = 3
 
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_pts_supporters(run_params, SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, supporters_tracking, supporter_params, lk_params, True, feature_params, True, fine_filter_type=fineFilterNum, course_filter_type=courseFilterNum)
+        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_SBLK(run_params, SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, supporters_tracking, supporter_params, lk_params, True, feature_params, True, fine_filter_type=fineFilterNum, course_filter_type=courseFilterNum)
 
 
     # Errors/Accuracy measures from tracking
