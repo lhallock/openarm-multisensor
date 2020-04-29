@@ -13,7 +13,7 @@ import cv2
 import numpy as np
 import scipy
 
-from multisensorimport.tracking import supporters_simple as supporters_simple
+from multisensorimport.tracking import supporters_utils as supporters_utils
 from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
 
@@ -65,7 +65,7 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
     ground_truth_contour_areas.append(cv2.contourArea(pts))
 
     # add first thickness
-    first_thickness_x, first_thickness_y = thickness(supporters_simple.format_supporters(pts))
+    first_thickness_x, first_thickness_y = thickness(supporters_utils.format_supporters(pts))
     ground_truth_thickness.append(first_thickness_x)
     ground_truth_thickness_ratio.append(first_thickness_x / first_thickness_y)
 
@@ -154,9 +154,9 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
                 pts = tracked_contour.copy()
 
                 # add ground truth and tracked thickness
-                segmented_thickness_x, segmented_thickness_y = thickness(supporters_simple.format_supporters(segmented_contour))
+                segmented_thickness_x, segmented_thickness_y = thickness(supporters_utils.format_supporters(segmented_contour))
 
-                predicted_thickness_x, predicted_thickness_y = thickness(supporters_simple.format_supporters(tracked_contour))
+                predicted_thickness_x, predicted_thickness_y = thickness(supporters_utils.format_supporters(tracked_contour))
 
                 ground_truth_thickness.append(segmented_thickness_x)
 
@@ -262,7 +262,7 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
     ground_truth_contour_areas.append(cv2.contourArea(tracked_contour))
 
     # add first aspect ratio
-    first_thickness_x, first_thickness_y = thickness(supporters_simple.format_supporters(tracked_contour))
+    first_thickness_x, first_thickness_y = thickness(supporters_utils.format_supporters(tracked_contour))
     ground_truth_thickness.append(first_thickness_x)
     ground_truth_thickness_ratio.append(first_thickness_x / first_thickness_y)
 
@@ -354,10 +354,10 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
 
                 # calculate values of interest (thickness, CSA, AR) for ground truth and tracking
                 segmented_thickness_x, segmented_thickness_y = thickness(
-                    supporters_simple.format_supporters(segmented_contour))
+                    supporters_utils.format_supporters(segmented_contour))
 
                 predicted_thickness_x, predicted_thickness_y = thickness(
-                    supporters_simple.format_supporters(tracked_contour))
+                    supporters_utils.format_supporters(tracked_contour))
 
                 ground_truth_thickness.append(segmented_thickness_x)
 
@@ -458,7 +458,7 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
     ground_truth_contour_areas.append(cv2.contourArea(pts))
 
     # add first thickness
-    first_thickness_x, first_thickness_y = thickness(supporters_simple.format_supporters(pts))
+    first_thickness_x, first_thickness_y = thickness(supporters_utils.format_supporters(pts))
     ground_truth_thickness.append(first_thickness_x)
     ground_truth_thickness_ratio.append(first_thickness_x / first_thickness_y)
 
@@ -558,7 +558,7 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                         supporter_params = []
                         for i in range(len(course_pts)):
                             point = course_pts[i][0]
-                            _, run_params = supporters_simple.initialize_supporters_for_point(supporter_pts, point, 10)
+                            _, run_params = supporters_utils.initialize_supporters_for_point(supporter_pts, point, 10)
                             supporter_params.append(run_params)
                 else:
                     # calculate new point locations for fine_points using frame filtered by the fine filter
@@ -574,8 +574,8 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                         old_frame_course, frame_course, supporter_pts, None, **lk_params
                     )
 
-                    # reformat predicted points (using a function in supporters_simple)
-                    predicted_course_pts = supporters_simple.format_supporters(predicted_course_pts)
+                    # reformat predicted points (using a function in supporters_utils)
+                    predicted_course_pts = supporters_utils.format_supporters(predicted_course_pts)
 
                     # initialize new params
                     updated_feature_params = []
@@ -592,7 +592,7 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                         # pass in both supporter_pts (the old values) and new_supporter_pts (old values) so that the displacement can be calculated
                         learning_rate = 0.7
                         # obtain point predictions and updated params for target point
-                        point_location, new_params = supporters_simple.apply_supporters_model(run_params, predicted_point, supporter_pts, new_supporter_pts, param_list, use_tracking, learning_rate)
+                        point_location, new_params = supporters_utils.apply_supporters_model(run_params, predicted_point, supporter_pts, new_supporter_pts, param_list, use_tracking, learning_rate)
                         updated_feature_params.append(new_params)
                         new_course_pts.append(np.array([[point_location[0], point_location[1]]], dtype=np.float32))
 
@@ -647,9 +647,9 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                     time.sleep(0.01)
 
                 # calculate thickness for ground truth and tracking
-                segmented_thickness_x, segmented_thickness_y = thickness(supporters_simple.format_supporters(segmented_contour))
+                segmented_thickness_x, segmented_thickness_y = thickness(supporters_utils.format_supporters(segmented_contour))
 
-                predicted_thickness_x, predicted_thickness_y = thickness(supporters_simple.format_supporters(tracked_contour))
+                predicted_thickness_x, predicted_thickness_y = thickness(supporters_utils.format_supporters(tracked_contour))
 
                 ground_truth_thickness.append(segmented_thickness_x)
 

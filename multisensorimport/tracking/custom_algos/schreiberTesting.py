@@ -7,7 +7,7 @@ from multisensorimport.tracking import schreiberAlgorithm as schreiber
 from multisensorimport.tracking import schreibersAlgorithm as schreibers
 from multisensorimport.tracking import lucasKanadeWarp as LKWarp
 from multisensorimport.tracking import supporters as supporters
-from multisensorimport.tracking import supporters_simple as supporters_simple
+from multisensorimport.tracking import supporters_utils as supporters_utils
 
 
 
@@ -754,7 +754,7 @@ def supportersTesting():
     original_img_gray = prev_img_gray.copy()
 
     good_trackers = cv2.goodFeaturesToTrack(original_img_gray, mask=None, **feature_params)
-    supporter_points, supporter_features = supporters_simple.initialize_supporters(good_trackers, point_init, 10)
+    supporter_points, supporter_features = supporters_utils.initialize_supporters(good_trackers, point_init, 10)
     original_supporters = supporter_points.copy()
 
     points_to_track = np.insert(good_trackers, 0, point_init, axis=0)
@@ -860,11 +860,11 @@ def simple_supporters_testing():
         supporters_tracking, status, error = cv2.calcOpticalFlowPyrLK(prev_img_gray, curr_img_gray, supporters_tracking, None, **lk_params)
 
         predicted_target = target_tracking[0][0]
-        supporter_points = supporters_simple.format_supporters(supporters_tracking)
+        supporter_points = supporters_utils.format_supporters(supporters_tracking)
 
         use_tracking = frame <= num_tracking_frames
 
-        target_point, supporter_features = supporters_simple.apply_supporters_model(predicted_target, supporters_tracking, supporter_features, use_tracking, 0.75, 50)
+        target_point, supporter_features = supporters_utils.apply_supporters_model(predicted_target, supporters_tracking, supporter_features, use_tracking, 0.75, 50)
 
 
 

@@ -5,7 +5,7 @@
 import cv2
 import numpy as np
 
-from multisensorimport.tracking import supporters_simple as supporters_simple
+from multisensorimport.tracking import supporters_utils as supporters_utils
 from multisensorimport.tracking import tracking_algorithms as track
 
 READ_PATH = '/Users/akashvelu/Documents/Research/Research_HART2/tracking_data/sub1/wp5t11/ultrasound_wp5t11/'
@@ -81,14 +81,14 @@ def tracking_run(run_params, run_type):
         print("SBLK tracking")
 
         # initialize contours and supporters
-        course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = supporters_simple.initialize_supporters(
+        course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = supporters_utils.initialize_supporters(
             run_params, READ_PATH, keyframe_path, init_img, feature_params, lk_params, 2)
 
         # initialize supporters
         supporter_params = []
         for i in range(len(course_filtered_points)):
             point = course_filtered_points[i][0]
-            _, sup_params = supporters_simple.initialize_supporters_for_point(supporters_tracking, point, 10)
+            _, sup_params = supporters_utils.initialize_supporters_for_point(supporters_tracking, point, 10)
             supporter_params.append(sup_params)
 
         # determine image filters to apply on frames
