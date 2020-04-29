@@ -1,8 +1,13 @@
 """
-Runner script containing parameters and main method to do tracking. Specify which algorithm to use via run_type. 
+Runner script containing parameters and main method to do tracking. Specify which algorithm to use via run_type.
 
 Run this via
-    $ python run_tracking.py
+    $ python run_tracking.py --run_type <integer indicating algorithm to use here>
+    integer to algorithm mapping:
+        1: LK
+        2: FRLK
+        3: BFLK
+        4: SBLK
 """
 
 import numpy as np
@@ -18,13 +23,22 @@ class ParamValues():
 
     # Quality level of corners chosen via Shi-Tomasi corner detection
     quality_level = 0.4
+
     # Minimum distance between corners chosen via Shi-Tomasi corner detection
     min_distance = 0
 
-    #
+    max_corners = 300
+    block_size = 7
+
+    # FRLK params
+    point_frac = 0.7
+
+    # Bilateral filter parameters - 'course/less agressive bilateral filter':
     course_diam = 5
     course_sigma_color = 100
     course_sigma_space = 100
+
+    # Bilateral filter parameters - 'Fine/more agressive bilateral filter':
     fine_diam = 20
     fine_sigma_color = 80
     fine_sigma_space = 80
@@ -89,16 +103,24 @@ parameter_values = ParamValues()
 
 def write_run():
     """
-    Execute a run of tracking
-    Run_type mappings:
-        1: LK
-        2: FRLK
-        3: BFLK
-        4: SBLK
+    Execute a run of tracking, based on command line arguments given.
     """
+    import argparse
 
-    run_type = 4
-    viz.tracking_run(parameter_values, run_type)
+    # set up command line arguments
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--run_type', type=int, help='denotes which algorithm to use')
+    parser.add_argument('--img_path', type=str, help='filepath to the raw ultrasound images to track')
+    parser.add_argument('--seg_path', type=str, help='filepath to the segmented ground truth images')
+    parser.add_argument('--out_path', type=str, help='filepath to the folder to which csv data should be written')
+    parser.add_argument('--init_img', type=str, help='filename for first frame in ultrasound video')
+
+    args = parser.parse_args()
+    arg_params = vars(args)
+
+
+    viz.tracking_run(arg_params, parameter_values)
 
 
 if __name__ == "__main__":

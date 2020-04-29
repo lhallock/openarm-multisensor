@@ -8,25 +8,20 @@ import numpy as np
 from multisensorimport.tracking import supporters_utils as supporters_utils
 from multisensorimport.tracking import tracking_algorithms as track
 
-READ_PATH = '/Users/akashvelu/Documents/Research/Research_HART2/tracking_data/sub1/wp5t11/ultrasound_wp5t11/'
-SEG_PATH = '/Users/akashvelu/Documents/Research/Research_HART2/tracking_data/sub1/wp5t11/segmented_wp5t11/'
-OUT_PATH = '/Users/akashvelu/Documents/Research/Research_HART2/tracking_data/sub1/wp5t11/data_wp5t11/LK_point_filtered/'
-init_img_name = '618.pgm'
-
-
-
-def tracking_run(run_params, run_type):
+def tracking_run(arg_params, run_params):
 
     """Execute ultrasound image tracking, tracking evaluation, and tracking visualization.
 
+        arg_params: dictionary specifying algorithm to use, read path for segmented/raw files, and initial image name
         run_params: instance of ParamValues class containing parameter values
-        run_type: integer determining tracking algorithm to run.
-            1: LK (Vanilla Lucas Kanade)
-            2: FRLK (Feature Refined Lucas Kanade)
-            3: BFLK (Bilaterally Filtered Lucas Kanade)
-            4: SBLK (Supporters Based Lucas Kanade)
-
+        run_type: integer determining tracking algorithm to run (see run_tracking.py for mapping from integer to algorithm)
     """
+
+    READ_PATH = arg_params['img_path']
+    SEG_PATH = arg_params['seg_path']
+    OUT_PATH = arg_params['out_path']
+    init_img_name = arg_params['init_img']
+    run_type = arg_params['run_type']
 
     # set Lucas-Kanade optical flow parameters
     window_size = run_params.LK_window
@@ -36,10 +31,10 @@ def tracking_run(run_params, run_type):
                                10, 0.03))
 
     # params for ShiTomasi corner detection
-    feature_params = dict(maxCorners = 300,
+    feature_params = dict(maxCorners = run_params.max_corners,
                           qualityLevel = run_params.quality_level,
                           minDistance = run_params.min_distance,
-                          blockSize = 7)
+                          blockSize = run_params.block_size)
 
     # initial image path
     init_path = READ_PATH + init_img_name
@@ -58,9 +53,11 @@ def tracking_run(run_params, run_type):
     elif run_type == 2:
         print("FRLK tracking")
         # 7 is window size, 0.7 is fraction of points to keep
-        shi_tomasi_window = 7
+        shi_tomasi_window = run_params.block_size
+        fraction_points = run_params.point_frac
+
+        # do not apply a filter for determining corner score for contour points
         filter_type_tomasi = 0
-        fraction_points = 0.7
 
         # filter the contour points to track based on their corner scores
         filtered_initial_contour, indeces = track.filter_points(run_params, shi_tomasi_window, initial_contour_pts, filter_type_tomasi, init_img, fraction_points)
