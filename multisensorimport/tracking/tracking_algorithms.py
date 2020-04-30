@@ -129,8 +129,8 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
 
                     # if tracking is done via a FRLK, filter the points and order them counter-clockwise
                     if filtered_LK_run:
-                        filtered_contour, indeces = filter_points(run_params, 7, seg_contour, 0,
-                                                                                frame, 0.7)
+                        filtered_contour, indeces = filter_points(run_params, run_params.block_size, seg_contour, 0,
+                                                                                frame, run_params.point_frac)
                         filtered_contour = order_points(filtered_contour, indeces, np.array([]),
                                                                       np.array([]))
                         tracked_contour = filtered_contour.copy()
@@ -558,8 +558,8 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                         supporter_params = []
                         for i in range(len(course_pts)):
                             point = course_pts[i][0]
-                            _, run_params = supporters_utils.initialize_supporters_for_point(supporter_pts, point, 10)
-                            supporter_params.append(run_params)
+                            _, supporter_param = supporters_utils.initialize_supporters_for_point(supporter_pts, point, run_params.supporter_variance)
+                            supporter_params.append(supporter_param)
                 else:
                     # calculate new point locations for fine_points using frame filtered by the fine filter
                     new_fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
@@ -590,9 +590,9 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                         param_list = supporter_params[i]
 
                         # pass in both supporter_pts (the old values) and new_supporter_pts (old values) so that the displacement can be calculated
-                        learning_rate = 0.7
+
                         # obtain point predictions and updated params for target point
-                        point_location, new_params = supporters_utils.apply_supporters_model(run_params, predicted_point, supporter_pts, new_supporter_pts, param_list, use_tracking, learning_rate)
+                        point_location, new_params = supporters_utils.apply_supporters_model(run_params, predicted_point, supporter_pts, new_supporter_pts, param_list, use_tracking, run_params.update_rate)
                         updated_feature_params.append(new_params)
                         new_course_pts.append(np.array([[point_location[0], point_location[1]]], dtype=np.float32))
 

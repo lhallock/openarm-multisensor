@@ -19,21 +19,32 @@ class ParamValues():
     """
     Class containing instance variables which are parameters used in various tracking algorithms and image filtering techniques, and a method to modify these variables. Used to easily change parameters for tuning.
     """
-    # offset (alpha) used in the weighting function for supporters points
-    displacement_weight = 40
 
+    # LK params:
+    # window size for Lucas Kanade
+    LK_window = 35
+    # Pyramiding level for Lucas Kanade
+    pyr_level = 3
+
+
+    # FRLK params:
     # Quality level of corners chosen via Shi-Tomasi corner detection
     quality_level = 0.4
 
     # Minimum distance between corners chosen via Shi-Tomasi corner detection
     min_distance = 0
 
+    # Maximum number of good corner points chosen
     max_corners = 300
+    # Block size used for derivative kernel in ShiTomasi corner scoring
     block_size = 7
 
-    # FRLK params
+    # Fraction of top points (based on corner score) to keep in FRLK
     point_frac = 0.7
 
+
+
+    # BFLK params:
     # Bilateral filter parameters - 'course/less agressive bilateral filter':
     course_diam = 5
     course_sigma_color = 100
@@ -44,23 +55,41 @@ class ParamValues():
     fine_sigma_color = 80
     fine_sigma_space = 80
 
-    LK_window = 35
-    pyr_level = 3
-
-    fine_threshold = 0.45
-    num_bottom = 0
-
+    # fraction of points (ordered by corner score) to track using fine/course filters
     percent_fine = 0.2
     percent_course =0.8
+
+
+    # SBLK params:
+    # offset (alpha) used in the weighting function for supporters points
+    displacement_weight = 40
+
+    # fraction of points to track without supporters
+    fine_threshold = 0.45
+
+    # diagonal entries to initialize covariance matrix, for supporters prediction
+    supporter_variance = 10
+
+    # update rate for exponential moving average
+    update_rate = 0.7
+
+
+    # common parameters
+    # number of lowermost contour points to keep (used to ensure that points along entire contour were kept)
+    num_bottom = 0
+
+    # flag to maintain the top edge of the contour across tracking (mitigates against downward drift)
     fix_top = False
 
+    # How often to reset contour to ground truth (used to analyze how often/when drift occurs)
+    # set to high number (i.e. > # frames) for no reset
     reset_frequency = 100000
 
 
     def change_values(self, disp_weight, qual_level, min_dist, course_d, course_sigma_c, course_sigma_s, fine_d,
                       fine_sigma_c, fine_sigma_s, window, pyr, fine_thresh, num_bot, perc_fine, perc_course, reset_freq):
         """
-        Method to modify the parameter instance variables to the given arguments. Only changes the arguments which are not None.
+        Method to modify the parameter instance variables to the given arguments. Only changes the arguments which are not None. Used for parameter tuning.
         """
         if disp_weight is not None:
             self.displacement_weight = disp_weight
