@@ -1,25 +1,22 @@
 #!/usr/bin/env python3
-"""Generate all tracker plots.
+"""Generate all plots and data published in BIOROB 2020.
 
 Example:
     Once filepaths are set appropriately, run this function via
 
-        $ python run_trackerplots.py
-
-Todo:
-    implement all the things!
+        $ python gen_biorob_figs.py
 """
 
 import matplotlib as mpl
-mpl.rcParams['pdf.fonttype'] = 42 #truetype shenanigans
-mpl.rcParams['ps.fonttype'] = 42
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-from multisensorimport.dataobj import trialdata as td
-from multisensorimport.dataobj import data_utils as utils
+# ensure plots use Type1 fonts when exported to PDF or PS
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+
+PLOT_FONT = 'Open Sans'
 
 DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
 
@@ -31,30 +28,9 @@ DATA_DIR_SUB5 = DATA_DIR + 'sub5/wp5t37/'
 
 TRACKER_STRINGS = ['LK','FRLK','BFLK-G','BFLK-T','SBLK-G','SBLK-T']
 
-READ_PATH_MAT = DATA_DIR + 'sub1/seg_data.mat'
-READ_PATH_MAT_28 = DATA_DIR + 'sub2/seg_data.mat'
-READ_PATH_MAT_33 = DATA_DIR + 'sub3/seg_data.mat'
-READ_PATH_MAT_34 = DATA_DIR + 'sub4/seg_data.mat'
-READ_PATH_MAT_37 = DATA_DIR + 'sub5/seg_data.mat'
-
-READ_PATH_US_1 = DATA_DIR + 'sub1/wp1t5'
-READ_PATH_US_2 = DATA_DIR + 'sub1/wp2t6'
-READ_PATH_US_5 = DATA_DIR + 'sub1/wp5t11'
-READ_PATH_US_8 = DATA_DIR + 'sub1/wp8t15'
-READ_PATH_US_10 = DATA_DIR + 'sub1/wp10t25'
-READ_PATH_US_28 = DATA_DIR + 'sub2/wp5t28'
-READ_PATH_US_33 = DATA_DIR + 'sub3/wp5t33'
-READ_PATH_US_34 = DATA_DIR + 'sub4/wp5t34'
-READ_PATH_US_37 = DATA_DIR + 'sub5/wp5t37'
-
-CORR_OUT_PATH = DATA_DIR + 'correlations.csv'
-
-PLOT = True
-
-PLOT_FONT = 'Open Sans'
-
 def main():
 
+    # generate angle correlation plot
     df_ang = pd.read_csv(DATA_DIR + 'ang_corr.csv', header=0,
                          index_col='measure')
 
@@ -66,13 +42,6 @@ def main():
     styles = ['-','-','-','--','-','--','-','--']
     sns.set()
     ax = df_ang.plot(kind='line', style=styles, color=ang_colors, rot=0)
-#    bars = ax.patches
-#    patterns =('-', '+', 'x','/','//','O','o','\\','\\\\')
-#    patterns = ('','////','','////','','////')
-#    hatches = [p for p in patterns for i in range(len(df_subj_def))]
-#    for bar, hatch in zip(bars, hatches):
-#            bar.set_hatch(hatch)
-
     L = ax.legend(loc='lower left', ncol=4)
     plt.setp(L.texts, family=PLOT_FONT)
     ax.set_xlabel('Flexion Angle ($\degree$ from full extension)', fontname=PLOT_FONT)
@@ -263,35 +232,6 @@ def main():
     for tick in ax.get_yticklabels():
         tick.set_fontname(PLOT_FONT)
     plt.show()
-
-
-#    sns.set()
-#    fig, axs = plt.subplots(6)
-#    axs[0].plot(df_iou['LK-JD'])
-#    axs[1].plot(df_iou['FRLK-JD'])
-#    axs[2].plot(df_iou['BFLK-G-JD'])
-#    axs[3].plot(df_iou['BFLK-T-JD'])
-#    axs[4].plot(df_iou['SBLK-G-JD'])
-#    axs[5].plot(df_iou['SBLK-T-JD'])
-#    axs[0].plot(df_t['LK'])
-#    axs[1].plot(df_t['FRLK'])
-#    axs[2].plot(df_t['BFLK-G'])
-#    axs[3].plot(df_t['BFLK-T'])
-#    axs[4].plot(df_t['SBLK-G'])
-#    axs[5].plot(df_t['SBLK-T'])
-
-#    plt.show()
-
-#    sns.set()
-#
-#    fig, axs = plt.subplots(4)
-#    fig.suptitle('test plot')
-#    axs[0].plot(data1.data_emg.data)
-#    axs[1].plot(data1.data_amg.data)
-#    axs[2].plot(data1.data_force.data)
-#    axs[3].plot(data1.data_ultrasound.data)
-#
-#    plt.show()
 
 def gen_iou_vals(subj_dir):
     df_iou = pd.read_csv(subj_dir + 'LK/iou_series.csv',
