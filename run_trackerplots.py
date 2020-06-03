@@ -11,6 +11,9 @@ Todo:
 """
 
 import matplotlib as mpl
+mpl.rcParams['pdf.fonttype'] = 42 #truetype shenanigans
+mpl.rcParams['ps.fonttype'] = 42
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -51,8 +54,6 @@ PLOT = True
 PLOT_FONT = 'Open Sans'
 
 def main():
-
-#    mpl.rc('font',family='Times New Roman')
 
     df_ang = pd.read_csv(DATA_DIR + 'ang_corr.csv', header=0,
                          index_col='measure')
@@ -159,8 +160,12 @@ def main():
     df_tr = pd.read_csv(DATA_DIR_SUB3 +
                                'ground_truth_thickness_ratio.csv',
                                index_col=False, header=0, names=['tr-GT'])
-    df_iou = pd.read_csv(DATA_DIR_SUB3 + '/LK/iou_series.csv',
+    df_iou = pd.read_csv(DATA_DIR_SUB3 + 'LK/iou_series.csv',
                                 index_col=False, header=0, names=['iou-LK'])
+
+    print(DATA_DIR_SUB3 + '/LK/iou_series.csv')
+    print(df_iou)
+#    raise ValueError('breakpoint')
 
     for tracker in TRACKER_STRINGS:
         datapath_csa = DATA_DIR_SUB3 + tracker + '/tracking_csa.csv'
@@ -186,11 +191,79 @@ def main():
         df_iou[tracker + '-JD'] = 1-df_iou[tracker]
 
 
-
+    print('MEANS-----------------------')
     print(df_csa.mean())
     print(df_t.mean())
     print(df_tr.mean())
     print(df_iou.mean())
+    print('STDEVS-----------------------')
+    print(df_csa.std())
+    print(df_t.std())
+    print(df_tr.std())
+    print(df_iou.std())
+
+
+    print('NEW TRIAL')
+
+    sub1_iou = gen_iou_vals(DATA_DIR_SUB1)
+    sub2_iou = gen_iou_vals(DATA_DIR_SUB2)
+    sub3_iou = gen_iou_vals(DATA_DIR_SUB3)
+    sub4_iou = gen_iou_vals(DATA_DIR_SUB4)
+    sub5_iou = gen_iou_vals(DATA_DIR_SUB5)
+
+    df_means = pd.DataFrame(index=TRACKER_STRINGS,
+                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
+    df_means['Sub1'] = sub1_iou.mean()
+    df_means['Sub2'] = sub2_iou.mean()
+    df_means['Sub3'] = sub3_iou.mean()
+    df_means['Sub4'] = sub4_iou.mean()
+    df_means['Sub5'] = sub5_iou.mean()
+
+    df_stds = pd.DataFrame(index=TRACKER_STRINGS,
+                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
+    df_stds['Sub1'] = sub1_iou.std()
+    df_stds['Sub2'] = sub2_iou.std()
+    df_stds['Sub3'] = sub3_iou.std()
+    df_stds['Sub4'] = sub4_iou.std()
+    df_stds['Sub5'] = sub5_iou.std()
+
+    df_sems = pd.DataFrame(index=TRACKER_STRINGS,
+                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
+    df_sems['Sub1'] = sub1_iou.sem()
+    df_sems['Sub2'] = sub2_iou.sem()
+    df_sems['Sub3'] = sub3_iou.sem()
+    df_sems['Sub4'] = sub4_iou.sem()
+    df_sems['Sub5'] = sub5_iou.sem()
+
+    df_means = df_means.T
+    df_stds = df_stds.T
+    df_sems = df_sems.T
+
+    print(df_means)
+    print(df_stds)
+    print(df_sems)
+
+    track_colors = ['#f781bf','#a65628','#377eb8','#377eb8','#984ea3','#984ea3']
+    sns.set()
+    ax = df_means.plot(kind='bar', color=track_colors, rot=0, yerr=df_stds,
+                       error_kw=dict(lw=0.5, capsize=0, capthick=0))
+    bars = ax.patches
+#    patterns =('-', '+', 'x','/','//','O','o','\\','\\\\')
+    patterns = ('','','','////','','////')
+    hatches = [p for p in patterns for i in range(len(df_subj))]
+    for bar, hatch in zip(bars, hatches):
+            bar.set_hatch(hatch)
+
+    L = ax.legend(loc='upper left')
+    plt.setp(L.texts, family=PLOT_FONT)
+    ax.set_xlabel('Subject', fontname=PLOT_FONT)
+    ax.set_ylabel('Jaccard Distance (1-IoU)', fontname=PLOT_FONT)
+    for tick in ax.get_xticklabels():
+        tick.set_fontname(PLOT_FONT)
+    for tick in ax.get_yticklabels():
+        tick.set_fontname(PLOT_FONT)
+    plt.show()
+
 
 #    sns.set()
 #    fig, axs = plt.subplots(6)
@@ -219,6 +292,23 @@ def main():
 #    axs[3].plot(data1.data_ultrasound.data)
 #
 #    plt.show()
+
+def gen_iou_vals(subj_dir):
+    df_iou = pd.read_csv(subj_dir + 'LK/iou_series.csv',
+                                index_col=False, header=0, names=['LK'])
+
+    for tracker in TRACKER_STRINGS:
+        if tracker != 'LK':
+            datapath_iou = subj_dir + tracker + '/iou_series.csv'
+            df_iou[tracker] = pd.read_csv(datapath_iou)
+
+    df_iou = df_iou.loc[df_iou['LK'] > 1e-3]
+
+
+    for tracker in TRACKER_STRINGS:
+        df_iou[tracker] = 1-df_iou[tracker]
+
+    return df_iou
 
 
 if __name__ == "__main__":
