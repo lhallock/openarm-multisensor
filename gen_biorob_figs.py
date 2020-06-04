@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
+from multisensorimport.viz import plot_utils
+
+
 # ensure plots use Type1 fonts when exported to PDF or PS
 mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
@@ -39,20 +42,7 @@ def main():
 
     print_header('[SIGNAL]-FORCE CORRELATION ACROSS ANGLES (SUB1)')
     print(df_ang)
-
-    ang_colors = ['#fdae6b','#f16d13','#41b6c4','#41b6c4','#225ea8','#225ea8','#081d58','#081d58']
-    styles = ['-','-','-','--','-','--','-','--']
-    sns.set()
-    ax = df_ang.plot(kind='line', style=styles, color=ang_colors, rot=0)
-    L = ax.legend(loc='lower left', ncol=4)
-    plt.setp(L.texts, family=PLOT_FONT)
-    ax.set_xlabel('Flexion Angle ($\degree$ from full extension)', fontname=PLOT_FONT)
-    ax.set_ylabel('CC(·,f)', fontname=PLOT_FONT)
-    for tick in ax.get_xticklabels():
-        tick.set_fontname(PLOT_FONT)
-    for tick in ax.get_yticklabels():
-        tick.set_fontname(PLOT_FONT)
-    plt.show()
+    plot_utils.gen_ang_plot(df_ang)
 
     # generate subject correlation plot
     df_subj_def = pd.read_csv(DATA_DIR + 'subj_corr2.csv', header=0,
@@ -176,34 +166,28 @@ def main():
         df_iou[tracker] = 1-df_iou[tracker]
 
     df_iou_mean = df_iou.mean()[TRACKER_STRINGS].to_frame()
-    df_iou_mean.rename(columns={0:'Jaccard Distance'}, inplace=True)
     df_csa_mean = df_csa.mean()[TRACKER_STRINGS].to_frame()
-    df_csa_mean.rename(columns={0:'CSA'}, inplace=True)
     df_t_mean = df_t.mean()[TRACKER_STRINGS].to_frame()
-    df_t_mean.rename(columns={0:'T'}, inplace=True)
     df_tr_mean = df_tr.mean()[TRACKER_STRINGS].to_frame()
-    df_tr_mean.rename(columns={0:'AR'}, inplace=True)
 
     df_means = df_iou_mean.copy()
-    df_means['CSA'] = df_csa_mean['CSA']
-    df_means['T'] = df_t_mean['T']
-    df_means['AR'] = df_tr_mean['AR']
+    df_means.rename(columns={0:'Jaccard Distance'}, inplace=True)
+    df_means['CSA'] = df_csa_mean[0]
+    df_means['T'] = df_t_mean[0]
+    df_means['AR'] = df_tr_mean[0]
     print_header('EXAMPLE TRACKING ERROR (SUB3) - MEAN')
     print(df_means)
 
     df_iou_std = df_iou.std()[TRACKER_STRINGS].to_frame()
-    df_iou_std.rename(columns={0:'Jaccard Distance'}, inplace=True)
     df_csa_std = df_csa.std()[TRACKER_STRINGS].to_frame()
-    df_csa_std.rename(columns={0:'CSA'}, inplace=True)
     df_t_std = df_t.std()[TRACKER_STRINGS].to_frame()
-    df_t_std.rename(columns={0:'T'}, inplace=True)
     df_tr_std = df_tr.std()[TRACKER_STRINGS].to_frame()
-    df_tr_std.rename(columns={0:'AR'}, inplace=True)
 
     df_stds = df_iou_std.copy()
-    df_stds['CSA'] = df_csa_std['CSA']
-    df_stds['T'] = df_t_std['T']
-    df_stds['AR'] = df_tr_std['AR']
+    df_stds.rename(columns={0:'Jaccard Distance'}, inplace=True)
+    df_stds['CSA'] = df_csa_std[0]
+    df_stds['T'] = df_t_std[0]
+    df_stds['AR'] = df_tr_std[0]
     print_header('EXAMPLE TRACKING ERROR (SUB3) - STDDEV')
     print(df_stds)
 
@@ -226,7 +210,7 @@ def gen_iou_vals(subj_dir):
     return df_iou
 
 def print_header(header_string):
-    print('\n' + '-'*int(TERM_DIM[1]))
+    print('\n')# + '-'*int(TERM_DIM[1]))
     print(header_string)
     print('-'*int(TERM_DIM[1]))
 
