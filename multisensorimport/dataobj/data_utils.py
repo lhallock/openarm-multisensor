@@ -96,14 +96,21 @@ def offset_from_peak(peak_ind, freq, prepeak):
     return offset
 
 
-def build_corr_table(data_list, out_path, correlate='force'):
+def build_corr_table(data_list, out_path=None, correlate='force'):
     """Build table containing correlation relationships from multiple trials.
+
+    This function builds and returns a pandas DataFrame containing specified
+    correlation relationships, and if a write path is specified, writes it to a
+    CSV file.
 
     Args:
         data_list (list): list of TrialData objects whose correlations to plot
-        out_path (str): out path for correlation table writing
+        out_path (str): out path for correlation table writing, if desired
         correlate (str): desired data series within each trial to correlate
             with
+
+    Returns:
+        pandas.DataFrame correlation table
     """
     first = True
     for data in data_list:
@@ -120,8 +127,11 @@ def build_corr_table(data_list, out_path, correlate='force'):
         else:
             df_corr[label] = data_corr
 
-    df_corr.to_csv(out_path)
-    print(df_corr)
+    # write to file, if specified
+    if out_path:
+        df_corr.to_csv(out_path)
+
+    return df_corr
 
 
 from scipy.stats import pearsonr

@@ -31,12 +31,21 @@ TRACKER_STRINGS = ['LK','FRLK','BFLK-G','BFLK-T','SBLK-G','SBLK-T']
 def main():
 
     # generate angle correlation plot
-    df_ang = pd.read_csv(DATA_DIR + 'ang_corr.csv', header=0,
-                         index_col='measure')
+#    df_ang = pd.read_csv(DATA_DIR + 'ang_corr.csv', header=0,
+#                         index_col='measure')
+
+#    df_ang = df_ang.T
+
+#    print(df_ang)
+
+    df_ang = pd.read_csv(DATA_DIR + 'ang_corr2.csv', header=0, index_col=0)
 
     df_ang = df_ang.T
 
     print(df_ang)
+#    raise ValueError('breakpoint')
+
+
 
     ang_colors = ['#fdae6b','#f16d13','#41b6c4','#41b6c4','#225ea8','#225ea8','#081d58','#081d58']
     styles = ['-','-','-','--','-','--','-','--']
@@ -55,8 +64,8 @@ def main():
 
 #    raise ValueError('breakpoint')
 
-    df_subj_def = pd.read_csv(DATA_DIR + 'subj_corr.csv', header=0,
-                               index_col='measure')
+    df_subj_def = pd.read_csv(DATA_DIR + 'subj_corr2.csv', header=0,
+                               index_col=0)
     df_subj_def = df_subj_def.T
 
     print(df_subj_def)

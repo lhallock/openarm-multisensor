@@ -34,7 +34,9 @@ READ_PATH_US_33 = DATA_DIR + 'sub3/wp5t33'
 READ_PATH_US_34 = DATA_DIR + 'sub4/wp5t34'
 READ_PATH_US_37 = DATA_DIR + 'sub5/wp5t37'
 
-CORR_OUT_PATH = DATA_DIR + 'correlations.csv'
+CORR_OUT_PATH = DATA_DIR + 'correlations2.csv'
+ANG_CORR_OUT_PATH = DATA_DIR + 'ang_corr2.csv'
+SUBJ_CORR_OUT_PATH = DATA_DIR + 'subj_corr2.csv'
 
 PLOT = True
 
@@ -52,7 +54,7 @@ def main():
 
 #    print(utils.calculate_pvalues(data1.df))
     data1.plot_biorob()
-    raise ValueError("poor man's breakpoint")
+#    raise ValueError("poor man's breakpoint")
 
     # s1wp2
     data2 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
@@ -125,8 +127,28 @@ def main():
                                                     force_only=True)
 
 
-    utils.build_corr_table([data1, data2, data5, data8, data10, data28, data33,
+    df_corr = utils.build_corr_table([data1, data2, data5, data8, data10, data28, data33,
                            data34, data37], CORR_OUT_PATH)
+
+    print(df_corr)
+
+    df_corr_ref = df_corr.loc[['emg-abs-bic','emg-abs-brd','us-csa','us-csa-dt','us-t','us-t-dt','us-tr','us-tr-dt']]
+    print(df_corr_ref)
+
+    df_corr_ref.rename(index={'emg-abs-bic':'sEMG-BIC','emg-abs-brd':'sEMG-BRD','us-csa':'CSA','us-csa-dt':'CSA-DT','us-t':'T','us-t-dt':'T-DT','us-tr':'AR','us-tr-dt':'AR-DT'}, inplace=True)
+
+    print(df_corr_ref)
+
+    df_corr_ang = df_corr_ref[['sub1wp1','sub1wp2','sub1wp5','sub1wp8','sub1wp10']]
+    df_corr_ang.columns = ['25','44','69','82','97']
+    print(df_corr_ang)
+    df_corr_ang.to_csv(ANG_CORR_OUT_PATH)
+
+    df_corr_subj = df_corr_ref[['sub1wp5','sub2wp5','sub3wp5','sub4wp5','sub5wp5']]
+    df_corr_subj = df_corr_subj.loc[['CSA','CSA-DT','T','T-DT','AR','AR-DT']]
+    df_corr_subj.columns = ['Sub1','Sub2','Sub3','Sub4','Sub5']
+    print(df_corr_subj)
+    df_corr_subj.to_csv(SUBJ_CORR_OUT_PATH)
 
     if PLOT:
         data1.plot()
