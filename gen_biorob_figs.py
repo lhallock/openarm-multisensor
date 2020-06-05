@@ -42,7 +42,8 @@ def main():
     plot_utils.gen_subj_plot(df_subj)
 
     # generate tracking accuracy plot
-    df_means, df_stds, df_sems = gen_tracking_dfs()
+    subj_dirs = [DATA_DIR_SUB1,DATA_DIR_SUB2,DATA_DIR_SUB3,DATA_DIR_SUB4,DATA_DIR_SUB5]
+    df_means, df_stds, df_sems = gen_tracking_dfs(subj_dirs)
 
     print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - MEAN')
     print(df_means)
@@ -54,36 +55,10 @@ def main():
 
 
     # generate example tracking data table
-    df_csa = pd.read_csv(DATA_DIR_SUB3 + 'ground_truth_csa.csv',
-                                index_col=False, header=0, names=['csa-GT'])
-    df_t = pd.read_csv(DATA_DIR_SUB3 + 'ground_truth_thickness.csv',
-                              index_col=False, header=0, names=['t-GT'])
-    df_tr = pd.read_csv(DATA_DIR_SUB3 +
-                               'ground_truth_thickness_ratio.csv',
-                               index_col=False, header=0, names=['tr-GT'])
-    df_iou = pd.read_csv(DATA_DIR_SUB3 + 'LK/iou_series.csv',
-                                index_col=False, header=0, names=['iou-LK'])
-
-    for tracker in TRACKER_STRINGS:
-        datapath_csa = DATA_DIR_SUB3 + tracker + '/tracking_csa.csv'
-        datapath_t = DATA_DIR_SUB3 + tracker + '/tracking_thickness.csv'
-        datapath_tr = DATA_DIR_SUB3 + tracker + '/tracking_thickness_ratio.csv'
-        datapath_iou = DATA_DIR_SUB3 + tracker + '/iou_series.csv'
-        df_csa[tracker] = pd.read_csv(datapath_csa)
-        df_t[tracker] = pd.read_csv(datapath_t)
-        df_tr[tracker] = pd.read_csv(datapath_tr)
-        df_iou[tracker] = pd.read_csv(datapath_iou)
-
-    df_csa = df_csa.loc[df_csa['csa-GT'] > 0]
-    df_t = df_t.loc[df_t['t-GT'] > 0]
-    df_tr = df_tr.loc[df_tr['tr-GT'] > 0]
-    df_iou = df_iou.loc[df_iou['iou-LK'] > 1e-3]
-
-    for tracker in TRACKER_STRINGS:
-        df_csa[tracker] = abs(df_csa[tracker]-df_csa['csa-GT'])/df_csa['csa-GT']
-        df_t[tracker] = abs(df_t[tracker]-df_t['t-GT'])/df_t['t-GT']
-        df_tr[tracker] = abs(df_tr[tracker]-df_tr['tr-GT'])/df_tr['tr-GT']
-        df_iou[tracker] = 1-df_iou[tracker]
+    df_iou = gen_jd_vals(DATA_DIR_SUB3)
+    df_csa = gen_def_err_vals('CSA')
+    df_t = gen_def_err_vals('T')
+    df_tr = gen_def_err_vals('AR')
 
     df_iou_mean = df_iou.mean()[TRACKER_STRINGS].to_frame()
     df_csa_mean = df_csa.mean()[TRACKER_STRINGS].to_frame()
@@ -112,47 +87,29 @@ def main():
     print(df_stds)
 
 
-def gen_tracking_dfs():
+def gen_tracking_dfs(subj_dirs):
     """Generate tracking error (Jaccard distance) data frames from raw IoU time
     series CSVs.
 
     Args:
-        sub_dirs (list): list of file paths to each IoU CSV, ordered Sub1-SubN
+        subj_dirs (list): list of file paths to each IoU CSV, ordered Sub1-SubN
 
     Returns:
         pandas.DataFrame mean Jaccard distance errors
         pandas.DataFrame standard deviation Jaccard distance errors
         pandas.DataFrame standard error Jaccard distance errors
     """
-    sub1_iou = gen_iou_vals(DATA_DIR_SUB1)
-    sub2_iou = gen_iou_vals(DATA_DIR_SUB2)
-    sub3_iou = gen_iou_vals(DATA_DIR_SUB3)
-    sub4_iou = gen_iou_vals(DATA_DIR_SUB4)
-    sub5_iou = gen_iou_vals(DATA_DIR_SUB5)
-
     df_means = pd.DataFrame(index=TRACKER_STRINGS,
                             columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
-    df_means['Sub1'] = sub1_iou.mean()
-    df_means['Sub2'] = sub2_iou.mean()
-    df_means['Sub3'] = sub3_iou.mean()
-    df_means['Sub4'] = sub4_iou.mean()
-    df_means['Sub5'] = sub5_iou.mean()
+    df_stds = df_means.copy()
+    df_sems = df_means.copy()
 
-    df_stds = pd.DataFrame(index=TRACKER_STRINGS,
-                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
-    df_stds['Sub1'] = sub1_iou.std()
-    df_stds['Sub2'] = sub2_iou.std()
-    df_stds['Sub3'] = sub3_iou.std()
-    df_stds['Sub4'] = sub4_iou.std()
-    df_stds['Sub5'] = sub5_iou.std()
-
-    df_sems = pd.DataFrame(index=TRACKER_STRINGS,
-                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
-    df_sems['Sub1'] = sub1_iou.sem()
-    df_sems['Sub2'] = sub2_iou.sem()
-    df_sems['Sub3'] = sub3_iou.sem()
-    df_sems['Sub4'] = sub4_iou.sem()
-    df_sems['Sub5'] = sub5_iou.sem()
+    for i in range(len(subj_dirs)):
+        df_col = 'Sub' + str(i + 1)
+        jds = gen_jd_vals(subj_dirs[i])
+        df_means[df_col] = jds.mean()
+        df_stds[df_col] = jds.std()
+        df_sems[df_col] = jds.sem()
 
     df_means = df_means.T
     df_stds = df_stds.T
@@ -160,8 +117,40 @@ def gen_tracking_dfs():
 
     return df_means, df_stds, df_sems
 
+def gen_def_err_vals(metric):
+    if metric == 'CSA':
+        df_metric = pd.read_csv(DATA_DIR_SUB3 + 'ground_truth_csa.csv',
+                                index_col=False, header=0, names=['GT'])
+    elif metric == 'T':
+        df_metric = pd.read_csv(DATA_DIR_SUB3 + 'ground_truth_thickness.csv',
+                              index_col=False, header=0, names=['GT'])
+    elif metric == 'AR':
+        df_metric = pd.read_csv(DATA_DIR_SUB3 +
+                               'ground_truth_thickness_ratio.csv',
+                               index_col=False, header=0, names=['GT'])
+    else:
+        raise ValueError('unknown deformation metric')
 
-def gen_iou_vals(subj_dir):
+    for tracker in TRACKER_STRINGS:
+        if metric == 'CSA':
+            datapath = DATA_DIR_SUB3 + tracker + '/tracking_csa.csv'
+        elif metric == 'T':
+            datapath = DATA_DIR_SUB3 + tracker + '/tracking_thickness.csv'
+        elif metric == 'AR':
+            datapath = DATA_DIR_SUB3 + tracker + '/tracking_thickness_ratio.csv'
+        else:
+            raise ValueError('unknown deformation metric')
+
+        df_metric[tracker] = pd.read_csv(datapath)
+
+    df_metric = df_metric.loc[df_metric['GT'] > 0]
+
+    for tracker in TRACKER_STRINGS:
+        df_metric[tracker] = abs(df_metric[tracker]-df_metric['GT'])/df_metric['GT']
+
+    return df_metric
+
+def gen_jd_vals(subj_dir):
     df_iou = pd.read_csv(subj_dir + 'LK/iou_series.csv',
                                 index_col=False, header=0, names=['LK'])
 
