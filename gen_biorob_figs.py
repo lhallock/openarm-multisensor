@@ -42,39 +42,7 @@ def main():
     plot_utils.gen_subj_plot(df_subj)
 
     # generate tracking accuracy plot
-    sub1_iou = gen_iou_vals(DATA_DIR_SUB1)
-    sub2_iou = gen_iou_vals(DATA_DIR_SUB2)
-    sub3_iou = gen_iou_vals(DATA_DIR_SUB3)
-    sub4_iou = gen_iou_vals(DATA_DIR_SUB4)
-    sub5_iou = gen_iou_vals(DATA_DIR_SUB5)
-
-    df_means = pd.DataFrame(index=TRACKER_STRINGS,
-                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
-    df_means['Sub1'] = sub1_iou.mean()
-    df_means['Sub2'] = sub2_iou.mean()
-    df_means['Sub3'] = sub3_iou.mean()
-    df_means['Sub4'] = sub4_iou.mean()
-    df_means['Sub5'] = sub5_iou.mean()
-
-    df_stds = pd.DataFrame(index=TRACKER_STRINGS,
-                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
-    df_stds['Sub1'] = sub1_iou.std()
-    df_stds['Sub2'] = sub2_iou.std()
-    df_stds['Sub3'] = sub3_iou.std()
-    df_stds['Sub4'] = sub4_iou.std()
-    df_stds['Sub5'] = sub5_iou.std()
-
-    df_sems = pd.DataFrame(index=TRACKER_STRINGS,
-                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
-    df_sems['Sub1'] = sub1_iou.sem()
-    df_sems['Sub2'] = sub2_iou.sem()
-    df_sems['Sub3'] = sub3_iou.sem()
-    df_sems['Sub4'] = sub4_iou.sem()
-    df_sems['Sub5'] = sub5_iou.sem()
-
-    df_means = df_means.T
-    df_stds = df_stds.T
-    df_sems = df_sems.T
+    df_means, df_stds, df_sems = gen_tracking_dfs()
 
     print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - MEAN')
     print(df_means)
@@ -142,6 +110,55 @@ def main():
     df_stds['AR'] = df_tr_std[0]
     print_header('EXAMPLE TRACKING ERROR (SUB3) - STDDEV')
     print(df_stds)
+
+
+def gen_tracking_dfs():
+    """Generate tracking error (Jaccard distance) data frames from raw IoU time
+    series CSVs.
+
+    Args:
+        sub_dirs (list): list of file paths to each IoU CSV, ordered Sub1-SubN
+
+    Returns:
+        pandas.DataFrame mean Jaccard distance errors
+        pandas.DataFrame standard deviation Jaccard distance errors
+        pandas.DataFrame standard error Jaccard distance errors
+    """
+    sub1_iou = gen_iou_vals(DATA_DIR_SUB1)
+    sub2_iou = gen_iou_vals(DATA_DIR_SUB2)
+    sub3_iou = gen_iou_vals(DATA_DIR_SUB3)
+    sub4_iou = gen_iou_vals(DATA_DIR_SUB4)
+    sub5_iou = gen_iou_vals(DATA_DIR_SUB5)
+
+    df_means = pd.DataFrame(index=TRACKER_STRINGS,
+                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
+    df_means['Sub1'] = sub1_iou.mean()
+    df_means['Sub2'] = sub2_iou.mean()
+    df_means['Sub3'] = sub3_iou.mean()
+    df_means['Sub4'] = sub4_iou.mean()
+    df_means['Sub5'] = sub5_iou.mean()
+
+    df_stds = pd.DataFrame(index=TRACKER_STRINGS,
+                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
+    df_stds['Sub1'] = sub1_iou.std()
+    df_stds['Sub2'] = sub2_iou.std()
+    df_stds['Sub3'] = sub3_iou.std()
+    df_stds['Sub4'] = sub4_iou.std()
+    df_stds['Sub5'] = sub5_iou.std()
+
+    df_sems = pd.DataFrame(index=TRACKER_STRINGS,
+                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
+    df_sems['Sub1'] = sub1_iou.sem()
+    df_sems['Sub2'] = sub2_iou.sem()
+    df_sems['Sub3'] = sub3_iou.sem()
+    df_sems['Sub4'] = sub4_iou.sem()
+    df_sems['Sub5'] = sub5_iou.sem()
+
+    df_means = df_means.T
+    df_stds = df_stds.T
+    df_sems = df_sems.T
+
+    return df_means, df_stds, df_sems
 
 
 def gen_iou_vals(subj_dir):
