@@ -8,21 +8,11 @@ Example:
 """
 
 import os
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 
 from multisensorimport.viz import plot_utils
 
-
-# ensure plots use Type1 fonts when exported to PDF or PS
-mpl.rcParams['pdf.fonttype'] = 42
-mpl.rcParams['ps.fonttype'] = 42
-
 TERM_DIM = os.popen('stty size', 'r').read().split()
-
-PLOT_FONT = 'Open Sans'
 
 DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
 
@@ -37,38 +27,19 @@ TRACKER_STRINGS = ['LK','FRLK','BFLK-G','BFLK-T','SBLK-G','SBLK-T']
 def main():
 
     # generate angle correlation plot
-    df_ang = pd.read_csv(DATA_DIR + 'ang_corr2.csv', header=0, index_col=0)
-    df_ang = df_ang.T
+    df_ang = pd.read_csv(DATA_DIR + 'ang_corr2.csv', header=0, index_col=0).T
 
     print_header('[SIGNAL]-FORCE CORRELATION ACROSS ANGLES (SUB1)')
     print(df_ang)
     plot_utils.gen_ang_plot(df_ang)
 
     # generate subject correlation plot
-    df_subj_def = pd.read_csv(DATA_DIR + 'subj_corr2.csv', header=0,
-                               index_col=0)
-    df_subj_def = df_subj_def.T
+    df_subj = pd.read_csv(DATA_DIR + 'subj_corr2.csv', header=0,
+                          index_col=0).T
 
     print_header('[SIGNAL]-FORCE CORRELATION ACROSS SUBJECTS (69deg)')
-    print(df_subj_def)
-
-    mod_subj_colors = ['#41b6c4','#41b6c4','#225ea8','#225ea8','#081d58','#081d58']
-    sns.set()
-    ax = df_subj_def.plot(kind='bar', color=mod_subj_colors, rot=0)
-    bars = ax.patches
-    patterns = ('','////','','////','','////')
-    hatches = [p for p in patterns for i in range(len(df_subj_def))]
-    for bar, hatch in zip(bars, hatches):
-            bar.set_hatch(hatch)
-    L = ax.legend(loc='lower left', ncol=3)
-    plt.setp(L.texts, family=PLOT_FONT)
-    ax.set_xlabel('Subject', fontname=PLOT_FONT)
-    ax.set_ylabel('CC(·,f)', fontname=PLOT_FONT)
-    for tick in ax.get_xticklabels():
-        tick.set_fontname(PLOT_FONT)
-    for tick in ax.get_yticklabels():
-        tick.set_fontname(PLOT_FONT)
-    plt.show()
+    print(df_subj)
+    plot_utils.gen_subj_plot(df_subj)
 
     # generate tracking accuracy plot
     sub1_iou = gen_iou_vals(DATA_DIR_SUB1)
@@ -111,26 +82,7 @@ def main():
     print(df_stds)
     print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - STDERR')
     print(df_sems)
-
-    track_colors = ['#f781bf','#a65628','#377eb8','#377eb8','#984ea3','#984ea3']
-    sns.set()
-    ax = df_means.plot(kind='bar', color=track_colors, rot=0, yerr=df_stds,
-                       error_kw=dict(lw=0.5, capsize=0, capthick=0))
-    bars = ax.patches
-    patterns = ('','','','////','','////')
-    hatches = [p for p in patterns for i in range(len(df_means))]
-    for bar, hatch in zip(bars, hatches):
-            bar.set_hatch(hatch)
-
-    L = ax.legend(loc='upper left')
-    plt.setp(L.texts, family=PLOT_FONT)
-    ax.set_xlabel('Subject', fontname=PLOT_FONT)
-    ax.set_ylabel('Jaccard Distance (1-IoU)', fontname=PLOT_FONT)
-    for tick in ax.get_xticklabels():
-        tick.set_fontname(PLOT_FONT)
-    for tick in ax.get_yticklabels():
-        tick.set_fontname(PLOT_FONT)
-    plt.show()
+    plot_utils.gen_tracking_error_plot(df_means, df_stds)
 
 
     # generate example tracking data table
