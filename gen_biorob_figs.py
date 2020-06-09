@@ -19,7 +19,7 @@ DATA_DIR_SUB3 = DATA_DIR + 'sub3/wp5t33/'
 DATA_DIR_SUB4 = DATA_DIR + 'sub4/wp5t34/'
 DATA_DIR_SUB5 = DATA_DIR + 'sub5/wp5t37/'
 
-TRACKER_STRINGS = ['LK','FRLK','BFLK-G','BFLK-T','SBLK-G','SBLK-T']
+TRACKER_STRINGS = ['LK', 'FRLK', 'BFLK-G', 'BFLK-T', 'SBLK-G', 'SBLK-T']
 
 def main():
 
@@ -43,7 +43,7 @@ def main():
     print_utils.print_div()
 
     # generate tracking accuracy plot
-    subj_dirs = [DATA_DIR_SUB1,DATA_DIR_SUB2,DATA_DIR_SUB3,DATA_DIR_SUB4,DATA_DIR_SUB5]
+    subj_dirs = [DATA_DIR_SUB1, DATA_DIR_SUB2, DATA_DIR_SUB3, DATA_DIR_SUB4, DATA_DIR_SUB5]
     df_means, df_stds, df_sems = gen_tracking_dfs(subj_dirs)
 
     print_utils.print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - MEAN')
@@ -102,13 +102,13 @@ def gen_tracking_dfs(subj_dirs):
         pandas.DataFrame standard error Jaccard distance errors
     """
     df_means = pd.DataFrame(index=TRACKER_STRINGS,
-                            columns=['Sub1','Sub2','Sub3','Sub4','Sub5'])
+                            columns=['Sub1', 'Sub2', 'Sub3', 'Sub4', 'Sub5'])
     df_stds = df_means.copy()
     df_sems = df_means.copy()
 
-    for i in range(len(subj_dirs)):
+    for i, subj_dir in enumerate(subj_dirs):
         df_col = 'Sub' + str(i + 1)
-        jds = gen_jd_vals(subj_dirs[i])
+        jds = gen_jd_vals(subj_dir)
         df_means[df_col] = jds.mean()
         df_stds[df_col] = jds.std()
         df_sems[df_col] = jds.sem()
@@ -125,11 +125,11 @@ def gen_def_err_vals(metric, tracker_strings=TRACKER_STRINGS):
                                 index_col=False, header=0, names=['GT'])
     elif metric == 'T':
         df_metric = pd.read_csv(DATA_DIR_SUB3 + 'ground_truth_thickness.csv',
-                              index_col=False, header=0, names=['GT'])
+                                index_col=False, header=0, names=['GT'])
     elif metric == 'AR':
         df_metric = pd.read_csv(DATA_DIR_SUB3 +
-                               'ground_truth_thickness_ratio.csv',
-                               index_col=False, header=0, names=['GT'])
+                                'ground_truth_thickness_ratio.csv',
+                                index_col=False, header=0, names=['GT'])
     else:
         raise ValueError('unknown deformation metric')
 
@@ -153,8 +153,18 @@ def gen_def_err_vals(metric, tracker_strings=TRACKER_STRINGS):
     return df_metric
 
 def gen_jd_vals(subj_dir, tracker_strings=TRACKER_STRINGS):
+    """Aggregate table of per-frame Jaccard distance error for each tracker.
+
+    Args:
+        subj_dir (str): path to subject data directory, including final '/'
+        tracker_strings (list): list of tracker string identifiers (i.e.,
+            directory names)
+
+    Returns:
+        pandas.DataFrame of Jaccard distance errors, indexed by frame number
+    """
     df_iou = pd.read_csv(subj_dir + 'LK/iou_series.csv',
-                                index_col=False, header=0, names=['LK'])
+                         index_col=False, header=0, names=['LK'])
 
     for tracker in tracker_strings:
         if tracker != 'LK':
