@@ -19,9 +19,11 @@ DATA_DIR_SUB3 = DATA_DIR + 'sub3/wp5t33/'
 DATA_DIR_SUB4 = DATA_DIR + 'sub4/wp5t34/'
 DATA_DIR_SUB5 = DATA_DIR + 'sub5/wp5t37/'
 
-TRACKER_STRINGS = ['LK', 'FRLK', 'BFLK-G', 'BFLK-T', 'SBLK-G', 'SBLK-T']
+TRACKER_STRINGS = ('LK', 'FRLK', 'BFLK-G', 'BFLK-T', 'SBLK-G', 'SBLK-T')
 
 def main():
+    """Generate all plots reported in [PUBLICATION FORTHCOMING].
+    """
 
     # generate angle correlation plot
     df_ang = pd.read_csv(DATA_DIR + 'ang_corr2.csv', header=0, index_col=0).T
@@ -57,43 +59,60 @@ def main():
     print_utils.print_div()
 
     # generate example tracking data table
-    df_iou = gen_jd_vals(DATA_DIR_SUB3)
-    df_csa = gen_def_err_vals(DATA_DIR_SUB3, 'CSA')
-    df_t = gen_def_err_vals(DATA_DIR_SUB3, 'T')
-    df_tr = gen_def_err_vals(DATA_DIR_SUB3, 'AR')
+    df_ex_means, df_ex_stds = gen_ex_tracking_df(DATA_DIR_SUB3)
+    print_utils.print_header('EXAMPLE TRACKING ERROR (SUB3) - MEAN')
+    print(df_ex_means)
+    print_utils.print_header('EXAMPLE TRACKING ERROR (SUB3) - STDDEV')
+    print(df_ex_stds)
 
-    df_iou_mean = df_iou.mean()[TRACKER_STRINGS].to_frame()
-    df_csa_mean = df_csa.mean()[TRACKER_STRINGS].to_frame()
-    df_t_mean = df_t.mean()[TRACKER_STRINGS].to_frame()
-    df_tr_mean = df_tr.mean()[TRACKER_STRINGS].to_frame()
+def gen_ex_tracking_df(subj_dir):
+    """Generate tracking error (Jaccard distance, CSA, T, AR) data frames from raw time
+    series CSVs for single subject.
+
+    Args:
+        subj_dir (str): path to subject data directory, including final '/'
+
+    Returns:
+        pandas.DataFrame mean errors (Jaccard distance, CSA, T, AR)
+        pandas.DataFrame standard deviation errors (Jaccard distance, CSA, T, AR)
+    """
+    df_iou = gen_jd_vals(subj_dir)
+    df_csa = gen_def_err_vals(subj_dir, 'CSA')
+    df_t = gen_def_err_vals(subj_dir, 'T')
+    df_tr = gen_def_err_vals(subj_dir, 'AR')
+
+    df_iou_mean = df_iou.mean().to_frame()
+    df_csa_mean = df_csa.mean().to_frame()
+    df_t_mean = df_t.mean().to_frame()
+    df_tr_mean = df_tr.mean().to_frame()
 
     df_means = df_iou_mean.copy()
     df_means.rename(columns={0:'Jaccard Distance'}, inplace=True)
     df_means['CSA'] = df_csa_mean[0]
     df_means['T'] = df_t_mean[0]
     df_means['AR'] = df_tr_mean[0]
-    print_utils.print_header('EXAMPLE TRACKING ERROR (SUB3) - MEAN')
-    print(df_means)
 
-    df_iou_std = df_iou.std()[TRACKER_STRINGS].to_frame()
-    df_csa_std = df_csa.std()[TRACKER_STRINGS].to_frame()
-    df_t_std = df_t.std()[TRACKER_STRINGS].to_frame()
-    df_tr_std = df_tr.std()[TRACKER_STRINGS].to_frame()
+    df_iou_std = df_iou.std().to_frame()
+    df_csa_std = df_csa.std().to_frame()
+    df_t_std = df_t.std().to_frame()
+    df_tr_std = df_tr.std().to_frame()
 
     df_stds = df_iou_std.copy()
     df_stds.rename(columns={0:'Jaccard Distance'}, inplace=True)
     df_stds['CSA'] = df_csa_std[0]
     df_stds['T'] = df_t_std[0]
     df_stds['AR'] = df_tr_std[0]
-    print_utils.print_header('EXAMPLE TRACKING ERROR (SUB3) - STDDEV')
-    print(df_stds)
 
-def gen_tracking_dfs(subj_dirs):
+    return df_means, df_stds
+
+def gen_tracking_dfs(subj_dirs, tracker_strings=TRACKER_STRINGS):
     """Generate tracking error (Jaccard distance) data frames from raw IoU time
-    series CSVs.
+    series CSVs of multiple subjects.
 
     Args:
         subj_dirs (list): list of file paths to each IoU CSV, ordered Sub1-SubN
+        tracker_strings (list): list of tracker string identifiers (i.e.,
+            directory names)
 
     Returns:
         pandas.DataFrame mean Jaccard distance errors
@@ -106,7 +125,7 @@ def gen_tracking_dfs(subj_dirs):
         cols.append('Sub' + str(i + 1))
 
     # initialize data frame
-    df_means = pd.DataFrame(index=TRACKER_STRINGS, columns=cols)
+    df_means = pd.DataFrame(index=tracker_strings, columns=cols)
     df_stds = df_means.copy()
     df_sems = df_means.copy()
 
