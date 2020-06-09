@@ -7,12 +7,9 @@ Example:
         $ python gen_biorob_figs.py
 """
 
-import os
 import pandas as pd
 
-from multisensorimport.viz import plot_utils
-
-TERM_DIM = os.popen('stty size', 'r').read().split()
+from multisensorimport.viz import plot_utils, print_utils
 
 DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
 
@@ -29,30 +26,35 @@ def main():
     # generate angle correlation plot
     df_ang = pd.read_csv(DATA_DIR + 'ang_corr2.csv', header=0, index_col=0).T
 
-    print_header('[SIGNAL]-FORCE CORRELATION ACROSS ANGLES (SUB1)')
+    print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS ANGLES (SUB1)')
     print(df_ang)
     plot_utils.gen_ang_plot(df_ang)
+
+    print_utils.print_div()
 
     # generate subject correlation plot
     df_subj = pd.read_csv(DATA_DIR + 'subj_corr2.csv', header=0,
                           index_col=0).T
 
-    print_header('[SIGNAL]-FORCE CORRELATION ACROSS SUBJECTS (69deg)')
+    print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS SUBJECTS (69deg)')
     print(df_subj)
     plot_utils.gen_subj_plot(df_subj)
+
+    print_utils.print_div()
 
     # generate tracking accuracy plot
     subj_dirs = [DATA_DIR_SUB1,DATA_DIR_SUB2,DATA_DIR_SUB3,DATA_DIR_SUB4,DATA_DIR_SUB5]
     df_means, df_stds, df_sems = gen_tracking_dfs(subj_dirs)
 
-    print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - MEAN')
+    print_utils.print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - MEAN')
     print(df_means)
-    print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - STDDEV')
+    print_utils.print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - STDDEV')
     print(df_stds)
-    print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - STDERR')
+    print_utils.print_header('TRACKING ERROR ACROSS SUBJECTS (JACCARD DISTANCE) - STDERR')
     print(df_sems)
     plot_utils.gen_tracking_error_plot(df_means, df_stds)
 
+    print_utils.print_div()
 
     # generate example tracking data table
     df_iou = gen_jd_vals(DATA_DIR_SUB3)
@@ -70,7 +72,7 @@ def main():
     df_means['CSA'] = df_csa_mean[0]
     df_means['T'] = df_t_mean[0]
     df_means['AR'] = df_tr_mean[0]
-    print_header('EXAMPLE TRACKING ERROR (SUB3) - MEAN')
+    print_utils.print_header('EXAMPLE TRACKING ERROR (SUB3) - MEAN')
     print(df_means)
 
     df_iou_std = df_iou.std()[TRACKER_STRINGS].to_frame()
@@ -83,7 +85,7 @@ def main():
     df_stds['CSA'] = df_csa_std[0]
     df_stds['T'] = df_t_std[0]
     df_stds['AR'] = df_tr_std[0]
-    print_header('EXAMPLE TRACKING ERROR (SUB3) - STDDEV')
+    print_utils.print_header('EXAMPLE TRACKING ERROR (SUB3) - STDDEV')
     print(df_stds)
 
 
@@ -117,7 +119,7 @@ def gen_tracking_dfs(subj_dirs):
 
     return df_means, df_stds, df_sems
 
-def gen_def_err_vals(metric):
+def gen_def_err_vals(metric, tracker_strings=TRACKER_STRINGS):
     if metric == 'CSA':
         df_metric = pd.read_csv(DATA_DIR_SUB3 + 'ground_truth_csa.csv',
                                 index_col=False, header=0, names=['GT'])
@@ -131,7 +133,7 @@ def gen_def_err_vals(metric):
     else:
         raise ValueError('unknown deformation metric')
 
-    for tracker in TRACKER_STRINGS:
+    for tracker in tracker_strings:
         if metric == 'CSA':
             datapath = DATA_DIR_SUB3 + tracker + '/tracking_csa.csv'
         elif metric == 'T':
@@ -145,16 +147,16 @@ def gen_def_err_vals(metric):
 
     df_metric = df_metric.loc[df_metric['GT'] > 0]
 
-    for tracker in TRACKER_STRINGS:
+    for tracker in tracker_strings:
         df_metric[tracker] = abs(df_metric[tracker]-df_metric['GT'])/df_metric['GT']
 
     return df_metric
 
-def gen_jd_vals(subj_dir):
+def gen_jd_vals(subj_dir, tracker_strings=TRACKER_STRINGS):
     df_iou = pd.read_csv(subj_dir + 'LK/iou_series.csv',
                                 index_col=False, header=0, names=['LK'])
 
-    for tracker in TRACKER_STRINGS:
+    for tracker in tracker_strings:
         if tracker != 'LK':
             datapath_iou = subj_dir + tracker + '/iou_series.csv'
             df_iou[tracker] = pd.read_csv(datapath_iou)
@@ -162,15 +164,10 @@ def gen_jd_vals(subj_dir):
     df_iou = df_iou.loc[df_iou['LK'] > 1e-3]
 
 
-    for tracker in TRACKER_STRINGS:
+    for tracker in tracker_strings:
         df_iou[tracker] = 1-df_iou[tracker]
 
     return df_iou
-
-def print_header(header_string):
-    print('\n')# + '-'*int(TERM_DIM[1]))
-    print(header_string)
-    print('-'*int(TERM_DIM[1]))
 
 
 if __name__ == "__main__":
