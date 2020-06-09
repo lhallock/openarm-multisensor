@@ -88,7 +88,6 @@ def main():
     print_utils.print_header('EXAMPLE TRACKING ERROR (SUB3) - STDDEV')
     print(df_stds)
 
-
 def gen_tracking_dfs(subj_dirs):
     """Generate tracking error (Jaccard distance) data frames from raw IoU time
     series CSVs.
@@ -101,11 +100,17 @@ def gen_tracking_dfs(subj_dirs):
         pandas.DataFrame standard deviation Jaccard distance errors
         pandas.DataFrame standard error Jaccard distance errors
     """
-    df_means = pd.DataFrame(index=TRACKER_STRINGS,
-                            columns=['Sub1', 'Sub2', 'Sub3', 'Sub4', 'Sub5'])
+    # determine data columns
+    cols = []
+    for i, _ in enumerate(subj_dirs):
+        cols.append('Sub' + str(i + 1))
+
+    # initialize data frame
+    df_means = pd.DataFrame(index=TRACKER_STRINGS, columns=cols)
     df_stds = df_means.copy()
     df_sems = df_means.copy()
 
+    # aggregate data from each subject
     for i, subj_dir in enumerate(subj_dirs):
         df_col = 'Sub' + str(i + 1)
         jds = gen_jd_vals(subj_dir)
