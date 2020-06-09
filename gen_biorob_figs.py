@@ -58,9 +58,9 @@ def main():
 
     # generate example tracking data table
     df_iou = gen_jd_vals(DATA_DIR_SUB3)
-    df_csa = gen_def_err_vals('CSA')
-    df_t = gen_def_err_vals('T')
-    df_tr = gen_def_err_vals('AR')
+    df_csa = gen_def_err_vals(DATA_DIR_SUB3, 'CSA')
+    df_t = gen_def_err_vals(DATA_DIR_SUB3, 'T')
+    df_tr = gen_def_err_vals(DATA_DIR_SUB3, 'AR')
 
     df_iou_mean = df_iou.mean()[TRACKER_STRINGS].to_frame()
     df_csa_mean = df_csa.mean()[TRACKER_STRINGS].to_frame()
@@ -119,15 +119,26 @@ def gen_tracking_dfs(subj_dirs):
 
     return df_means, df_stds, df_sems
 
-def gen_def_err_vals(metric, tracker_strings=TRACKER_STRINGS):
+def gen_def_err_vals(subj_dir, metric, tracker_strings=TRACKER_STRINGS):
+    """Aggregate table of per-frame deformation metric error for each tracker.
+
+    Args:
+        subj_dir (str): path to subject data directory, including final '/'
+        metric (str): metric identifier ('CSA', 'T', or 'AR')
+        tracker_strings (list): list of tracker string identifiers (i.e.,
+            directory names)
+
+    Returns:
+        pandas.DataFrame of deformation metric errors, indexed by frame number
+    """
     if metric == 'CSA':
-        df_metric = pd.read_csv(DATA_DIR_SUB3 + 'ground_truth_csa.csv',
+        df_metric = pd.read_csv(subj_dir + 'ground_truth_csa.csv',
                                 index_col=False, header=0, names=['GT'])
     elif metric == 'T':
-        df_metric = pd.read_csv(DATA_DIR_SUB3 + 'ground_truth_thickness.csv',
+        df_metric = pd.read_csv(subj_dir + 'ground_truth_thickness.csv',
                                 index_col=False, header=0, names=['GT'])
     elif metric == 'AR':
-        df_metric = pd.read_csv(DATA_DIR_SUB3 +
+        df_metric = pd.read_csv(subj_dir +
                                 'ground_truth_thickness_ratio.csv',
                                 index_col=False, header=0, names=['GT'])
     else:
@@ -135,11 +146,11 @@ def gen_def_err_vals(metric, tracker_strings=TRACKER_STRINGS):
 
     for tracker in tracker_strings:
         if metric == 'CSA':
-            datapath = DATA_DIR_SUB3 + tracker + '/tracking_csa.csv'
+            datapath = subj_dir + tracker + '/tracking_csa.csv'
         elif metric == 'T':
-            datapath = DATA_DIR_SUB3 + tracker + '/tracking_thickness.csv'
+            datapath = subj_dir + tracker + '/tracking_thickness.csv'
         elif metric == 'AR':
-            datapath = DATA_DIR_SUB3 + tracker + '/tracking_thickness_ratio.csv'
+            datapath = subj_dir + tracker + '/tracking_thickness_ratio.csv'
         else:
             raise ValueError('unknown deformation metric')
 
