@@ -9,10 +9,6 @@ Example:
 Todo:
     implement all the things!
 """
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 from multisensorimport.dataobj import trialdata as td
 from multisensorimport.dataobj import data_utils
 from multisensorimport.viz import plot_utils, stats_utils
@@ -35,20 +31,16 @@ READ_PATH_US_33 = DATA_DIR + 'sub3/wp5t33'
 READ_PATH_US_34 = DATA_DIR + 'sub4/wp5t34'
 READ_PATH_US_37 = DATA_DIR + 'sub5/wp5t37'
 
-#CORR_OUT_PATH = DATA_DIR + 'correlations2.csv'
-CORR_OUT_PATH = None
 ANG_CORR_OUT_PATH = DATA_DIR + 'ang_corr.csv'
 SUBJ_CORR_OUT_PATH = DATA_DIR + 'subj_corr.csv'
-
-PLOT = True
 
 DEBUG = True
 
 def main():
-    """Execute all EMBC 2020 data analysis."""
+    """Execute all time series data analysis for [PUBLICATION FORTHCOMING]."""
 
     # import all time series data, detrend via polynomial fit
-    # TODO: AMG peaks are inaccurate
+    # NOTE: AMG data not currently analyzed, peaks inaccurate
     print('Aggregating and fitting time series data (Sub1, 25deg)...')
     data1 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
                                                     READ_PATH_US_1, 'sub1', 0,
@@ -127,9 +119,8 @@ def main():
                                                      force_only=True)
     print('Done.')
 
-    plot_utils.gen_time_plot(data1)
-
-    if PLOT:
+    # show debugging plots for alignment and fit quality evaluation
+    if DEBUG:
         plot_utils.gen_debug_time_plot(data1)
         plot_utils.gen_debug_time_plot(data2)
         plot_utils.gen_debug_time_plot(data5)
@@ -140,6 +131,16 @@ def main():
         plot_utils.gen_debug_time_plot(data34)
         plot_utils.gen_debug_time_plot(data37)
 
+    # generate final formatted plots
+        plot_utils.gen_time_plot(data1)
+        plot_utils.gen_time_plot(data2)
+        plot_utils.gen_time_plot(data5)
+        plot_utils.gen_time_plot(data8)
+        plot_utils.gen_time_plot(data10)
+        plot_utils.gen_time_plot(data28)
+        plot_utils.gen_time_plot(data33)
+        plot_utils.gen_time_plot(data34)
+        plot_utils.gen_time_plot(data37)
 
     # generate correlation data and print to console and CSV
     df_corr = data_utils.build_corr_table([data1, data2, data5, data8, data10, data28, data33,

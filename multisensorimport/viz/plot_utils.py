@@ -20,12 +20,14 @@ mpl.rcParams['ps.fonttype'] = 42
 # plot defaults
 PLOT_FONT = 'Open Sans'
 
-def gen_time_plot(trialdata, plot_font=PLOT_FONT):
+def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of force, sEMG, and ultrasound data.
 
     Args:
         trialdata (pandas.DataFrame): dataobj.TrialData object containing data
             to to be plotted
+        no_titles (bool): whether to omit axis/title labels that are redundant
+            with eventual use case (e.g., copying to table for publication)
         plot_font (str): desired matplotlib font family
     """
     register_matplotlib_converters()
@@ -39,35 +41,38 @@ def gen_time_plot(trialdata, plot_font=PLOT_FONT):
     plot_ind = plot_ind*24*60*60
 
     axs[0].plot(trialdata.df['force'], 'k')
-    #axs[0].set(ylabel='force')
-    axs[1].plot(trialdata.df['emg-bic']*1e3, color='#cccccc')
-    axs[1].plot(trialdata.df['emg-abs-bic']*1e4, color='#fdae6b')
-    #axs[1].set(ylabel='emg-bic')
-    axs[2].plot(trialdata.df['emg-brd']*1e3, color='#cccccc')
-    axs[2].plot(trialdata.df['emg-abs-brd']*1e4, color='#f16913')
-    #axs[2].set(ylabel='emg-brd')
+    if not trialdata.force_only:
+        axs[1].plot(trialdata.df['emg-bic']*1e3, color='#cccccc')
+        axs[1].plot(trialdata.df['emg-abs-bic']*1e4, color='#fdae6b')
+        axs[2].plot(trialdata.df['emg-brd']*1e3, color='#cccccc')
+        axs[2].plot(trialdata.df['emg-abs-brd']*1e4, color='#f16913')
     axs[3].plot(trialdata.df['us-csa-dt'], color='#41b6c4')
-    #axs[3].set(ylabel='us-csa-dt')
     axs[4].plot(trialdata.df['us-t-dt'], color='#225ea8')
-    #axs[4].set(ylabel='us-t-dt')
     axs[5].plot(plot_ind, trialdata.df['us-tr-dt'], color='#081d58')
-    #axs[5].set(ylabel='us-tr-dt')
-    axs[5].set_xlabel('time (s)', fontname=PLOT_FONT)
+    axs[5].set_xlabel('time (s)', fontname=plot_font)
     axs[5].xaxis.set_label_coords(1.0, -0.15)
+
+    if not no_titles:
+        tstring = trialdata.subj + ', ' + str(180-int(trialdata.ang)) + '$\degree$'
+        fig.suptitle(tstring, fontname=plot_font)
+        axs[0].set(ylabel='f')
+        axs[1].set(ylabel='sEMG-BIC')
+        axs[2].set(ylabel='sEMG-BRD')
+        axs[3].set(ylabel='CSA-DT')
+        axs[4].set(ylabel='T-DT')
+        axs[5].set(ylabel='AR-DT')
 
     axs[0].xaxis.set_visible(False)
     axs[1].xaxis.set_visible(False)
     axs[2].xaxis.set_visible(False)
     axs[3].xaxis.set_visible(False)
     axs[4].xaxis.set_visible(False)
-    #axs[5].xaxis.set_major_formatter(mdates.DateFormatter("%s"))
-    #axs[5].xaxis.set_minor_formatter(mdates.DateFormatter("%s"))
 
     for i in range(num_subplots):
         for tick in axs[i].get_xticklabels():
-            tick.set_fontname(PLOT_FONT)
+            tick.set_fontname(plot_font)
         for tick in axs[i].get_yticklabels():
-            tick.set_fontname(PLOT_FONT)
+            tick.set_fontname(plot_font)
 
     plt.show()
 
