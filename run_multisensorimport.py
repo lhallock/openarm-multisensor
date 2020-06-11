@@ -11,7 +11,7 @@ Todo:
 """
 from multisensorimport.dataobj import trialdata as td
 from multisensorimport.dataobj import data_utils
-from multisensorimport.viz import plot_utils, stats_utils
+from multisensorimport.viz import plot_utils, print_utils, stats_utils
 
 DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
 
@@ -35,6 +35,7 @@ ANG_CORR_OUT_PATH = DATA_DIR + 'ang_corr.csv'
 SUBJ_CORR_OUT_PATH = DATA_DIR + 'subj_corr.csv'
 
 DEBUG = True
+PRINT_PUB_PLOTS = False
 
 def main():
     """Execute all time series data analysis for [PUBLICATION FORTHCOMING]."""
@@ -119,8 +120,11 @@ def main():
                                                      force_only=True)
     print('Done.')
 
+    print_utils.print_div()
+
     # show debugging plots for alignment and fit quality evaluation
     if DEBUG:
+        print('\nDisplaying debug plots...')
         plot_utils.gen_debug_time_plot(data1)
         plot_utils.gen_debug_time_plot(data2)
         plot_utils.gen_debug_time_plot(data5)
@@ -130,17 +134,24 @@ def main():
         plot_utils.gen_debug_time_plot(data33)
         plot_utils.gen_debug_time_plot(data34)
         plot_utils.gen_debug_time_plot(data37)
+        print('Done.')
+
+        print_utils.print_div()
 
     # generate final formatted plots
-        plot_utils.gen_time_plot(data1)
-        plot_utils.gen_time_plot(data2)
-        plot_utils.gen_time_plot(data5)
-        plot_utils.gen_time_plot(data8)
-        plot_utils.gen_time_plot(data10)
-        plot_utils.gen_time_plot(data28)
-        plot_utils.gen_time_plot(data33)
-        plot_utils.gen_time_plot(data34)
-        plot_utils.gen_time_plot(data37)
+    print('\nDisplaying final plots...')
+    plot_utils.gen_time_plot(data1, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data2, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data8, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data10, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data28, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data33, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data34, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data37, PRINT_PUB_PLOTS)
+    print('Done.')
+
+    print_utils.print_div()
 
     # generate correlation data and print to console and CSV
     df_corr = data_utils.build_corr_table([data1, data2, data5, data8, data10, data28, data33,
@@ -148,7 +159,9 @@ def main():
 
     df_ang, df_subj = stats_utils.gen_refined_corr_dfs(df_corr, ANG_CORR_OUT_PATH,
                                                        SUBJ_CORR_OUT_PATH)
+    print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS ANGLES (SUB1)')
     print(df_ang)
+    print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS SUBJECTS (69deg)')
     print(df_subj)
 
 if __name__ == "__main__":

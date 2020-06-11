@@ -76,68 +76,52 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
-def gen_debug_time_plot(trialdata, plot_font=PLOT_FONT):
-    """Generate time series plot of force, sEMG, and ultrasound data for fit
-    debugging.
+def gen_debug_time_plot(trialdata):
+    """Generate unformatted time series plot of force, sEMG, and ultrasound
+    data for fit debugging.
+
+    Colors used in plotting:
+        blue: unmodified signal
+        orange: filtered signal (sEMG)
+        red: polyfit trendline
+        green: samples used in trendline generation
+        black: detrended data
 
     Args:
         trialdata (pandas.DataFrame): dataobj.TrialData object containing data
             to to be plotted
         plot_font (str): desired matplotlib font family
     """
-    #df_corr = df.corr()
-    #print(df_corr['force'])
-    #corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/' + trialdata.subj + '/wp' + str(trialdata.wp) + '.csv'
-    #df_corr.to_csv(corr_out_path)
     register_matplotlib_converters()
     sns.set()
 
-    tstring = trialdata.subj + ' test plot, wp' + str(trialdata.wp)
+    tstring ='FIT TEST: ' + trialdata.subj + ', ' + str(180-int(trialdata.ang)) + '$\degree$'
 
+    fig, axs = plt.subplots(7)
+    fig.suptitle(tstring)
+    axs[0].plot(trialdata.df['force'])
+    axs[0].set(ylabel='force')
     if not trialdata.force_only:
-        fig, axs = plt.subplots(7)
-        fig.suptitle(tstring)
-        axs[0].plot(trialdata.df['force'])
-        axs[0].set(ylabel='force')
         axs[1].plot(trialdata.df['emg-brd'])
         axs[1].plot(trialdata.df['emg-abs-brd'])
         axs[1].set(ylabel='emg-brd')
         axs[2].plot(trialdata.df['emg-bic'])
         axs[2].plot(trialdata.df['emg-abs-bic'])
-        axs[2].set(ylabel='emg-bic')
-        axs[3].plot(trialdata.df['us-csa'])
-        axs[3].set(ylabel='us-csa')
-        axs[3].plot(trialdata.df_dt['us-csa'], 'g-')
-        axs[3].plot(trialdata.df['us-csa-fit'], 'r-')
-        axs[4].plot(trialdata.df['us-t'])
-        axs[4].set(ylabel='us-t')
-        axs[4].plot(trialdata.df_dt['us-t'], 'g-')
-        axs[4].plot(trialdata.df['us-t-fit'], 'r-')
-        axs[5].plot(trialdata.df['us-t-dt'])
-        axs[5].set(ylabel='us-t-dt')
-        axs[6].plot(trialdata.df['us-tr'])
-        axs[6].set(ylabel='us-tr')
-        axs[6].plot(trialdata.df_dt['us-tr'], 'g-')
-        axs[6].plot(trialdata.df['us-tr-fit'], 'r-')
-    else:
-        fig, axs = plt.subplots(5)
-        fig.suptitle(tstring)
-        axs[0].plot(trialdata.df['force'])
-        axs[0].set(ylabel='force')
-        axs[1].plot(trialdata.df['us-csa'])
-        axs[1].set(ylabel='us-csa')
-        axs[1].plot(trialdata.df_dt['us-csa'], 'g-')
-        axs[1].plot(trialdata.df['us-csa-fit'], 'r-')
-        axs[2].plot(trialdata.df['us-t'])
-        axs[2].set(ylabel='us-t')
-        axs[2].plot(trialdata.df_dt['us-t'], 'g-')
-        axs[2].plot(trialdata.df['us-t-fit'], 'r-')
-        axs[3].plot(trialdata.df['us-t-dt'])
-        axs[3].set(ylabel='us-t-dt')
-        axs[4].plot(trialdata.df['us-tr'])
-        axs[4].set(ylabel='us-tr')
-        axs[4].plot(trialdata.df_dt['us-tr'], 'g-')
-        axs[4].plot(trialdata.df['us-tr-fit'], 'r-')
+    axs[2].set(ylabel='emg-bic')
+    axs[3].plot(trialdata.df['us-csa'])
+    axs[3].set(ylabel='us-csa')
+    axs[3].plot(trialdata.df_dt['us-csa'], 'g-')
+    axs[3].plot(trialdata.df['us-csa-fit'], 'r-')
+    axs[4].plot(trialdata.df['us-t'])
+    axs[4].set(ylabel='us-t')
+    axs[4].plot(trialdata.df_dt['us-t'], 'g-')
+    axs[4].plot(trialdata.df['us-t-fit'], 'r-')
+    axs[5].plot(trialdata.df['us-t-dt'], 'k-')
+    axs[5].set(ylabel='us-t-dt')
+    axs[6].plot(trialdata.df['us-tr'])
+    axs[6].set(ylabel='us-tr')
+    axs[6].plot(trialdata.df_dt['us-tr'], 'g-')
+    axs[6].plot(trialdata.df['us-tr-fit'], 'r-')
 
     plt.show()
 
