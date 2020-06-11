@@ -189,7 +189,7 @@ class TimeSeriesData():
             raise ValueError('Channel labels are of inconsistent dimension.')
 
     def _compute_offset_data(self):
-        """Compute data matrix from specified offset
+        """Compute data matrix from specified offset.
 
         Note that if the specified index is before data collection begins, the
         array will pre-populate with zeros. (TODO: make these NaNs probably)
@@ -202,7 +202,7 @@ class TimeSeriesData():
             return self.data[self.offset:, :]
 
         # if offset is negative, prepend zeros
-        if self.offset < 0:
+        else:
             prefix = np.zeros((-1 * self.offset, self.data.shape[1]))
             return np.vstack((prefix, self.data))
 
@@ -277,8 +277,10 @@ class TimeSeriesData():
 
     @property
     def offset(self):
-        """Get 'zero-valued' time point (for alignment with other
-            TimeSeriesData objects).
+        """Get 'zero-valued' time point.
+
+        This method returns the point of the data series considered 'zero' for
+        the purposes of alignment with other TimeSeriesData objects).
 
         Returns:
             int offset time point (in number of data points)
@@ -287,8 +289,10 @@ class TimeSeriesData():
 
     @offset.setter
     def offset(self, offset):
-        """Set 'zero-valued' time point (for alignment with other
-            TimeSeriesData objects).
+        """Set 'zero-valued' time point.
+
+        This method sets the point of the data series considered 'zero' for the
+        purposes of alignment with other TimeSeriesData objects).
 
         Args:
             offset (int): desired offset (in number of data points)

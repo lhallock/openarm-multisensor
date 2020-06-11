@@ -5,9 +5,6 @@ Example:
     Once filepaths are set appropriately, run this function via
 
         $ python run_multisensorimport.py
-
-Todo:
-    implement all the things!
 """
 import os
 
@@ -49,7 +46,6 @@ PRINT_PUB_PLOTS = False
 
 def main():
     """Execute all time series data analysis for [PUBLICATION FORTHCOMING]."""
-
     # import all time series data, detrend via polynomial fit
     # NOTE: AMG data not currently analyzed, peaks inaccurate
     print('Aggregating and fitting time series data (Sub1, 25deg)...')

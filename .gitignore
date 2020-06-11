@@ -5,6 +5,9 @@
 # prospector (linter) config
 .prospector.yaml
 
+# prospector reference outfile
+prospector_out.txt
+
 # standard Python gitignore, taken from https://github.com/github/gitignore/blob/master/Python.gitignore
 
 # Byte-compiled / optimized / DLL files

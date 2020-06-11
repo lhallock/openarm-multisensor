@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Generate all bar plots and correlation statistics for [PUBLICATION
-FORTHCOMING]
+"""Generate all bar plots / correlation statistics for publication.
 
 Example:
     Once filepaths are set appropriately, run this function via
