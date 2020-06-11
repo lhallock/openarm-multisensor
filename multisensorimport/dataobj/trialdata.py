@@ -12,26 +12,17 @@ metadata.
 import math
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt #TODO: won't need these after refactor
-import seaborn as sns
 from scipy.io import loadmat
-#from numpy.polynomial import Polynomial as Poly
-import numpy.polynomial.polynomial as poly
-#from sklearn.preprocessing import PolynomialFeatures
 
 import multisensorimport.dataobj.data_utils as utils
 from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
-
-from pandas.plotting import register_matplotlib_converters
-import matplotlib.dates as mdates
-
-PLOT_FONT = 'Open Sans'
 
 # MAGIC NUMBERS (fungible)
 EMG_EWM_SPAN = 500
 FORCE_DETREND_CUTOFF = 5.0
 POLYNOMIAL_ORDER = 3
 PREPEAK_VAL = 3
+INTERPOLATION_METHOD = 'linear'
 
 class TrialData():
     """Class containing muscle time series data and associated metadata.
@@ -193,26 +184,26 @@ class TrialData():
 
         # set ultrasound CSA data
         us_csa_labels = ['CSA']
-        us_freq = 8.3856 #TODO: note on empirical calculation
+        us_freq = 8.3856 # empirical calculation
         us_offset = utils.offset_from_peak(us_peak, us_freq, PREPEAK_VAL)
         filename_us_csa = filedir_us + '/ground_truth_csa.csv'
         td.data_us_csa = TimeSeriesData.from_file('US-CSA', filename_us_csa,
-                                                      us_csa_labels, us_freq,
-                                                      us_offset)
+                                                  us_csa_labels, us_freq,
+                                                  us_offset)
 
         # set ultrasound thickness data
         us_t_labels = ['T']
         filename_us_t = filedir_us + '/ground_truth_thickness.csv'
         td.data_us_thickness = TimeSeriesData.from_file('US-T', filename_us_t,
-                                                      us_t_labels, us_freq,
-                                                      us_offset)
+                                                        us_t_labels, us_freq,
+                                                        us_offset)
 
         # set ultrasound thickness ratio data
         us_tr_labels = ['TR']
         filename_us_tr = filedir_us + '/ground_truth_thickness_ratio.csv'
         td.data_us_th_rat = TimeSeriesData.from_file('US-TR', filename_us_tr,
-                                                      us_tr_labels, us_freq,
-                                                      us_offset)
+                                                     us_tr_labels, us_freq,
+                                                     us_offset)
 
         td.build_synced_dataframe()
 
@@ -282,12 +273,9 @@ class TrialData():
                                      max(force_series.index))
 
         df = df.truncate(after=min_time_completed)
-        print(df)
 
         # interpolate values
-        df = df.interpolate(method='linear')
-        #TODO: choose interpolation method/order
-        print(df)
+        df = df.interpolate(method=INTERPOLATION_METHOD)
 
         # create df for detrending
         df_dt = df.loc[df['force'] <= FORCE_DETREND_CUTOFF]
@@ -296,9 +284,9 @@ class TrialData():
         us_csa_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-csa'],
                                              df.index, POLYNOMIAL_ORDER)
         us_t_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-t'],
-                                             df.index, POLYNOMIAL_ORDER)
+                                           df.index, POLYNOMIAL_ORDER)
         us_tr_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-tr'],
-                                             df.index, POLYNOMIAL_ORDER)
+                                            df.index, POLYNOMIAL_ORDER)
 
         # add polyfits to data frame
         df['us-csa-fit'] = us_csa_fitdata
@@ -316,6 +304,8 @@ class TrialData():
 
 
     def _compute_abs_force(self):
+        """Compute absolute value of force from 6-channel force data.
+        """
         force_data_comps = self.data_force.data
         force_abs = np.zeros((force_data_comps.shape[0], 1))
         for i in range(force_abs.shape[0]):

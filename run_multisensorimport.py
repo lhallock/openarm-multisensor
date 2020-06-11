@@ -47,51 +47,57 @@ def main():
     # TODO: AMG peaks are inaccurate
 
     # s1wp1
+    print('Aggregating and fitting time series data (Sub1, 25deg)...')
     data1 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
                                                     READ_PATH_US_1, 'sub1', 0,
                                                     emg_peak=5500,
                                                     amg_peak=13290,
                                                     force_peak=3721, us_peak=51)
-
-#    print(data_utils.calculate_pvalues(data1.df))
-#    data1.plot_biorob()
+    print('Done.')
     plot_utils.gen_time_plot(data1)
-#    raise ValueError("poor man's breakpoint")
 
     # s1wp2
+    print('\nAggregating and fitting time series data (Sub1, 44deg)...')
     data2 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
                                                     READ_PATH_US_2, 'sub1', 1,
                                                     emg_peak=5500,
                                                     amg_peak=13290,
                                                     force_peak=5800, us_peak=46)
+    print('Done.')
 
-#   raise ValueError("poor man's breakpoint")
 
 
     # s1wp5
+    print('\nAggregating and fitting time series data (Sub1, 69deg)...')
     data5 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
                                                     READ_PATH_US_5, 'sub1', 4,
                                                     emg_peak=5800,
                                                     amg_peak=13290,
                                                     force_peak=4476, us_peak=50)
+    print('Done.')
 
 
     # s1wp8
+    print('\nAggregating and fitting time series data (Sub1, 82deg)...')
     data8 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
                                                     READ_PATH_US_8, 'sub1', 7,
                                                     emg_peak=5700,
                                                     amg_peak=13290,
                                                     force_peak=2469, us_peak=49)
+    print('Done.')
 
 
     # s1wp10
+    print('\nAggregating and fitting time series data (Sub1, 97deg)...')
     data10 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT,
                                                     READ_PATH_US_10, 'sub1', 9,
                                                     emg_peak=6000,
                                                     amg_peak=13290,
                                                     force_peak=4222, us_peak=48)
+    print('Done.')
 
     # s2wp5
+    print('\nAggregating and fitting time series data (Sub2, 69deg)...')
     data28 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_28,
                                                     READ_PATH_US_28, 'sub2', 0,
                                                     emg_peak=None,
@@ -99,9 +105,11 @@ def main():
                                                     force_peak=4033,
                                                     us_peak=53,
                                                     force_only=True)
+    print('Done.')
 
 
     # s3wp5
+    print('\nAggregating and fitting time series data (Sub3, 69deg)...')
     data33 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_33,
                                                     READ_PATH_US_33, 'sub3', 0,
                                                     emg_peak=None,
@@ -109,24 +117,29 @@ def main():
                                                     force_peak=7113,
                                                     us_peak=63,
                                                     force_only=True)
+    print('Done.')
 
 
     # s4wp5
+    print('\nAggregating and fitting time series data (Sub4, 69deg)...')
     data34 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_34,
                                                     READ_PATH_US_34, 'sub4', 0,
                                                     emg_peak=None,
                                                     amg_peak=None,
                                                     force_peak=10810,
                                                     us_peak=72, force_only=True)
+    print('Done.')
 
 
     # s5wp5
+    print('\nAggregating and fitting time series data (Sub5, 69deg)...')
     data37 = td.TrialData.from_preprocessed_mat_file(READ_PATH_MAT_37,
                                                     READ_PATH_US_37, 'sub5', 0,
                                                     emg_peak=None,
                                                     amg_peak=None,
                                                     force_peak=0, us_peak=36,
                                                     force_only=True)
+    print('Done.')
 
 
     df_corr = data_utils.build_corr_table([data1, data2, data5, data8, data10, data28, data33,
