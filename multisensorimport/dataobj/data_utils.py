@@ -4,10 +4,9 @@
 This module contains functions used during processing of TrialData and
 TimeSeriesData objects.
 """
-
 import pandas as pd
 import numpy.polynomial.polynomial as poly
-
+from scipy.stats import pearsonr
 
 def build_data_series(data, col=0):
     """Build pandas Series object from column of TimeSeriesData object.
@@ -133,9 +132,6 @@ def build_corr_table(data_list, out_path=None, correlate='force'):
 
     return df_corr
 
-
-from scipy.stats import pearsonr
-import pandas as pd
 
 def calculate_pvalues(df):
     """Calculate table of correlation p-values of given data frame.

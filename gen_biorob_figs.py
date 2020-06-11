@@ -24,7 +24,7 @@ def main():
     """
 
     # generate angle correlation plot
-    df_ang = pd.read_csv(DATA_DIR + 'ang_corr2.csv', header=0, index_col=0).T
+    df_ang = pd.read_csv(DATA_DIR + 'ang_corr.csv', header=0, index_col=0).T
 
     print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS ANGLES (SUB1)')
     print(df_ang)
@@ -33,7 +33,7 @@ def main():
     print_utils.print_div()
 
     # generate subject correlation plot
-    df_subj = pd.read_csv(DATA_DIR + 'subj_corr2.csv', header=0,
+    df_subj = pd.read_csv(DATA_DIR + 'subj_corr.csv', header=0,
                           index_col=0).T
 
     print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS SUBJECTS (69deg)')
