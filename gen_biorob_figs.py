@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Generate all plots and data published in BIOROB 2020.
+"""Generate all bar plots and correlation statistics for [PUBLICATION
+FORTHCOMING]
 
 Example:
     Once filepaths are set appropriately, run this function via
 
         $ python gen_biorob_figs.py
 """
-
+import os
 import pandas as pd
 
 from multisensorimport.viz import plot_utils, print_utils, stats_utils
 
-DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
+DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
 DATA_DIR_SUB1 = DATA_DIR + 'sub1/wp5t11/'
 DATA_DIR_SUB2 = DATA_DIR + 'sub2/wp5t28/'
@@ -22,7 +23,6 @@ DATA_DIR_SUB5 = DATA_DIR + 'sub5/wp5t37/'
 def main():
     """Generate all plots reported in [PUBLICATION FORTHCOMING].
     """
-
     # generate angle correlation plot
     df_ang = pd.read_csv(DATA_DIR + 'ang_corr.csv', header=0, index_col=0).T
 

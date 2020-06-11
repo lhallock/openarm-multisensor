@@ -9,12 +9,14 @@ Example:
 Todo:
     implement all the things!
 """
+import os
+
 from multisensorimport.dataobj import trialdata as td
 from multisensorimport.dataobj import data_utils
 from multisensorimport.viz import plot_utils, print_utils, stats_utils
 
 # directory containing all data
-DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
+DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
 # paths to MATLAB structured data (force, sEMG, etc.)
 READ_PATH_MAT_SUB1 = DATA_DIR + 'sub1/seg_data.mat'
@@ -161,11 +163,14 @@ def main():
     print_utils.print_div()
 
     # generate correlation data and print to console and CSV
+    print('\nComputing correlations...')
     df_corr = data_utils.build_corr_table([data_sub1_wp1, data_sub1_wp2, data_sub1_wp5, data_sub1_wp8, data_sub1_wp10, data_sub2_wp5, data_sub3_wp5,
                            data_sub4_wp5, data_sub5_wp5])
 
     df_ang, df_subj = stats_utils.gen_refined_corr_dfs(df_corr, ANG_CORR_OUT_PATH,
                                                        SUBJ_CORR_OUT_PATH)
+    print('Done.')
+
     print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS ANGLES (SUB1)')
     print(df_ang.T)
     print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS SUBJECTS (69deg)')
