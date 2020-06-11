@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from multisensorimport.dataobj import trialdata as td
-from multisensorimport.dataobj import data_utils as utils
+from multisensorimport.dataobj import data_utils
+from multisensorimport.viz import plot_utils
 
 DATA_DIR = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/'
 
@@ -52,8 +53,9 @@ def main():
                                                     amg_peak=13290,
                                                     force_peak=3721, us_peak=51)
 
-#    print(utils.calculate_pvalues(data1.df))
-    data1.plot_biorob()
+#    print(data_utils.calculate_pvalues(data1.df))
+#    data1.plot_biorob()
+    plot_utils.gen_time_plot(data1)
 #    raise ValueError("poor man's breakpoint")
 
     # s1wp2
@@ -127,7 +129,7 @@ def main():
                                                     force_only=True)
 
 
-    df_corr = utils.build_corr_table([data1, data2, data5, data8, data10, data28, data33,
+    df_corr = data_utils.build_corr_table([data1, data2, data5, data8, data10, data28, data33,
                            data34, data37], CORR_OUT_PATH)
 
     print(df_corr)
@@ -151,27 +153,15 @@ def main():
     df_corr_subj.to_csv(SUBJ_CORR_OUT_PATH)
 
     if PLOT:
-        data1.plot()
-        data2.plot()
-        data5.plot()
-        data8.plot()
-        data10.plot()
-        data28.plot()
-        data33.plot()
-        data34.plot()
-        data37.plot()
-
-#    sns.set()
-#
-#    fig, axs = plt.subplots(4)
-#    fig.suptitle('test plot')
-#    axs[0].plot(data1.data_emg.data)
-#    axs[1].plot(data1.data_amg.data)
-#    axs[2].plot(data1.data_force.data)
-#    axs[3].plot(data1.data_ultrasound.data)
-#
-#    plt.show()
-
+        plot_utils.gen_debug_time_plot(data1)
+        plot_utils.gen_debug_time_plot(data2)
+        plot_utils.gen_debug_time_plot(data5)
+        plot_utils.gen_debug_time_plot(data8)
+        plot_utils.gen_debug_time_plot(data10)
+        plot_utils.gen_debug_time_plot(data28)
+        plot_utils.gen_debug_time_plot(data33)
+        plot_utils.gen_debug_time_plot(data34)
+        plot_utils.gen_debug_time_plot(data37)
 
 if __name__ == "__main__":
     main()

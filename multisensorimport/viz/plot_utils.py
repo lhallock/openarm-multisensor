@@ -9,12 +9,132 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
+# deal with pandas index compatibility errors
+from pandas.plotting import register_matplotlib_converters
+import matplotlib.dates as mdates
+
 # ensure plots use Type1 fonts when exported to PDF or PS
 mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
 
 # plot defaults
 PLOT_FONT = 'Open Sans'
+
+def gen_time_plot(trialdata, plot_font=PLOT_FONT):
+    """Generate time series plot of force, sEMG, and ultrasound data.
+
+    Args:
+        trialdata (pandas.DataFrame): dataobj.TrialData object containing data
+            to to be plotted
+        plot_font (str): desired matplotlib font family
+    """
+    register_matplotlib_converters()
+    sns.set()
+
+    num_subplots = 6
+
+    fig, axs = plt.subplots(num_subplots)
+
+    plot_ind = trialdata.df.index.to_julian_date().to_numpy()-2457780.5
+    plot_ind = plot_ind*24*60*60
+
+    axs[0].plot(trialdata.df['force'], 'k')
+    #axs[0].set(ylabel='force')
+    axs[1].plot(trialdata.df['emg-bic']*1e3, color='#cccccc')
+    axs[1].plot(trialdata.df['emg-abs-bic']*1e4, color='#fdae6b')
+    #axs[1].set(ylabel='emg-bic')
+    axs[2].plot(trialdata.df['emg-brd']*1e3, color='#cccccc')
+    axs[2].plot(trialdata.df['emg-abs-brd']*1e4, color='#f16913')
+    #axs[2].set(ylabel='emg-brd')
+    axs[3].plot(trialdata.df['us-csa-dt'], color='#41b6c4')
+    #axs[3].set(ylabel='us-csa-dt')
+    axs[4].plot(trialdata.df['us-t-dt'], color='#225ea8')
+    #axs[4].set(ylabel='us-t-dt')
+    axs[5].plot(plot_ind, trialdata.df['us-tr-dt'], color='#081d58')
+    #axs[5].set(ylabel='us-tr-dt')
+    axs[5].set_xlabel('time (s)', fontname=PLOT_FONT)
+    axs[5].xaxis.set_label_coords(1.0, -0.15)
+
+    axs[0].xaxis.set_visible(False)
+    axs[1].xaxis.set_visible(False)
+    axs[2].xaxis.set_visible(False)
+    axs[3].xaxis.set_visible(False)
+    axs[4].xaxis.set_visible(False)
+    #axs[5].xaxis.set_major_formatter(mdates.DateFormatter("%s"))
+    #axs[5].xaxis.set_minor_formatter(mdates.DateFormatter("%s"))
+
+    for i in range(num_subplots):
+        for tick in axs[i].get_xticklabels():
+            tick.set_fontname(PLOT_FONT)
+        for tick in axs[i].get_yticklabels():
+            tick.set_fontname(PLOT_FONT)
+
+    plt.show()
+
+def gen_debug_time_plot(trialdata, plot_font=PLOT_FONT):
+    """Generate time series plot of force, sEMG, and ultrasound data for fit
+    debugging.
+
+    Args:
+        trialdata (pandas.DataFrame): dataobj.TrialData object containing data
+            to to be plotted
+        plot_font (str): desired matplotlib font family
+    """
+    #df_corr = df.corr()
+    #print(df_corr['force'])
+    #corr_out_path = '/home/lhallock/Dropbox/DYNAMIC/Research/MM/code/openarm-multisensor/sandbox/data/FINAL/' + trialdata.subj + '/wp' + str(trialdata.wp) + '.csv'
+    #df_corr.to_csv(corr_out_path)
+    register_matplotlib_converters()
+    sns.set()
+
+    tstring = trialdata.subj + ' test plot, wp' + str(trialdata.wp)
+
+    if not trialdata.force_only:
+        fig, axs = plt.subplots(7)
+        fig.suptitle(tstring)
+        axs[0].plot(trialdata.df['force'])
+        axs[0].set(ylabel='force')
+        axs[1].plot(trialdata.df['emg-brd'])
+        axs[1].plot(trialdata.df['emg-abs-brd'])
+        axs[1].set(ylabel='emg-brd')
+        axs[2].plot(trialdata.df['emg-bic'])
+        axs[2].plot(trialdata.df['emg-abs-bic'])
+        axs[2].set(ylabel='emg-bic')
+        axs[3].plot(trialdata.df['us-csa'])
+        axs[3].set(ylabel='us-csa')
+        axs[3].plot(trialdata.df_dt['us-csa'], 'g-')
+        axs[3].plot(trialdata.df['us-csa-fit'], 'r-')
+        axs[4].plot(trialdata.df['us-t'])
+        axs[4].set(ylabel='us-t')
+        axs[4].plot(trialdata.df_dt['us-t'], 'g-')
+        axs[4].plot(trialdata.df['us-t-fit'], 'r-')
+        axs[5].plot(trialdata.df['us-t-dt'])
+        axs[5].set(ylabel='us-t-dt')
+        axs[6].plot(trialdata.df['us-tr'])
+        axs[6].set(ylabel='us-tr')
+        axs[6].plot(trialdata.df_dt['us-tr'], 'g-')
+        axs[6].plot(trialdata.df['us-tr-fit'], 'r-')
+    else:
+        fig, axs = plt.subplots(5)
+        fig.suptitle(tstring)
+        axs[0].plot(trialdata.df['force'])
+        axs[0].set(ylabel='force')
+        axs[1].plot(trialdata.df['us-csa'])
+        axs[1].set(ylabel='us-csa')
+        axs[1].plot(trialdata.df_dt['us-csa'], 'g-')
+        axs[1].plot(trialdata.df['us-csa-fit'], 'r-')
+        axs[2].plot(trialdata.df['us-t'])
+        axs[2].set(ylabel='us-t')
+        axs[2].plot(trialdata.df_dt['us-t'], 'g-')
+        axs[2].plot(trialdata.df['us-t-fit'], 'r-')
+        axs[3].plot(trialdata.df['us-t-dt'])
+        axs[3].set(ylabel='us-t-dt')
+        axs[4].plot(trialdata.df['us-tr'])
+        axs[4].set(ylabel='us-tr')
+        axs[4].plot(trialdata.df_dt['us-tr'], 'g-')
+        axs[4].plot(trialdata.df['us-tr-fit'], 'r-')
+
+    plt.show()
 
 
 def gen_ang_plot(df_ang, plot_font=PLOT_FONT):
