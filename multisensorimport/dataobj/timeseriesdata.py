@@ -149,7 +149,7 @@ class TimeSeriesData():
                                        skip_header=header_lines,
                                        usecols=cols)
 
-        if len(self._data.shape) == 1: # handle single-channel data
+        if len(self._data.shape) == 1:  # handle single-channel data
             self._n_ch = 1
             self._n = self._data.shape[0]
             self._data = np.reshape(self._data, (-1, 1))
@@ -158,7 +158,6 @@ class TimeSeriesData():
             self._n = self._data.shape[0]
 
         self._data_from_offset = self._compute_offset_data()
-
 
     def _init_from_wav(self, filename):
         """Internal helper method for instantiation from WAV.
@@ -175,7 +174,6 @@ class TimeSeriesData():
 
         self._data_from_offset = self._compute_offset_data()
 
-
     def _assert_consistent(self):
         """Confirm that dimensions of data and channel labels are consistent.
 
@@ -189,7 +187,6 @@ class TimeSeriesData():
         """
         if self.ch_labels and (len(self.ch_labels) != self.n_ch):
             raise ValueError('Channel labels are of inconsistent dimension.')
-
 
     def _compute_offset_data(self):
         """Compute data matrix from specified offset
@@ -206,7 +203,7 @@ class TimeSeriesData():
 
         # if offset is negative, prepend zeros
         if self.offset < 0:
-            prefix = np.zeros((-1*self.offset, self.data.shape[1]))
+            prefix = np.zeros((-1 * self.offset, self.data.shape[1]))
             return np.vstack((prefix, self.data))
 
     ###########################################################################

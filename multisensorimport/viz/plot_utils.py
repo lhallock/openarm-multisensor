@@ -5,13 +5,12 @@ This module contains functions used to plot time series data for [PUBLICATION
 FORTHCOMING].
 """
 import matplotlib as mpl
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
-
+import seaborn as sns
 # deal with pandas index compatibility errors
 from pandas.plotting import register_matplotlib_converters
-import matplotlib.dates as mdates
 
 # ensure plots use Type1 fonts when exported to PDF or PS
 mpl.rcParams['pdf.fonttype'] = 42
@@ -19,6 +18,7 @@ mpl.rcParams['ps.fonttype'] = 42
 
 # plot defaults
 PLOT_FONT = 'Open Sans'
+
 
 def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of force, sEMG, and ultrasound data.
@@ -37,15 +37,15 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     fig, axs = plt.subplots(num_subplots)
 
-    plot_ind = trialdata.df.index.to_julian_date().to_numpy()-2457780.5
-    plot_ind = plot_ind*24*60*60
+    plot_ind = trialdata.df.index.to_julian_date().to_numpy() - 2457780.5
+    plot_ind = plot_ind * 24 * 60 * 60
 
     axs[0].plot(trialdata.df['force'], 'k')
     if not trialdata.force_only:
-        axs[1].plot(trialdata.df['emg-bic']*1e3, color='#cccccc')
-        axs[1].plot(trialdata.df['emg-abs-bic']*1e4, color='#fdae6b')
-        axs[2].plot(trialdata.df['emg-brd']*1e3, color='#cccccc')
-        axs[2].plot(trialdata.df['emg-abs-brd']*1e4, color='#f16913')
+        axs[1].plot(trialdata.df['emg-bic'] * 1e3, color='#cccccc')
+        axs[1].plot(trialdata.df['emg-abs-bic'] * 1e4, color='#fdae6b')
+        axs[2].plot(trialdata.df['emg-brd'] * 1e3, color='#cccccc')
+        axs[2].plot(trialdata.df['emg-abs-brd'] * 1e4, color='#f16913')
     axs[3].plot(trialdata.df['us-csa-dt'], color='#41b6c4')
     axs[4].plot(trialdata.df['us-t-dt'], color='#225ea8')
     axs[5].plot(plot_ind, trialdata.df['us-tr-dt'], color='#081d58')
@@ -53,7 +53,8 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     axs[5].xaxis.set_label_coords(1.0, -0.15)
 
     if not no_titles:
-        tstring = trialdata.subj + ', ' + str(180-int(trialdata.ang)) + '$\degree$'
+        tstring = trialdata.subj + ', ' + str(180 -
+                                              int(trialdata.ang)) + '$\degree$'
         fig.suptitle(tstring, fontname=plot_font)
         axs[0].set(ylabel='f')
         axs[1].set(ylabel='sEMG-BIC')
@@ -76,6 +77,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
+
 def gen_debug_time_plot(trialdata):
     """Generate unformatted time series plot of force, sEMG, and ultrasound
     data for fit debugging.
@@ -95,7 +97,8 @@ def gen_debug_time_plot(trialdata):
     register_matplotlib_converters()
     sns.set()
 
-    tstring ='FIT TEST: ' + trialdata.subj + ', ' + str(180-int(trialdata.ang)) + '$\degree$'
+    tstring = 'FIT TEST: ' + trialdata.subj + ', ' + str(
+        180 - int(trialdata.ang)) + '$\degree$'
 
     fig, axs = plt.subplots(7)
     fig.suptitle(tstring)
@@ -133,19 +136,24 @@ def gen_ang_plot(df_ang, plot_font=PLOT_FONT):
         df_ang (pandas.DataFrame): frame containing data to be plotted
         plot_font (str): desired matplotlib font family
     """
-    ang_colors = ['#fdae6b','#f16d13','#41b6c4','#41b6c4','#225ea8','#225ea8','#081d58','#081d58']
-    styles = ['-','-','-','--','-','--','-','--']
+    ang_colors = [
+        '#fdae6b', '#f16d13', '#41b6c4', '#41b6c4', '#225ea8', '#225ea8',
+        '#081d58', '#081d58'
+    ]
+    styles = ['-', '-', '-', '--', '-', '--', '-', '--']
     sns.set()
     ax = df_ang.plot(kind='line', style=styles, color=ang_colors, rot=0)
     L = ax.legend(loc='lower left', ncol=4)
     plt.setp(L.texts, family=plot_font)
-    ax.set_xlabel('Flexion Angle ($\degree$ from full extension)', fontname=plot_font)
+    ax.set_xlabel('Flexion Angle ($\degree$ from full extension)',
+                  fontname=plot_font)
     ax.set_ylabel('CC(·,f)', fontname=plot_font)
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
     plt.show()
+
 
 def gen_subj_plot(df_subj, plot_font=PLOT_FONT):
     """Generate plot showing correlation across subjects from provided data frame.
@@ -154,14 +162,16 @@ def gen_subj_plot(df_subj, plot_font=PLOT_FONT):
         df_subj (pandas.DataFrame): frame containing data to be plotted
         plot_font (str): desired matplotlib font family
     """
-    mod_subj_colors = ['#41b6c4','#41b6c4','#225ea8','#225ea8','#081d58','#081d58']
+    mod_subj_colors = [
+        '#41b6c4', '#41b6c4', '#225ea8', '#225ea8', '#081d58', '#081d58'
+    ]
     sns.set()
     ax = df_subj.plot(kind='bar', color=mod_subj_colors, rot=0)
     bars = ax.patches
-    patterns = ('','////','','////','','////')
+    patterns = ('', '////', '', '////', '', '////')
     hatches = [p for p in patterns for i in range(len(df_subj))]
     for bar, hatch in zip(bars, hatches):
-            bar.set_hatch(hatch)
+        bar.set_hatch(hatch)
     L = ax.legend(loc='lower left', ncol=3)
     plt.setp(L.texts, family=plot_font)
     ax.set_xlabel('Subject', fontname=plot_font)
@@ -172,6 +182,7 @@ def gen_subj_plot(df_subj, plot_font=PLOT_FONT):
         tick.set_fontname(plot_font)
     plt.show()
 
+
 def gen_tracking_error_plot(df_means, df_stds, plot_font=PLOT_FONT):
     """Generate plot showing correlation across subjects from provided data frame.
 
@@ -181,15 +192,20 @@ def gen_tracking_error_plot(df_means, df_stds, plot_font=PLOT_FONT):
             standard errors) to be plotted
         plot_font (str): desired matplotlib font family
     """
-    track_colors = ['#f781bf','#a65628','#377eb8','#377eb8','#984ea3','#984ea3']
+    track_colors = [
+        '#f781bf', '#a65628', '#377eb8', '#377eb8', '#984ea3', '#984ea3'
+    ]
     sns.set()
-    ax = df_means.plot(kind='bar', color=track_colors, rot=0, yerr=df_stds,
+    ax = df_means.plot(kind='bar',
+                       color=track_colors,
+                       rot=0,
+                       yerr=df_stds,
                        error_kw=dict(lw=0.5, capsize=0, capthick=0))
     bars = ax.patches
-    patterns = ('','','','////','','////')
+    patterns = ('', '', '', '////', '', '////')
     hatches = [p for p in patterns for i in range(len(df_means))]
     for bar, hatch in zip(bars, hatches):
-            bar.set_hatch(hatch)
+        bar.set_hatch(hatch)
 
     L = ax.legend(loc='upper left')
     plt.setp(L.texts, family=plot_font)
@@ -200,5 +216,3 @@ def gen_tracking_error_plot(df_means, df_stds, plot_font=PLOT_FONT):
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
     plt.show()
-
-

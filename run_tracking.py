@@ -12,6 +12,7 @@ Run this via:
 """
 
 import numpy as np
+
 import ultrasoundviz as viz
 
 
@@ -25,7 +26,6 @@ class ParamValues():
     LK_window = 35
     # Pyramiding level for Lucas Kanade
     pyr_level = 3
-
 
     # FRLK params:
     # Quality level of corners chosen via Shi-Tomasi corner detection
@@ -42,8 +42,6 @@ class ParamValues():
     # Fraction of top points (based on corner score) to keep in FRLK
     point_frac = 0.7
 
-
-
     # BFLK params:
     # Bilateral filter parameters - 'course/less agressive bilateral filter':
     course_diam = 5
@@ -57,8 +55,7 @@ class ParamValues():
 
     # fraction of points (ordered by corner score) to track using fine/course filters
     percent_fine = 0.2
-    percent_course =0.8
-
+    percent_course = 0.8
 
     # SBLK params:
     # offset (alpha) used in the weighting function for supporters points
@@ -73,7 +70,6 @@ class ParamValues():
     # update rate for exponential moving average
     update_rate = 0.7
 
-
     # common parameters
     # number of lowermost contour points to keep (used to ensure that points along entire contour were kept)
     num_bottom = 0
@@ -85,9 +81,10 @@ class ParamValues():
     # set to high number (i.e. > # frames) for no reset
     reset_frequency = 100000
 
-
-    def change_values(self, disp_weight, qual_level, min_dist, course_d, course_sigma_c, course_sigma_s, fine_d,
-                      fine_sigma_c, fine_sigma_s, window, pyr, fine_thresh, num_bot, perc_fine, perc_course, reset_freq):
+    def change_values(self, disp_weight, qual_level, min_dist, course_d,
+                      course_sigma_c, course_sigma_s, fine_d, fine_sigma_c,
+                      fine_sigma_s, window, pyr, fine_thresh, num_bot,
+                      perc_fine, perc_course, reset_freq):
         """
         Method to modify the parameter instance variables to the given arguments. Only changes the arguments which are not None. Used for parameter tuning.
         """
@@ -131,6 +128,7 @@ class ParamValues():
 global parameter_values
 parameter_values = ParamValues()
 
+
 def write_run():
     """
     Execute a run of tracking, based on command line arguments given.
@@ -140,15 +138,25 @@ def write_run():
     # set up command line arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--run_type', type=int, help='denotes which algorithm to use')
-    parser.add_argument('--img_path', type=str, help='filepath to the raw ultrasound images to track')
-    parser.add_argument('--seg_path', type=str, help='filepath to the segmented ground truth images')
-    parser.add_argument('--out_path', type=str, help='filepath to the folder to which csv data should be written')
-    parser.add_argument('--init_img', type=str, help='filename for first frame in ultrasound video')
+    parser.add_argument('--run_type',
+                        type=int,
+                        help='denotes which algorithm to use')
+    parser.add_argument('--img_path',
+                        type=str,
+                        help='filepath to the raw ultrasound images to track')
+    parser.add_argument('--seg_path',
+                        type=str,
+                        help='filepath to the segmented ground truth images')
+    parser.add_argument(
+        '--out_path',
+        type=str,
+        help='filepath to the folder to which csv data should be written')
+    parser.add_argument('--init_img',
+                        type=str,
+                        help='filename for first frame in ultrasound video')
 
     args = parser.parse_args()
     arg_params = vars(args)
-
 
     viz.tracking_run(arg_params, parameter_values)
 

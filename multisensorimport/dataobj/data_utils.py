@@ -4,9 +4,10 @@
 This module contains functions used during processing of TrialData and
 TimeSeriesData objects.
 """
-import pandas as pd
 import numpy.polynomial.polynomial as poly
+import pandas as pd
 from scipy.stats import pearsonr
+
 
 def build_data_series(data, col=0):
     """Build pandas Series object from column of TimeSeriesData object.
@@ -40,16 +41,15 @@ def fit_data_poly(times_in, data_in, times_out, order):
         numpy.ndarray of data values of fitted polynomial at times times_out
     """
     # preprocess data, avoiding numerical instability
-    times_arr = times_in.to_julian_date().to_numpy()-2457780
+    times_arr = times_in.to_julian_date().to_numpy() - 2457780
     data_arr = data_in.to_numpy()
 
     # fit polynomial
     p_coeffs = poly.polyfit(times_arr, data_arr, order)
 
     # generate and return polynomial computed at times_out
-    times_out_arr = times_out.to_julian_date().to_numpy()-2457780
+    times_out_arr = times_out.to_julian_date().to_numpy() - 2457780
     return poly.polyval(times_out_arr, p_coeffs)
-
 
 
 def as_pd_freq(freq):
@@ -74,7 +74,7 @@ def as_pd_freq(freq):
         raise ValueError('Specified frequency is too high for this method',
                          'and will result in catastrophic precision loss.')
 
-    freq_pd = int(1e6/freq)
+    freq_pd = int(1e6 / freq)
     freq_pd_str = str(freq_pd) + 'U'
     return freq_pd_str
 
@@ -91,7 +91,7 @@ def offset_from_peak(peak_ind, freq, prepeak):
     Returns:
         int index of desired offset in original data
     """
-    offset = int(peak_ind - prepeak*freq)
+    offset = int(peak_ind - prepeak * freq)
     return offset
 
 
@@ -153,6 +153,3 @@ def calculate_pvalues(df):
         for c in df.columns:
             pvalues[r][c] = round(pearsonr(df[r], df[c])[1], 4)
     return pvalues
-
-
-

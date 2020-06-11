@@ -7,7 +7,9 @@ import os
 import cv2
 import numpy as np
 import scipy
+
 from multisensorimport.tracking.image_proc_utils import *
+
 
 def extract_contour_pts_png(filename):
     """Extract points from largest contour in PNG image.
@@ -27,16 +29,17 @@ def extract_contour_pts_png(filename):
     # convert PNG to OpenCV mask
     img = cv2.imread(filename, -1)
     alpha_channel = img[:, :, 3]
-    _, mask = cv2.threshold(alpha_channel, 254, 255, cv2.THRESH_BINARY)  # binarize mask
+    _, mask = cv2.threshold(alpha_channel, 254, 255,
+                            cv2.THRESH_BINARY)  # binarize mask
     color = img[:, :, :3]
     new_img = cv2.bitwise_not(cv2.bitwise_not(color, mask=mask))
-    new_img = (255-new_img)
+    new_img = (255 - new_img)
     gray = cv2.cvtColor(new_img, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 127, 255, 0)
 
     # extract contours from processed contour mask
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
-                                           cv2.CHAIN_APPROX_SIMPLE)
+                                   cv2.CHAIN_APPROX_SIMPLE)
 
     # convert largest contour to tracking-compatible numpy array
     points = []
@@ -44,8 +47,8 @@ def extract_contour_pts_png(filename):
         points.append(np.array(contours[0][i], dtype=np.float32))
     np_points = np.array(points)
 
-
     return np_points
+
 
 def extract_contour_pts_pgm(filename):
     """Extract points from largest contour in PGM image.
@@ -76,7 +79,7 @@ def extract_contour_pts_pgm(filename):
     # flip image (need a white object on black background)
     flipped = cv2.bitwise_not(binarized)
     contours, _ = cv2.findContours(flipped, cv2.RETR_EXTERNAL,
-                                           cv2.CHAIN_APPROX_SIMPLE)
+                                   cv2.CHAIN_APPROX_SIMPLE)
 
     # convert largest contour to tracking-compatible numpy array
     points = []
@@ -84,7 +87,6 @@ def extract_contour_pts_pgm(filename):
         points.append(np.array(contours[0][i], dtype=np.float32))
 
     np_points = np.array(points)
-
 
     return np_points
 
@@ -109,7 +111,7 @@ def shi_tomasi_corner_score(point, block_size, img):
     # sets dimension of Sobel derivative kernel
     k_size = 5
     # obtain eigenvalues and corresponding eigenvectors of image structure tensor
-    eigen = cv2.cornerEigenValsAndVecs(img, block_size, ksize = k_size)
+    eigen = cv2.cornerEigenValsAndVecs(img, block_size, ksize=k_size)
 
     # extract eigenvalues
     lambda_one = get_image_value(x, y, eigen)[0]
@@ -119,8 +121,13 @@ def shi_tomasi_corner_score(point, block_size, img):
     return min(lambda_one, lambda_two)
 
 
-def filter_points(run_params, window_size, pts, filter_type, img, percent, keep_bottom=False):
-
+def filter_points(run_params,
+                  window_size,
+                  pts,
+                  filter_type,
+                  img,
+                  percent,
+                  keep_bottom=False):
     """
     Filter the given contour points by removing those with low Shi-Tomasi corner scores. Used in FRLK, BFLK, and SBLK.
 
@@ -156,8 +163,12 @@ def filter_points(run_params, window_size, pts, filter_type, img, percent, keep_
 
     # converts map to a list of 2-tuples (key, value), which are sorted in descending order by value
     # key is index of point in the pts list
-    sorted_corner_mapping = sorted(ind_to_score_map.items(), key=lambda x: x[1], reverse=True)
-    sorted_y_mapping = sorted(ind_to_y_map.items(), key=lambda x: x[1], reverse=True)
+    sorted_corner_mapping = sorted(ind_to_score_map.items(),
+                                   key=lambda x: x[1],
+                                   reverse=True)
+    sorted_y_mapping = sorted(ind_to_y_map.items(),
+                              key=lambda x: x[1],
+                              reverse=True)
 
     # get top percent% of points
     for i in range(0, int(np.rint(percent * len(sorted_corner_mapping)))):
@@ -195,8 +206,12 @@ def separate_points(run_params, img, pts):
     corner_window_size = 7
 
     # separate points into two potentially overlapping subsets of pts
-    fine_pts, fine_pts_inds = filter_points(run_params, corner_window_size, pts, fine_filter_type, img, run_params.percent_fine)
-    course_pts, course_pts_inds = filter_points(run_params, corner_window_size, pts, course_filter_type, img, run_params.percent_course)
+    fine_pts, fine_pts_inds = filter_points(run_params, corner_window_size, pts,
+                                            fine_filter_type, img,
+                                            run_params.percent_fine)
+    course_pts, course_pts_inds = filter_points(run_params, corner_window_size,
+                                                pts, course_filter_type, img,
+                                                run_params.percent_course)
 
     # remove overlap between the two subsets; a point in both sets will be removed from the course_pts and kept in the fine_pts
     course_kept_indeces = set()
@@ -284,6 +299,7 @@ def thickness(points):
 
     # return difference
     return (max_x - min_x), (max_y - min_y)
+
 
 def get_image_value(x, y, img):
     """

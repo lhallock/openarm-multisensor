@@ -4,10 +4,9 @@
 This module contains algorithms to extract desired contour points for tracking, process and filter ultrasound images,  and track these points and their properties through ultrasound scans.
 """
 
-import time
-import os
-
 import csv
+import os
+import time
 
 import cv2
 import numpy as np
@@ -18,7 +17,14 @@ from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
 
 
-def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filter_type=0, filtered_LK_run=False):
+def track_LK(run_params,
+             seg_filedir,
+             filedir,
+             pts,
+             lk_params,
+             viz=True,
+             filter_type=0,
+             filtered_LK_run=False):
     """
     Implements unmodified, iterative lucas kanade (LK), and feature refined lucas kanade (FRLK) algorithm to track a list of pre-determined keypoints in a sequence of images, and obtain values of interest.
 
@@ -65,7 +71,8 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
     ground_truth_contour_areas.append(cv2.contourArea(pts))
 
     # add first thickness
-    first_thickness_x, first_thickness_y = thickness(supporters_utils.format_supporters(pts))
+    first_thickness_x, first_thickness_y = thickness(
+        supporters_utils.format_supporters(pts))
     ground_truth_thickness.append(first_thickness_x)
     ground_truth_thickness_ratio.append(first_thickness_x / first_thickness_y)
 
@@ -83,14 +90,15 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
         if (segmented_filename.endswith('.pgm')):
             filtered_segmented_filenames.append(segmented_filename)
 
-    sorted_image_filenames = sorted(filtered_image_filenames, key=lambda s: int(s[0:len(s)-4]))
-    sorted_segmented_filenames = sorted(filtered_segmented_filenames, key=lambda s: int(s[0:len(s)-4]))
+    sorted_image_filenames = sorted(filtered_image_filenames,
+                                    key=lambda s: int(s[0:len(s) - 4]))
+    sorted_segmented_filenames = sorted(filtered_segmented_filenames,
+                                        key=lambda s: int(s[0:len(s) - 4]))
 
     predicted_thickness.append(first_thickness_x)
     predicted_thickness_ratio.append(first_thickness_x / first_thickness_y)
 
     iou_accuracy_series.append(1)
-
 
     # track and display specified points through images
     first_loop = True
@@ -105,8 +113,9 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
         image_filename = sorted_image_filenames[num]
         segmented_filename = sorted_segmented_filenames[num]
 
-        if image_filename.endswith('.pgm') and segmented_filename.endswith('.pgm'):
-            assert(segmented_filename == image_filename)
+        if image_filename.endswith('.pgm') and segmented_filename.endswith(
+                '.pgm'):
+            assert (segmented_filename == image_filename)
             filepath = filedir + image_filename
 
             # if it's the first image, we already have the contour area
@@ -129,16 +138,20 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
 
                     # if tracking is done via a FRLK, filter the points and order them counter-clockwise
                     if filtered_LK_run:
-                        filtered_contour, indeces = filter_points(run_params, run_params.block_size, seg_contour, 0,
-                                                                                frame, run_params.point_frac)
-                        filtered_contour = order_points(filtered_contour, indeces, np.array([]),
-                                                                      np.array([]))
+                        filtered_contour, indeces = filter_points(
+                            run_params, run_params.block_size, seg_contour, 0,
+                            frame, run_params.point_frac)
+                        filtered_contour = order_points(filtered_contour,
+                                                        indeces, np.array([]),
+                                                        np.array([]))
                         tracked_contour = filtered_contour.copy()
                     else:
                         tracked_contour = seg_contour.copy()
                 # use tracking
                 else:
-                    tracked_contour, status, error = cv2.calcOpticalFlowPyrLK(old_frame_filtered, frame_filtered, pts, None, **lk_params)
+                    tracked_contour, status, error = cv2.calcOpticalFlowPyrLK(
+                        old_frame_filtered, frame_filtered, pts, None,
+                        **lk_params)
 
                 # obtain ground truth contour for current frame
                 segmented_contour = extract_contour_pts_pgm(key_frame_path)
@@ -154,9 +167,11 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
                 pts = tracked_contour.copy()
 
                 # add ground truth and tracked thickness
-                segmented_thickness_x, segmented_thickness_y = thickness(supporters_utils.format_supporters(segmented_contour))
+                segmented_thickness_x, segmented_thickness_y = thickness(
+                    supporters_utils.format_supporters(segmented_contour))
 
-                predicted_thickness_x, predicted_thickness_y = thickness(supporters_utils.format_supporters(tracked_contour))
+                predicted_thickness_x, predicted_thickness_y = thickness(
+                    supporters_utils.format_supporters(tracked_contour))
 
                 ground_truth_thickness.append(segmented_thickness_x)
 
@@ -164,26 +179,33 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
                 if segmented_thickness_x == 0 or segmented_thickness_y == 0:
                     ground_truth_thickness_ratio.append(0)
                 else:
-                    ground_truth_thickness_ratio.append(segmented_thickness_x / segmented_thickness_y)
+                    ground_truth_thickness_ratio.append(segmented_thickness_x /
+                                                        segmented_thickness_y)
 
                 predicted_thickness.append(predicted_thickness_x)
-                predicted_thickness_ratio.append(predicted_thickness_x / predicted_thickness_y)
+                predicted_thickness_ratio.append(predicted_thickness_x /
+                                                 predicted_thickness_y)
 
                 # add ground truth and tracked contour area
                 predicted_contour_areas.append(cv2.contourArea(tracked_contour))
-                ground_truth_contour_areas.append(cv2.contourArea(segmented_contour))
+                ground_truth_contour_areas.append(
+                    cv2.contourArea(segmented_contour))
 
                 # calculate intersection over union accuracy:
 
                 # initialize matrices of zeros
-                mat_predicted = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
-                mat_segmented = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+                mat_predicted = np.zeros(
+                    cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+                mat_segmented = np.zeros(
+                    cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
 
                 # fill the initialized matrices with nonzero numbers in the area of the contour
                 cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)], 255)
-                cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)], 255)
+                cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)],
+                             255)
 
-                intersection = np.sum(np.logical_and(mat_predicted, mat_segmented))
+                intersection = np.sum(
+                    np.logical_and(mat_predicted, mat_segmented))
                 union = np.sum(np.logical_or(mat_predicted, mat_segmented))
 
                 iou_error = intersection / union
@@ -196,7 +218,7 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
                 if viz:
                     cv2.imshow('Frame', frame_color)
                     key = cv2.waitKey(1)
-                    if key == 27: # stop on escape key
+                    if key == 27:  # stop on escape key
                         break
                     time.sleep(0.01)
 
@@ -206,10 +228,15 @@ def track_LK(run_params, seg_filedir, filedir, pts, lk_params, viz = True, filte
     return predicted_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, predicted_thickness, predicted_thickness_ratio, normalized_iou_error, iou_accuracy_series
 
 
-
-
-
-def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_pts_inds, lk_params, viz = True):
+def track_BFLK(run_params,
+               seg_filedir,
+               filedir,
+               fine_pts,
+               fine_pts_inds,
+               course_pts,
+               course_pts_inds,
+               lk_params,
+               viz=True):
     """
     Bilaterally filtered lucas kanade (BFLK) algorithm to track a list of pre-determined keypoints in a sequence of images, and obtain values of interest. *This can also be used with other image filters*
 
@@ -252,17 +279,17 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
 
     iou_accuracy_series.append(1)
 
-
     # combine pts to form contour
-    tracked_contour = order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds)
-
+    tracked_contour = order_points(fine_pts, fine_pts_inds, course_pts,
+                                   course_pts_inds)
 
     # add first contour area
     predicted_contour_areas.append(cv2.contourArea(tracked_contour))
     ground_truth_contour_areas.append(cv2.contourArea(tracked_contour))
 
     # add first aspect ratio
-    first_thickness_x, first_thickness_y = thickness(supporters_utils.format_supporters(tracked_contour))
+    first_thickness_x, first_thickness_y = thickness(
+        supporters_utils.format_supporters(tracked_contour))
     ground_truth_thickness.append(first_thickness_x)
     ground_truth_thickness_ratio.append(first_thickness_x / first_thickness_y)
 
@@ -284,8 +311,10 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
         if (segmented_filename.endswith('.pgm')):
             filtered_segmented_filenames.append(segmented_filename)
 
-    sorted_image_filenames = sorted(filtered_image_filenames, key=lambda s: int(s[0:len(s)-4]))
-    sorted_segmented_filenames = sorted(filtered_segmented_filenames, key=lambda s: int(s[0:len(s)-4]))
+    sorted_image_filenames = sorted(filtered_image_filenames,
+                                    key=lambda s: int(s[0:len(s) - 4]))
+    sorted_segmented_filenames = sorted(filtered_segmented_filenames,
+                                        key=lambda s: int(s[0:len(s) - 4]))
 
     # track and display specified points through images
     first_loop = True
@@ -300,8 +329,9 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
         image_filename = sorted_image_filenames[num]
         segmented_filename = sorted_segmented_filenames[num]
 
-        if image_filename.endswith('.pgm') and segmented_filename.endswith('.pgm'):
-            assert(segmented_filename == image_filename)
+        if image_filename.endswith('.pgm') and segmented_filename.endswith(
+                '.pgm'):
+            assert (segmented_filename == image_filename)
             filepath = filedir + image_filename
 
             # if it's the first image, we already have the contour area
@@ -310,7 +340,8 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                 old_frame_course_filtered = course_filter(old_frame, run_params)
                 old_frame_fine_filtered = fine_filter(old_frame, run_params)
                 first_loop = False
-                old_frame_color = cv2.cvtColor(old_frame, cv2.COLOR_GRAY2RGB).copy()
+                old_frame_color = cv2.cvtColor(old_frame,
+                                               cv2.COLOR_GRAY2RGB).copy()
 
                 # visualize if needed:
                 if viz:
@@ -332,11 +363,16 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                 key_frame_path = seg_filedir + segmented_filename
 
                 # find tracked locations of the points (for both fine and course) using lucas kanade, and update for next iteration
-                fine_pts, status, error = cv2.calcOpticalFlowPyrLK(old_frame_fine_filtered, frame_fine_filtered, fine_pts, None, **lk_params)
-                course_pts, status, error = cv2.calcOpticalFlowPyrLK(old_frame_course_filtered, frame_course_filtered, course_pts, None, **lk_params)
+                fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    old_frame_fine_filtered, frame_fine_filtered, fine_pts,
+                    None, **lk_params)
+                course_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    old_frame_course_filtered, frame_course_filtered,
+                    course_pts, None, **lk_params)
 
                 # combine fine and course points into full contour, in proper counter-clockwise order
-                tracked_contour = order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds)
+                tracked_contour = order_points(fine_pts, fine_pts_inds,
+                                               course_pts, course_pts_inds)
 
                 # obtain ground truth contour
                 segmented_contour = extract_contour_pts_pgm(key_frame_path)
@@ -351,7 +387,6 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                     x, y = course_pts[i].ravel()
                     cv2.circle(frame_color, (x, y), 3, (0, 255, 255), -1)
 
-
                 # calculate values of interest (thickness, CSA, AR) for ground truth and tracking
                 segmented_thickness_x, segmented_thickness_y = thickness(
                     supporters_utils.format_supporters(segmented_contour))
@@ -364,25 +399,32 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                 if segmented_thickness_x == 0 or segmented_thickness_y == 0:
                     ground_truth_thickness_ratio.append(0)
                 else:
-                    ground_truth_thickness_ratio.append(segmented_thickness_x / segmented_thickness_y)
+                    ground_truth_thickness_ratio.append(segmented_thickness_x /
+                                                        segmented_thickness_y)
 
                 predicted_thickness.append(predicted_thickness_x)
-                predicted_thickness_ratio.append(predicted_thickness_x / predicted_thickness_y)
+                predicted_thickness_ratio.append(predicted_thickness_x /
+                                                 predicted_thickness_y)
 
                 # append new predicted contour area
                 predicted_contour_areas.append(cv2.contourArea(tracked_contour))
-                ground_truth_contour_areas.append(cv2.contourArea(segmented_contour))
+                ground_truth_contour_areas.append(
+                    cv2.contourArea(segmented_contour))
 
                 # calculate intersection over union accuracy:
                 # initialize matrices of zeros
-                mat_predicted = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
-                mat_segmented = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+                mat_predicted = np.zeros(
+                    cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+                mat_segmented = np.zeros(
+                    cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
 
                 # fill the initialized matrices with nonzero numbers in the area of the contour
                 cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)], 255)
-                cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)], 255)
+                cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)],
+                             255)
 
-                intersection = np.sum(np.logical_and(mat_predicted, mat_segmented))
+                intersection = np.sum(
+                    np.logical_and(mat_predicted, mat_segmented))
                 union = np.sum(np.logical_or(mat_predicted, mat_segmented))
 
                 iou_error = intersection / union
@@ -408,7 +450,21 @@ def track_BFLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
     return predicted_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, predicted_thickness, predicted_thickness_ratio, normalized_iou_error, iou_accuracy_series
 
 
-def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course_pts, course_pts_inds, supporter_pts, supporter_params, lk_params, reset_supporters, feature_params, viz=False, fine_filter_type=0, course_filter_type=0):
+def track_SBLK(run_params,
+               seg_filedir,
+               filedir,
+               fine_pts,
+               fine_pts_inds,
+               course_pts,
+               course_pts_inds,
+               supporter_pts,
+               supporter_params,
+               lk_params,
+               reset_supporters,
+               feature_params,
+               viz=False,
+               fine_filter_type=0,
+               course_filter_type=0):
     """Supporters based lucas kanade (SBLK) algorithm to track a list of pre-determined keypoints in a sequence of images, and obtain values of interest.
 
 
@@ -458,7 +514,8 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
     ground_truth_contour_areas.append(cv2.contourArea(pts))
 
     # add first thickness
-    first_thickness_x, first_thickness_y = thickness(supporters_utils.format_supporters(pts))
+    first_thickness_x, first_thickness_y = thickness(
+        supporters_utils.format_supporters(pts))
     ground_truth_thickness.append(first_thickness_x)
     ground_truth_thickness_ratio.append(first_thickness_x / first_thickness_y)
 
@@ -490,8 +547,10 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
             filtered_segmented_filenames.append(segmented_filename)
 
     # sort by the image number
-    sorted_image_filenames = sorted(filtered_image_filenames, key=lambda s: int(s[0:len(s)-4]))
-    sorted_segmented_filenames = sorted(filtered_segmented_filenames, key=lambda s: int(s[0:len(s)-4]))
+    sorted_image_filenames = sorted(filtered_image_filenames,
+                                    key=lambda s: int(s[0:len(s) - 4]))
+    sorted_segmented_filenames = sorted(filtered_segmented_filenames,
+                                        key=lambda s: int(s[0:len(s) - 4]))
 
     # create OpenCV window (if visualization is desired)
     if viz:
@@ -518,9 +577,10 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
         image_filename = sorted_image_filenames[num]
         segmented_filename = sorted_segmented_filenames[num]
 
-        if image_filename.endswith('.pgm') and segmented_filename.endswith('.pgm'):
+        if image_filename.endswith('.pgm') and segmented_filename.endswith(
+                '.pgm'):
             # make sure segmented and image filenames are the same
-            assert(segmented_filename == image_filename)
+            assert (segmented_filename == image_filename)
 
             # filepath to the image
             filepath = filedir + image_filename
@@ -550,15 +610,21 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
 
                     if reset_supporters:
                         # reset all points to contour, and re-initialize a new set of supporters based on good corner features
-                        course_pts, course_pts_inds, fine_pts, fine_pts_inds, supporter_pts, supporter_params = initialize_supporters(run_params, filedir, key_frame_path, frame, feature_params, lk_params, 2)
+                        course_pts, course_pts_inds, fine_pts, fine_pts_inds, supporter_pts, supporter_params = initialize_supporters(
+                            run_params, filedir, key_frame_path, frame,
+                            feature_params, lk_params, 2)
                     else:
                         # reset tracking points to contour, but do not set new supporter points.
-                        course_pts, course_pts_inds, fine_pts, fine_pts_inds, _, _ = initialize_supporters(run_params, filedir, key_frame_path, frame, feature_params, lk_params, 2)
+                        course_pts, course_pts_inds, fine_pts, fine_pts_inds, _, _ = initialize_supporters(
+                            run_params, filedir, key_frame_path, frame,
+                            feature_params, lk_params, 2)
                         # re-initialize parameters for supporters
                         supporter_params = []
                         for i in range(len(course_pts)):
                             point = course_pts[i][0]
-                            _, supporter_param = supporters_utils.initialize_supporters_for_point(supporter_pts, point, run_params.supporter_variance)
+                            _, supporter_param = supporters_utils.initialize_supporters_for_point(
+                                supporter_pts, point,
+                                run_params.supporter_variance)
                             supporter_params.append(supporter_param)
                 else:
                     # calculate new point locations for fine_points using frame filtered by the fine filter
@@ -567,22 +633,25 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
 
                     # calculate new point locations for course_points using frame filtered by the course filter: predictions, might be updated by supporters
                     predicted_course_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                        old_frame_course, frame_course, course_pts, None, **lk_params)
+                        old_frame_course, frame_course, course_pts, None,
+                        **lk_params)
 
                     # calculate new supporter locations in coursely filtered frame
                     new_supporter_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                        old_frame_course, frame_course, supporter_pts, None, **lk_params
-                    )
+                        old_frame_course, frame_course, supporter_pts, None,
+                        **lk_params)
 
                     # reformat predicted points (using a function in supporters_utils)
-                    predicted_course_pts = supporters_utils.format_supporters(predicted_course_pts)
+                    predicted_course_pts = supporters_utils.format_supporters(
+                        predicted_course_pts)
 
                     # initialize new params
                     updated_feature_params = []
                     new_course_pts = []
 
                     # whether to trust LK tracking or not
-                    use_tracking = ((frame_num % reset_freq) <= num_training_frames)
+                    use_tracking = ((frame_num % reset_freq) <=
+                                    num_training_frames)
 
                     # get supporters predictions (will return the LK predictions if use_tracking is True)
                     for i in range(len(predicted_course_pts)):
@@ -592,12 +661,16 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                         # pass in both supporter_pts (the old values) and new_supporter_pts (old values) so that the displacement can be calculated
 
                         # obtain point predictions and updated params for target point
-                        point_location, new_params = supporters_utils.apply_supporters_model(run_params, predicted_point, supporter_pts, new_supporter_pts, param_list, use_tracking, run_params.update_rate)
+                        point_location, new_params = supporters_utils.apply_supporters_model(
+                            run_params, predicted_point, supporter_pts,
+                            new_supporter_pts, param_list, use_tracking,
+                            run_params.update_rate)
                         updated_feature_params.append(new_params)
-                        new_course_pts.append(np.array([[point_location[0], point_location[1]]], dtype=np.float32))
+                        new_course_pts.append(
+                            np.array([[point_location[0], point_location[1]]],
+                                     dtype=np.float32))
 
                     new_course_pts = np.array(new_course_pts)
-
 
                     # update point locations for next iteration
                     fine_pts = new_fine_pts
@@ -611,7 +684,6 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                     old_frame_course = frame_course.copy()
                     old_frame_fine = frame_fine.copy()
 
-
                 # draw the contour
                 for i in range(len(fine_pts)):
                     x, y = fine_pts[i].ravel()
@@ -624,15 +696,16 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                     cv2.circle(frame_color, (x, y), 4, (0, 255, 0), 1)
 
                 # combine and order the fine and course points into one contour
-                tracked_contour = order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds)
-
+                tracked_contour = order_points(fine_pts, fine_pts_inds,
+                                               course_pts, course_pts_inds)
 
                 # set the y coordinate of first and last point to 0 to fix downward boundary drift (if this flag is set)
                 if run_params.fix_top:
                     first_contour_point = tracked_contour[0]
                     first_contour_point[0][1] = 0
 
-                    last_contour_point = tracked_contour[len(tracked_contour) - 1]
+                    last_contour_point = tracked_contour[len(tracked_contour) -
+                                                         1]
                     last_contour_point[0][1] = 0
 
                 # contour from ground truth segmentaton
@@ -642,14 +715,16 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                 if viz:
                     cv2.imshow('Frame', frame_color)
                     key = cv2.waitKey(1)
-                    if key == 27: # stop on escape key
+                    if key == 27:  # stop on escape key
                         break
                     time.sleep(0.01)
 
                 # calculate thickness for ground truth and tracking
-                segmented_thickness_x, segmented_thickness_y = thickness(supporters_utils.format_supporters(segmented_contour))
+                segmented_thickness_x, segmented_thickness_y = thickness(
+                    supporters_utils.format_supporters(segmented_contour))
 
-                predicted_thickness_x, predicted_thickness_y = thickness(supporters_utils.format_supporters(tracked_contour))
+                predicted_thickness_x, predicted_thickness_y = thickness(
+                    supporters_utils.format_supporters(tracked_contour))
 
                 ground_truth_thickness.append(segmented_thickness_x)
 
@@ -657,33 +732,39 @@ def track_SBLK(run_params, seg_filedir, filedir, fine_pts, fine_pts_inds, course
                 if segmented_thickness_x == 0 or segmented_thickness_y == 0:
                     ground_truth_thickness_ratio.append(0)
                 else:
-                    ground_truth_thickness_ratio.append(segmented_thickness_x / segmented_thickness_y)
+                    ground_truth_thickness_ratio.append(segmented_thickness_x /
+                                                        segmented_thickness_y)
 
                 predicted_thickness.append(predicted_thickness_x)
-                predicted_thickness_ratio.append(predicted_thickness_x / predicted_thickness_y)
+                predicted_thickness_ratio.append(predicted_thickness_x /
+                                                 predicted_thickness_y)
 
                 # calculate CSA for ground truth and tracking
                 predicted_contour_areas.append(cv2.contourArea(tracked_contour))
-                ground_truth_contour_areas.append(cv2.contourArea(segmented_contour))
+                ground_truth_contour_areas.append(
+                    cv2.contourArea(segmented_contour))
 
                 # calculate intersection over union
 
                 # initialize matrices of zeros
-                mat_predicted = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
-                mat_segmented = np.zeros(cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+                mat_predicted = np.zeros(
+                    cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
+                mat_segmented = np.zeros(
+                    cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
 
                 # fill the initialized matrices with nonzero numbers in the area of the contour
                 cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)], 255)
-                cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)], 255)
+                cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)],
+                             255)
 
-                intersection = np.sum(np.logical_and(mat_predicted, mat_segmented))
+                intersection = np.sum(
+                    np.logical_and(mat_predicted, mat_segmented))
                 union = np.sum(np.logical_or(mat_predicted, mat_segmented))
 
                 iou_error = intersection / union
                 cumulative_iou_error += iou_error
 
                 iou_accuracy_series.append(iou_error)
-
 
         frame_num += 1
 

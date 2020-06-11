@@ -5,11 +5,13 @@ Methods to initialize supporter points, and use supporter points to infer contou
 import numpy as np
 import scipy
 from scipy import stats
-from multisensorimport.tracking.point_proc_utils import *
+
 from multisensorimport.tracking.image_proc_utils import *
+from multisensorimport.tracking.point_proc_utils import *
 
 
-def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img, feature_params, lk_params, which_contour):
+def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
+                          feature_params, lk_params, which_contour):
     """
     Separates contour points into those to be tracked via lucas kucas tracking, and those to be tracked via supporters, and also determine good supporter points and initialize their parameters.
 
@@ -26,12 +28,11 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img, featur
         numpy array of points to be tracked via supporters and their corresponding indeces in the contour, numpy array of points to be tracked via Lucas Kanade and their corresponding indeces in the contour, list of supporter point locations, list of the parameters for each supporter points
     """
 
-
     # extract contour
     if which_contour == 1:
         pts = extract_contour_pts_png(keyframe_path)
     else:
-        pts= extract_contour_pts_pgm(keyframe_path)
+        pts = extract_contour_pts_pgm(keyframe_path)
 
     mean_x_pts = 0
     mean_y_pts = 0
@@ -54,9 +55,18 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img, featur
     filtered_init_img = course_filter(init_img, run_params)
 
     # remove points that have low corner scores (Shi Tomasi Corner scoring): these points will be kept for LK tracking
-    lucas_kanade_points, lucas_kanade_points_indeces = filter_points(run_params, 7, pts, fineFilterNum, init_img, run_params.fine_threshold, keep_bottom=True)
+    lucas_kanade_points, lucas_kanade_points_indeces = filter_points(
+        run_params,
+        7,
+        pts,
+        fineFilterNum,
+        init_img,
+        run_params.fine_threshold,
+        keep_bottom=True)
     # add the first point to LK tracking (top left)
-    lucas_kanade_points = np.append(lucas_kanade_points, np.array([pts[0]]), axis=0)
+    lucas_kanade_points = np.append(lucas_kanade_points,
+                                    np.array([pts[0]]),
+                                    axis=0)
     lucas_kanade_points_indeces = np.append(lucas_kanade_points_indeces, 0)
 
     # obtain points which need supporters to be tracked
@@ -67,7 +77,8 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img, featur
     supporter_kept_indeces = set()
     for i in range(len(supporter_tracked_points)):
         supporter_tracked_point = supporter_tracked_points[i]
-        add = (supporter_tracked_point[0][0] > mean_x_pts and supporter_tracked_point[0][1] < mean_y_pts)
+        add = (supporter_tracked_point[0][0] > mean_x_pts and
+               supporter_tracked_point[0][1] < mean_y_pts)
         if add:
             supporter_kept_indeces.add(i)
 
@@ -76,12 +87,12 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img, featur
     supporter_tracked_to_keep_inds = []
     for index in supporter_kept_indeces:
         supporter_tracked_to_keep.append(supporter_tracked_points[index])
-        supporter_tracked_to_keep_inds.append(supporter_tracked_points_indeces[index])
+        supporter_tracked_to_keep_inds.append(
+            supporter_tracked_points_indeces[index])
 
     # reset the points to get tracked using supporters
     supporter_tracked_points = np.array(supporter_tracked_to_keep)
     supporter_tracked_points_indeces = np.array(supporter_tracked_to_keep_inds)
-
 
     # find points which differ between supporter tracked and LK points: remove the LK points which match supporter points
     LK_kept_indeces = set()
@@ -92,11 +103,12 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img, featur
         for j in range(len(supporter_tracked_points)):
             supporter_point = supporter_tracked_points[j]
             # go through supporter points: if the LK point is the same as a supporter point or it is in the top right zone, do not add
-            if ((np.linalg.norm(lucas_kanade_point - supporter_point) < 0.001) or (lucas_kanade_point[0][0] > mean_x_pts and lucas_kanade_point[0][1] < mean_y_pts)):
+            if ((np.linalg.norm(lucas_kanade_point - supporter_point) < 0.001)
+                    or (lucas_kanade_point[0][0] > mean_x_pts and
+                        lucas_kanade_point[0][1] < mean_y_pts)):
                 add = False
         if add:
             LK_kept_indeces.add(i)
-
 
     # only add the lucas kanade points that we determined should be added
     LK_to_keep = []
@@ -110,14 +122,17 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img, featur
     lucas_kanade_points_indeces = np.array(LK_to_keep_inds)
 
     # find supporters based on good points
-    supporters = cv2.goodFeaturesToTrack(filtered_init_img, mask=None, **feature_params)
+    supporters = cv2.goodFeaturesToTrack(filtered_init_img,
+                                         mask=None,
+                                         **feature_params)
 
     # initialize supporters
     supporter_params = []
     for i in range(len(supporter_tracked_to_keep)):
         supporter_tracked_point = supporter_tracked_to_keep[i][0]
         initial_variance = 10
-        _, run_params = initialize_supporters_for_point(supporters, supporter_tracked_point, initial_variance)
+        _, run_params = initialize_supporters_for_point(
+            supporters, supporter_tracked_point, initial_variance)
         supporter_params.append(run_params)
 
     return supporter_tracked_points, supporter_tracked_points_indeces, lucas_kanade_points, lucas_kanade_points_indeces, supporters, supporter_params
@@ -142,12 +157,15 @@ def initialize_supporters_for_point(supporter_points, target_point, variance):
         supporter_point = supporter_points[i][0]
         supporters.append(supporter_point)
         # initialize displacement average with initial displacement and a diagonal covariance matrix
-        supporter_params.append((target_point - supporter_point, variance * np.eye(2)))
+        supporter_params.append(
+            (target_point - supporter_point, variance * np.eye(2)))
 
     return supporters, supporter_params
 
 
-def apply_supporters_model(run_params, predicted_target_point, prev_feature_points, feature_points, feature_params, use_tracking, alpha):
+def apply_supporters_model(run_params, predicted_target_point,
+                           prev_feature_points, feature_points, feature_params,
+                           use_tracking, alpha):
     """
     Do model learning or prediction based on learned model, based on conditions of image tracking
 
@@ -173,7 +191,6 @@ def apply_supporters_model(run_params, predicted_target_point, prev_feature_poin
     # initialize new target param tuple array
     new_feature_params = []
 
-
     # tracking is to be used (first x amount of frames, x determined a priori)
     if use_tracking:
 
@@ -188,16 +205,20 @@ def apply_supporters_model(run_params, predicted_target_point, prev_feature_poin
             # previous average for displacement
             prev_displacement_average = feature_params[i][0]
             # update displacement average using exponential forgetting principle
-            new_displacement_average = alpha * prev_displacement_average + (1 - alpha) * curr_displacement
+            new_displacement_average = alpha * prev_displacement_average + (
+                1 - alpha) * curr_displacement
 
             displacement_mean_diff = curr_displacement - new_displacement_average
             # compute current covariance matrix
-            curr_covariance_matrix = displacement_mean_diff.reshape(2, 1) @ displacement_mean_diff.reshape(1, 2)
+            curr_covariance_matrix = displacement_mean_diff.reshape(
+                2, 1) @ displacement_mean_diff.reshape(1, 2)
             # update covariance matrix average using exponential forgetting principle
             prev_covariance_matrix = feature_params[i][1]
-            new_covariance_matrix = alpha * prev_covariance_matrix + (1 - alpha) * curr_covariance_matrix
+            new_covariance_matrix = alpha * prev_covariance_matrix + (
+                1 - alpha) * curr_covariance_matrix
 
-            new_feature_params.append((new_displacement_average, new_covariance_matrix))
+            new_feature_params.append(
+                (new_displacement_average, new_covariance_matrix))
 
     # Use supporter prediction: take a weighted average of the mean displacements + supporter positions, weighted by probability of supporter and prediction
     else:
@@ -209,25 +230,26 @@ def apply_supporters_model(run_params, predicted_target_point, prev_feature_poin
         for i in range(len(feature_points)):
             feature_point = feature_points[i]
             prev_feature_point = prev_feature_points[i]
-            displacement_norm = np.linalg.norm(feature_point - prev_feature_point)
+            displacement_norm = np.linalg.norm(feature_point -
+                                               prev_feature_point)
             # determine the weight to assign to that point, as a function of displacement
             weight = weight_function(run_params, displacement_norm)
             covariance = feature_params[i][1]
             displacement = feature_params[i][0]
 
-            numerator += (weight * (displacement + feature_point))/np.linalg.det(covariance)
+            numerator += (
+                weight *
+                (displacement + feature_point)) / np.linalg.det(covariance)
             denominator += weight / np.linalg.det(covariance)
 
         # return weighted average
         target_point_final = numerator / denominator
-
 
     # if Supporters was used, return the old feature_params; else return the updated params
     if new_feature_params == []:
         return target_point_final, feature_params
     else:
         return target_point_final, new_feature_params
-
 
 
 def weight_function(run_params, displacement_norm):

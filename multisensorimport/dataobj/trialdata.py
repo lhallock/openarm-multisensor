@@ -10,6 +10,7 @@ metadata.
 
 """
 import math
+
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
@@ -23,6 +24,7 @@ FORCE_DETREND_CUTOFF = 5.0
 POLYNOMIAL_ORDER = 3
 PREPEAK_VAL = 3
 INTERPOLATION_METHOD = 'linear'
+
 
 class TrialData():
     """Class containing muscle time series data and associated metadata.
@@ -76,9 +78,16 @@ class TrialData():
         self.df_dt = None
 
     @classmethod
-    def from_preprocessed_mat_file(cls, filename_mat, filedir_us, subj,
-                                   struct_no, emg_peak=0, amg_peak=0,
-                                   force_peak=0, us_peak=0, force_only=False):
+    def from_preprocessed_mat_file(cls,
+                                   filename_mat,
+                                   filedir_us,
+                                   subj,
+                                   struct_no,
+                                   emg_peak=0,
+                                   amg_peak=0,
+                                   force_peak=0,
+                                   us_peak=0,
+                                   force_only=False):
         """Initialize TrialData object from specialized MATLAB .mat file.
 
         This initializer is designed for use with publication-specific
@@ -157,8 +166,9 @@ class TrialData():
 
             # set AMG data
             amg_data = data_struct['rawAmg'][0, 0]
-            amg_labels = ['forearm (front/wrist)', 'forearm (back)', 'biceps',
-                          'triceps']
+            amg_labels = [
+                'forearm (front/wrist)', 'forearm (back)', 'biceps', 'triceps'
+            ]
             amg_freq = 2000
             amg_offset = utils.offset_from_peak(amg_peak, amg_freq, PREPEAK_VAL)
             td.data_amg = TimeSeriesData.from_array('AMG', amg_data, amg_labels,
@@ -184,7 +194,7 @@ class TrialData():
 
         # set ultrasound CSA data
         us_csa_labels = ['CSA']
-        us_freq = 8.3856 # empirical calculation
+        us_freq = 8.3856  # empirical calculation
         us_offset = utils.offset_from_peak(us_peak, us_freq, PREPEAK_VAL)
         filename_us_csa = filedir_us + '/ground_truth_csa.csv'
         td.data_us_csa = TimeSeriesData.from_file('US-CSA', filename_us_csa,
@@ -228,8 +238,11 @@ class TrialData():
         us_t_series = us_t_series.multiply(us_res)
 
         # build ultrasound dataframe
-        us_series_dict = {'us-csa': us_csa_series, 'us-t': us_t_series,
-                          'us-tr': us_tr_series}
+        us_series_dict = {
+            'us-csa': us_csa_series,
+            'us-t': us_t_series,
+            'us-tr': us_tr_series
+        }
         df_us = pd.DataFrame(us_series_dict)
 
         # crop out zero values (i.e., where detection failed)
@@ -241,10 +254,11 @@ class TrialData():
         if not self.force_only:
             # build EMG data series
             emg_series_brd = utils.build_data_series(self.data_emg, 0)
-            emg_abs_series_brd = emg_series_brd.abs().ewm(span=EMG_EWM_SPAN).mean()
+            emg_abs_series_brd = emg_series_brd.abs().ewm(
+                span=EMG_EWM_SPAN).mean()
             emg_series_bic = utils.build_data_series(self.data_emg, 1)
-            emg_abs_series_bic = emg_series_bic.abs().ewm(span=EMG_EWM_SPAN).mean()
-
+            emg_abs_series_bic = emg_series_bic.abs().ewm(
+                span=EMG_EWM_SPAN).mean()
 
         # combine all series into dataframe
         us_csa_series_nz = df_us['us-csa']
@@ -252,14 +266,23 @@ class TrialData():
         us_tr_series_nz = df_us['us-tr']
 
         if not self.force_only:
-            series_dict = {'force': force_series, 'emg-brd': emg_series_brd,
-                           'emg-abs-brd': emg_abs_series_brd, 'emg-bic':
-                           emg_series_bic, 'emg-abs-bic': emg_abs_series_bic,
-                           'us-csa': us_csa_series_nz, 'us-t': us_t_series_nz,
-                           'us-tr': us_tr_series_nz}
+            series_dict = {
+                'force': force_series,
+                'emg-brd': emg_series_brd,
+                'emg-abs-brd': emg_abs_series_brd,
+                'emg-bic': emg_series_bic,
+                'emg-abs-bic': emg_abs_series_bic,
+                'us-csa': us_csa_series_nz,
+                'us-t': us_t_series_nz,
+                'us-tr': us_tr_series_nz
+            }
         else:
-            series_dict = {'force': force_series, 'us-csa': us_csa_series_nz,
-                           'us-t': us_t_series_nz, 'us-tr': us_tr_series_nz}
+            series_dict = {
+                'force': force_series,
+                'us-csa': us_csa_series_nz,
+                'us-t': us_t_series_nz,
+                'us-tr': us_tr_series_nz
+            }
 
         df = pd.DataFrame(series_dict)
 
@@ -283,8 +306,8 @@ class TrialData():
         # generate polynomial fits
         us_csa_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-csa'],
                                              df.index, POLYNOMIAL_ORDER)
-        us_t_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-t'],
-                                           df.index, POLYNOMIAL_ORDER)
+        us_t_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-t'], df.index,
+                                           POLYNOMIAL_ORDER)
         us_tr_fitdata = utils.fit_data_poly(df_dt.index, df_dt['us-tr'],
                                             df.index, POLYNOMIAL_ORDER)
 
@@ -302,7 +325,6 @@ class TrialData():
         self.df = df
         self.df_dt = df_dt
 
-
     def _compute_abs_force(self):
         """Compute absolute value of force from 6-channel force data.
         """
@@ -313,6 +335,7 @@ class TrialData():
             y_i = force_data_comps[i, 1]
             z_i = force_data_comps[i, 2]
 
-            force_abs[i] = math.sqrt(math.pow(x_i, 2)+math.pow(y_i, 2)+math.pow(z_i, 2))
+            force_abs[i] = math.sqrt(
+                math.pow(x_i, 2) + math.pow(y_i, 2) + math.pow(z_i, 2))
 
         return force_abs

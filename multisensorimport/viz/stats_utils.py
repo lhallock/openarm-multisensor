@@ -9,7 +9,9 @@ import pandas as pd
 # list of tracker identifiers
 TRACKER_STRINGS = ('LK', 'FRLK', 'BFLK-G', 'BFLK-T', 'SBLK-G', 'SBLK-T')
 
-def gen_refined_corr_dfs(df_corr, ang_corr_out_path=None,
+
+def gen_refined_corr_dfs(df_corr,
+                         ang_corr_out_path=None,
                          subj_corr_out_path=None):
     """Generate print-ready angle and subject correlation tables for
     [PUBLICATION FORTHCOMING].
@@ -27,24 +29,44 @@ def gen_refined_corr_dfs(df_corr, ang_corr_out_path=None,
         pandas.DataFrame subject correlation table
     """
     # extract only desired table rows (polyfits are omitted/nonsensical)
-    df_corr_ref = df_corr.loc[['emg-abs-bic','emg-abs-brd','us-csa','us-csa-dt','us-t','us-t-dt','us-tr','us-tr-dt']]
+    df_corr_ref = df_corr.loc[[
+        'emg-abs-bic', 'emg-abs-brd', 'us-csa', 'us-csa-dt', 'us-t', 'us-t-dt',
+        'us-tr', 'us-tr-dt'
+    ]]
 
     # rename with print-ready labels
-    df_corr_ref.rename(index={'emg-abs-bic':'sEMG-BIC','emg-abs-brd':'sEMG-BRD','us-csa':'CSA','us-csa-dt':'CSA-DT','us-t':'T','us-t-dt':'T-DT','us-tr':'AR','us-tr-dt':'AR-DT'}, inplace=True)
+    df_corr_ref.rename(index={
+        'emg-abs-bic': 'sEMG-BIC',
+        'emg-abs-brd': 'sEMG-BRD',
+        'us-csa': 'CSA',
+        'us-csa-dt': 'CSA-DT',
+        'us-t': 'T',
+        'us-t-dt': 'T-DT',
+        'us-tr': 'AR',
+        'us-tr-dt': 'AR-DT'
+    },
+                       inplace=True)
 
     # aggregate angle correlation data
-    df_corr_ang = df_corr_ref[['sub1wp1','sub1wp2','sub1wp5','sub1wp8','sub1wp10']]
-    df_corr_ang.columns = ['25','44','69','82','97']
+    df_corr_ang = df_corr_ref[[
+        'sub1wp1', 'sub1wp2', 'sub1wp5', 'sub1wp8', 'sub1wp10'
+    ]]
+    df_corr_ang.columns = ['25', '44', '69', '82', '97']
     if ang_corr_out_path:
         df_corr_ang.to_csv(ang_corr_out_path)
 
-    df_corr_subj = df_corr_ref[['sub1wp5','sub2wp5','sub3wp5','sub4wp5','sub5wp5']]
-    df_corr_subj = df_corr_subj.loc[['CSA','CSA-DT','T','T-DT','AR','AR-DT']]
-    df_corr_subj.columns = ['Sub1','Sub2','Sub3','Sub4','Sub5']
+    df_corr_subj = df_corr_ref[[
+        'sub1wp5', 'sub2wp5', 'sub3wp5', 'sub4wp5', 'sub5wp5'
+    ]]
+    df_corr_subj = df_corr_subj.loc[[
+        'CSA', 'CSA-DT', 'T', 'T-DT', 'AR', 'AR-DT'
+    ]]
+    df_corr_subj.columns = ['Sub1', 'Sub2', 'Sub3', 'Sub4', 'Sub5']
     if subj_corr_out_path:
         df_corr_subj.to_csv(subj_corr_out_path)
 
     return df_corr_ang, df_corr_subj
+
 
 def gen_ex_tracking_df(subj_dir):
     """Generate tracking error (Jaccard distance, CSA, T, AR) data frames from raw time
@@ -68,7 +90,7 @@ def gen_ex_tracking_df(subj_dir):
     df_tr_mean = df_tr.mean().to_frame()
 
     df_means = df_iou_mean.copy()
-    df_means.rename(columns={0:'Jaccard Distance'}, inplace=True)
+    df_means.rename(columns={0: 'Jaccard Distance'}, inplace=True)
     df_means['CSA'] = df_csa_mean[0]
     df_means['T'] = df_t_mean[0]
     df_means['AR'] = df_tr_mean[0]
@@ -79,12 +101,13 @@ def gen_ex_tracking_df(subj_dir):
     df_tr_std = df_tr.std().to_frame()
 
     df_stds = df_iou_std.copy()
-    df_stds.rename(columns={0:'Jaccard Distance'}, inplace=True)
+    df_stds.rename(columns={0: 'Jaccard Distance'}, inplace=True)
     df_stds['CSA'] = df_csa_std[0]
     df_stds['T'] = df_t_std[0]
     df_stds['AR'] = df_tr_std[0]
 
     return df_means, df_stds
+
 
 def gen_tracking_dfs(subj_dirs, tracker_strings=TRACKER_STRINGS):
     """Generate tracking error (Jaccard distance) data frames from raw IoU time
@@ -124,6 +147,7 @@ def gen_tracking_dfs(subj_dirs, tracker_strings=TRACKER_STRINGS):
 
     return df_means, df_stds, df_sems
 
+
 def gen_def_err_vals(subj_dir, metric, tracker_strings=TRACKER_STRINGS):
     """Aggregate table of per-frame deformation metric error for each tracker.
 
@@ -138,14 +162,19 @@ def gen_def_err_vals(subj_dir, metric, tracker_strings=TRACKER_STRINGS):
     """
     if metric == 'CSA':
         df_metric = pd.read_csv(subj_dir + 'ground_truth_csa.csv',
-                                index_col=False, header=0, names=['GT'])
+                                index_col=False,
+                                header=0,
+                                names=['GT'])
     elif metric == 'T':
         df_metric = pd.read_csv(subj_dir + 'ground_truth_thickness.csv',
-                                index_col=False, header=0, names=['GT'])
+                                index_col=False,
+                                header=0,
+                                names=['GT'])
     elif metric == 'AR':
-        df_metric = pd.read_csv(subj_dir +
-                                'ground_truth_thickness_ratio.csv',
-                                index_col=False, header=0, names=['GT'])
+        df_metric = pd.read_csv(subj_dir + 'ground_truth_thickness_ratio.csv',
+                                index_col=False,
+                                header=0,
+                                names=['GT'])
     else:
         raise ValueError('unknown deformation metric')
 
@@ -164,9 +193,11 @@ def gen_def_err_vals(subj_dir, metric, tracker_strings=TRACKER_STRINGS):
     df_metric = df_metric.loc[df_metric['GT'] > 0]
 
     for tracker in tracker_strings:
-        df_metric[tracker] = abs(df_metric[tracker]-df_metric['GT'])/df_metric['GT']
+        df_metric[tracker] = abs(df_metric[tracker] -
+                                 df_metric['GT']) / df_metric['GT']
 
     return df_metric
+
 
 def gen_jd_vals(subj_dir, tracker_strings=TRACKER_STRINGS):
     """Aggregate table of per-frame Jaccard distance error for each tracker.
@@ -180,7 +211,9 @@ def gen_jd_vals(subj_dir, tracker_strings=TRACKER_STRINGS):
         pandas.DataFrame of Jaccard distance errors, indexed by frame number
     """
     df_iou = pd.read_csv(subj_dir + 'LK/iou_series.csv',
-                         index_col=False, header=0, names=['LK'])
+                         index_col=False,
+                         header=0,
+                         names=['LK'])
 
     for tracker in tracker_strings:
         if tracker != 'LK':
@@ -189,8 +222,7 @@ def gen_jd_vals(subj_dir, tracker_strings=TRACKER_STRINGS):
 
     df_iou = df_iou.loc[df_iou['LK'] > 1e-3]
 
-
     for tracker in tracker_strings:
-        df_iou[tracker] = 1-df_iou[tracker]
+        df_iou[tracker] = 1 - df_iou[tracker]
 
     return df_iou

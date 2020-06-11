@@ -8,8 +8,8 @@ import numpy as np
 from multisensorimport.tracking import supporters_utils as supporters_utils
 from multisensorimport.tracking import tracking_algorithms as track
 
-def tracking_run(arg_params, run_params):
 
+def tracking_run(arg_params, run_params):
     """Execute ultrasound image tracking, tracking evaluation, and tracking visualization.
 
         arg_params: dictionary specifying algorithm to use, read path for segmented/raw files, and initial image name
@@ -26,15 +26,15 @@ def tracking_run(arg_params, run_params):
     # set Lucas-Kanade optical flow parameters
     window_size = run_params.LK_window
     lk_params = dict(winSize=(window_size, window_size),
-                     maxLevel= run_params.pyr_level,
+                     maxLevel=run_params.pyr_level,
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
     # params for ShiTomasi corner detection
-    feature_params = dict(maxCorners = run_params.max_corners,
-                          qualityLevel = run_params.quality_level,
-                          minDistance = run_params.min_distance,
-                          blockSize = run_params.block_size)
+    feature_params = dict(maxCorners=run_params.max_corners,
+                          qualityLevel=run_params.quality_level,
+                          minDistance=run_params.min_distance,
+                          blockSize=run_params.block_size)
 
     # initial image path
     init_path = READ_PATH + init_img_name
@@ -48,7 +48,14 @@ def tracking_run(arg_params, run_params):
     if run_type == 1:
         print("LK tracking")
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_LK(run_params, SEG_PATH, READ_PATH, initial_contour_pts, lk_params, viz = True, filter_type=0)
+        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_LK(
+            run_params,
+            SEG_PATH,
+            READ_PATH,
+            initial_contour_pts,
+            lk_params,
+            viz=True,
+            filter_type=0)
 
     elif run_type == 2:
         print("FRLK tracking")
@@ -60,32 +67,49 @@ def tracking_run(arg_params, run_params):
         filter_type_tomasi = 0
 
         # filter the contour points to track based on their corner scores
-        filtered_initial_contour, indeces = track.filter_points(run_params, shi_tomasi_window, initial_contour_pts, filter_type_tomasi, init_img, fraction_points)
+        filtered_initial_contour, indeces = track.filter_points(
+            run_params, shi_tomasi_window, initial_contour_pts,
+            filter_type_tomasi, init_img, fraction_points)
         # order the contour points in counter-clockwise order for easier OpenCV contour analysis
-        filtered_initial_contour = track.order_points(filtered_initial_contour, indeces, np.array([]), np.array([]))
+        filtered_initial_contour = track.order_points(filtered_initial_contour,
+                                                      indeces, np.array([]),
+                                                      np.array([]))
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_LK(run_params, SEG_PATH, READ_PATH, filtered_initial_contour, lk_params, viz = True, filter_type=0, filtered_LK_run = True)
+        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_LK(
+            run_params,
+            SEG_PATH,
+            READ_PATH,
+            filtered_initial_contour,
+            lk_params,
+            viz=True,
+            filter_type=0,
+            filtered_LK_run=True)
 
     elif run_type == 3:
         print("BFLK tracking")
         # separate points into those to be tracked with the less aggressive bilateral filter, and those to be tracked with the more aggressive bilateral filter
-        fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds = track.separate_points(run_params, init_img, initial_contour_pts)
+        fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds = track.separate_points(
+            run_params, init_img, initial_contour_pts)
 
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_BFLK(run_params, SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, lk_params)
+        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_BFLK(
+            run_params, SEG_PATH, READ_PATH, fine_filtered_points,
+            fine_pts_inds, course_filtered_points, course_pts_inds, lk_params)
 
     elif run_type == 4:
         print("SBLK tracking")
 
         # initialize contours and supporters
         course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = supporters_utils.initialize_supporters(
-            run_params, READ_PATH, keyframe_path, init_img, feature_params, lk_params, 2)
+            run_params, READ_PATH, keyframe_path, init_img, feature_params,
+            lk_params, 2)
 
         # initialize supporters
         supporter_params = []
         for i in range(len(course_filtered_points)):
             point = course_filtered_points[i][0]
-            _, sup_params = supporters_utils.initialize_supporters_for_point(supporters_tracking, point, 10)
+            _, sup_params = supporters_utils.initialize_supporters_for_point(
+                supporters_tracking, point, 10)
             supporter_params.append(sup_params)
 
         # determine image filters to apply on frames
@@ -93,21 +117,40 @@ def tracking_run(arg_params, run_params):
         courseFilterNum = 3
 
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_SBLK(run_params, SEG_PATH, READ_PATH, fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds, supporters_tracking, supporter_params, lk_params, True, feature_params, True, fine_filter_type=fineFilterNum, course_filter_type=courseFilterNum)
-
+        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_SBLK(
+            run_params,
+            SEG_PATH,
+            READ_PATH,
+            fine_filtered_points,
+            fine_pts_inds,
+            course_filtered_points,
+            course_pts_inds,
+            supporters_tracking,
+            supporter_params,
+            lk_params,
+            True,
+            feature_params,
+            True,
+            fine_filter_type=fineFilterNum,
+            course_filter_type=courseFilterNum)
 
     # Errors/Accuracy measures from tracking
-    thickness_error = np.linalg.norm(np.array([ground_truth_thickness]) - np.array([tracking_thickness])) / len(tracking_thickness)
+    thickness_error = np.linalg.norm(
+        np.array([ground_truth_thickness]) -
+        np.array([tracking_thickness])) / len(tracking_thickness)
 
-    thickness_ratio_error = np.linalg.norm(np.array([ground_truth_thickness_ratio]) - np.array([tracking_thickness_ratio])) / len(tracking_thickness_ratio)
+    thickness_ratio_error = np.linalg.norm(
+        np.array([ground_truth_thickness_ratio]) -
+        np.array([tracking_thickness_ratio])) / len(tracking_thickness_ratio)
 
-    csa_error = np.linalg.norm(np.array([ground_truth_contour_areas]) - np.array([tracking_contour_areas])) / len(tracking_contour_areas)
+    csa_error = np.linalg.norm(
+        np.array([ground_truth_contour_areas]) -
+        np.array([tracking_contour_areas])) / len(tracking_contour_areas)
 
     print("THICKNESS ERROR: ", thickness_error)
     print("THICKNESS RATIO ERROR: ", thickness_ratio_error)
     print("CSA ERROR: ", csa_error)
     print("IOU ACCURACY: ", iou_error)
-
 
     # write contour areas to csv file
 

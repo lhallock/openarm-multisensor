@@ -126,7 +126,10 @@ def anisotropic_diffuse(img, run_params):
     alphaVar = 0.1
     KVar = 5
     nitersVar = 5
-    diffusedColor = cv2.ximgproc.anisotropicDiffusion(src = img, alpha = alphaVar, K = KVar, niters = nitersVar)
+    diffusedColor = cv2.ximgproc.anisotropicDiffusion(src=img,
+                                                      alpha=alphaVar,
+                                                      K=KVar,
+                                                      niters=nitersVar)
     return cv2.cvtColor(diffusedColor, cv2.COLOR_RGB2GRAY)
 
 
@@ -140,7 +143,8 @@ def otsu_binarization(gray_image):
     Returns: Binarized version of the img
     """
 
-    ret2, th2 = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    ret2, th2 = cv2.threshold(gray_image, 0, 255,
+                              cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return th2
 
 
