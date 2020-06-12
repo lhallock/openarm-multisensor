@@ -1,6 +1,3 @@
-# openarm-multisensor
-Code to import and manipulate muscle time series data for publication in [PUBLICATION FORTHCOMING].
-
 # Developing on this repository
 
 This README describes the workflow expected of contributors to this repository to maintain code cleanliness, legibility, and accuracy.
