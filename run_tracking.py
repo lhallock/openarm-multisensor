@@ -24,6 +24,7 @@ import numpy as np
 
 import ultrasoundviz as viz
 
+
 class ParamValues():
     """Class containing tracking algorithm parameter values.
 
@@ -187,8 +188,9 @@ def write_run():
     parser.add_argument('--seg_path',
                         type=str,
                         help='file path to segmented ground truth images')
-    parser.add_argument('--out_path',
-                        type=str,
+    parser.add_argument(
+        '--out_path',
+        type=str,
         help='file path to folder to which CSV data should be written')
     parser.add_argument('--init_img',
                         type=str,
