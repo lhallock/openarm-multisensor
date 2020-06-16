@@ -8,9 +8,81 @@ This repo contains code used to
 
 This README primarily describes the methods needed to recreate the analyses described in the publication above, as applied to the time series "multisensor" data found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
+---
+
 ## Installation
 
-All packages used in code development and their associated versions can be found in [requirements.txt](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`. 
+All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`. 
+
+---
+
+## Time series data aggregation, analysis, and plotting
+
+This section describes the file structure and code necessary to recreate all plots and statistics in the publication above. Two main scripts are included: the first, [`run_multisensorimport.py`](run_multisensorimport.py) aggregates and plots all time series force, sEMG, and ultrasound-based deformation data, and writes out correlation tables to CSV; the second, [`gen_pub_figs.py`](gen_pub_figs.py) uses these CSV files and others generated in the deformation tracking procedures below to generate all bar plots and statistics reported in the publication above.
+
+### Setup
+
+Data should be downloaded from the [OpenArm multi-sensor data set](TODO) and arranged as follows:
+
+```bash
+.
+├── gen_pub_figs.py
+├── run_multisensorimport.py
+├── sandbox/data/FINAL
+│   ├── sub[N]
+│   │   ├── seg_data.mat
+│   │   ├── wp[i]t[j]
+│   │   │   ├── ground_truth_csa.csv
+│   │   │   ├── ground_truth_thickness.csv
+│   │   │   ├── ground_truth_thickness_ratio.csv
+│   │   │   ├── BFLK-G
+│   │   │   │   ├── iou_series.csv
+│   │   │   │   ├── tracking_csa.csv
+│   │   │   │   ├── tracking_thickness.csv
+│   │   │   │   └── tracking_thickness_ratio.csv
+│   │   │   ├── BFLK-T
+│   │   │   │   ├── iou_series.csv
+│   │   │   │   ├── ...
+│   │   │   ├── FRLK
+│   │   │   │   ├── iou_series.csv
+│   │   │   │   ├── ...
+│   │   │   ├── LK
+│   │   │   │   ├── iou_series.csv
+│   │   │   │   ├── ...
+│   │   │   ├── SBLK-G
+│   │   │   │   ├── iou_series.csv
+│   │   │   │   ├── ...
+│   │   │   └── SBLK-T
+│   │   │       ├── iou_series.csv
+│   │   │       ├── ...
+│   │   ├── ...
+│   ├── ...
+
+```
+
+i.e., data should be placed in directory `sandbox/data/FINAL`, where `sandbox` is a directory at the top level of this repository. Alternatively, file paths can be modified via the constant variables at the top of each script.
+
+# Usage
+
+First, run
+
+```bash
+python run_multisensorimport.py
+```
+
+to view all time series data plots. This will also generate correlation table files `ang_corr.csv` and `subj_corr.csv` in `sandbox/data/FINAL`, which are necessary for the second script below. (These files are also included with the OpenArm data release; the command above is thus optional if these files are already in the tree.)
+
+Next, run
+
+```bash
+python gen_pub_figs.py
+```
+
+to view all bar plots and aggregate correlation statistics in the publication above.
+
+---
+
+## Deformation tracking in ultrasound scans
 
 ## Setup
 
