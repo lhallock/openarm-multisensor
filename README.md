@@ -62,7 +62,7 @@ Data should be downloaded from the [OpenArm multi-sensor data set](TODO) and arr
 
 i.e., data should be placed in directory `sandbox/data/FINAL`, where `sandbox` is a directory at the top level of this repository. Alternatively, file paths can be modified via the constant variables at the top of each script.
 
-# Usage
+### Usage
 
 First, run
 
@@ -84,7 +84,7 @@ to view all bar plots and aggregate correlation statistics in the publication ab
 
 ## Deformation tracking in ultrasound scans
 
-## Setup
+### Setup
 
 Source data and models should be organized in the following directory structure:
 
