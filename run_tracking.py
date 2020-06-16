@@ -1,54 +1,75 @@
-"""
-Runner script containing parameters and main method to do tracking. Specify which algorithm to use via run_type.
+#!/usr/bin/env python3
+"""Script to track ultrasound muscle contours via optical flow.
 
-Run this via:
-    $ python run_tracking.py --run_type <algorithm integer> --img_path <filepath to US frames> --seg_path <filepath to segmented images> --out_path <filepath to where output will be written> --init_img <name of first image in US frame series>
+Example:
+    Run this function via
 
-    algorithm integer to algorithm mapping:
-        1: LK
-        2: FRLK
-        3: BFLK
-        4: SBLK
+        $ python run_tracking.py --run_type <alg_int> --img_path <filepath_us>\
+        --seg_path <filepath_seg> --out_path <filepath_out> --init_img\
+        <filename_init>
+
+    for
+        alg_int: integer value corresponding to desired algorithm
+            1: LK
+            2: FRLK
+            3: BFLK
+            4: SBLK
+        filepath_us: file path to raw ultrasound PGM frames
+        filepath_seg: file path to segmented PGM images
+        filepath_out: file path to which [TODO: spec. files] will be written
+        filename_init: file name of first image in ultrasound frame series
 """
 
 import numpy as np
 
 import ultrasoundviz as viz
 
-
 class ParamValues():
-    """
-    Class containing instance variables which are parameters used in various tracking algorithms and image filtering techniques, and a method to modify these variables. Used to easily change parameters for tuning.
-    """
+    """Class containing tracking algorithm parameter values.
 
-    # LK params:
+    This class contains all parameters used in optical flow tracking of
+    ultrasound images as instance variables, as well as a method to modify
+    these variables. It is used to easily modify parameters for tuning.
+    """
+    ###########################################################################
+    ## LK PARAMETERS
+    ###########################################################################
+
     # window size for Lucas Kanade
     LK_window = 35
-    # Pyramiding level for Lucas Kanade
+
+    # pyramiding level for Lucas Kanade
     pyr_level = 3
 
-    # FRLK params:
-    # Quality level of corners chosen via Shi-Tomasi corner detection
+    ###########################################################################
+    ## FRLK PARAMETERS
+    ###########################################################################
+
+    # quality level of corners chosen via Shi-Tomasi corner detection
     quality_level = 0.4
 
-    # Minimum distance between corners chosen via Shi-Tomasi corner detection
+    # minimum distance between corners chosen via Shi-Tomasi corner detection
     min_distance = 0
 
-    # Maximum number of good corner points chosen
+    # maximum number of good corner points chosen
     max_corners = 300
-    # Block size used for derivative kernel in ShiTomasi corner scoring
+
+    # block size used for derivative kernel in ShiTomasi corner scoring
     block_size = 7
 
-    # Fraction of top points (based on corner score) to keep in FRLK
+    # fraction of top points (based on corner score) to keep in FRLK
     point_frac = 0.7
 
-    # BFLK params:
-    # Bilateral filter parameters - 'course/less agressive bilateral filter':
+    ###########################################################################
+    ## BFLK PARAMETERS
+    ###########################################################################
+
+    # bilateral filter parameters - coarse/less aggressive
     course_diam = 5
     course_sigma_color = 100
     course_sigma_space = 100
 
-    # Bilateral filter parameters - 'Fine/more agressive bilateral filter':
+    # bilateral filter parameters - fine/more aggressive
     fine_diam = 20
     fine_sigma_color = 80
     fine_sigma_space = 80
@@ -57,8 +78,11 @@ class ParamValues():
     percent_fine = 0.2
     percent_course = 0.8
 
-    # SBLK params:
-    # offset (alpha) used in the weighting function for supporters points
+    ###########################################################################
+    ## SBLK PARAMETERS
+    ###########################################################################
+
+    # offset (alpha) used in weighting function for supporter points
     displacement_weight = 40
 
     # fraction of points to track without supporters
@@ -70,23 +94,35 @@ class ParamValues():
     # update rate for exponential moving average
     update_rate = 0.7
 
-    # common parameters
-    # number of lowermost contour points to keep (used to ensure that points along entire contour were kept)
+    ###########################################################################
+    ## SHARED/COMMON PARAMETERS
+    ###########################################################################
+
+    # number of lowermost contour points to keep (used to ensure point along
+    # entire contour are kept)
     num_bottom = 0
 
-    # flag to maintain the top edge of the contour across tracking (mitigates against downward drift)
+    # flag to maintain top edge of contour across tracking (mitigates downward
+    # drift)
     fix_top = False
 
-    # How often to reset contour to ground truth (used to analyze how often/when drift occurs)
-    # set to high number (i.e. > # frames) for no reset
+    # how often to reset contour to ground truth (used to analyze when and how
+    # often drift occurs)
+    # set to high number (i.e., > # total frames) for no reset
     reset_frequency = 100000
+
+    ###########################################################################
+    ## GETTERS/SETTERS
+    ###########################################################################
 
     def change_values(self, disp_weight, qual_level, min_dist, course_d,
                       course_sigma_c, course_sigma_s, fine_d, fine_sigma_c,
                       fine_sigma_s, window, pyr, fine_thresh, num_bot,
                       perc_fine, perc_course, reset_freq):
-        """
-        Method to modify the parameter instance variables to the given arguments. Only changes the arguments which are not None. Used for parameter tuning.
+        """Modify parameter instance variables to given arguments.
+
+        This method is used for parameter tuning, and only changes arguments
+        that are not None.
         """
         if disp_weight is not None:
             self.displacement_weight = disp_weight
@@ -122,6 +158,11 @@ class ParamValues():
             self.reset_frequency = reset_freq
 
     def get_displacement_weight(self):
+        """Get SBLK object displacement weight parameter.
+
+        Returns:
+            float displacement weight
+        """
         return self.displacement_weight
 
 
@@ -130,8 +171,7 @@ parameter_values = ParamValues()
 
 
 def write_run():
-    """
-    Execute a run of tracking, based on command line arguments given.
+    """Execute tracking run based on command line arguments given.
     """
     import argparse
 
@@ -143,17 +183,16 @@ def write_run():
                         help='denotes which algorithm to use')
     parser.add_argument('--img_path',
                         type=str,
-                        help='filepath to the raw ultrasound images to track')
+                        help='file path to raw ultrasound images to track')
     parser.add_argument('--seg_path',
                         type=str,
-                        help='filepath to the segmented ground truth images')
-    parser.add_argument(
-        '--out_path',
-        type=str,
-        help='filepath to the folder to which csv data should be written')
+                        help='file path to segmented ground truth images')
+    parser.add_argument('--out_path',
+                        type=str,
+        help='file path to folder to which CSV data should be written')
     parser.add_argument('--init_img',
                         type=str,
-                        help='filename for first frame in ultrasound video')
+                        help='file name for first frame in ultrasound sequence')
 
     args = parser.parse_args()
     arg_params = vars(args)
