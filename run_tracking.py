@@ -54,7 +54,7 @@ class ParamValues():
     # maximum number of good corner points chosen
     max_corners = 300
 
-    # block size used for derivative kernel in ShiTomasi corner scoring
+    # block size used for derivative kernel in Shi-Tomasi corner scoring
     block_size = 7
 
     # fraction of top points (based on corner score) to keep in FRLK

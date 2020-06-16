@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Executes and visualizes contour tracking of a series of ultrasound frames, using the specified algorithm.
+"""Executes and visualizes contour tracking of ultrasound frame series using
+specified algorithm.
 """
-
 import cv2
 import numpy as np
 
@@ -10,13 +10,17 @@ from multisensorimport.tracking import tracking_algorithms as track
 
 
 def tracking_run(arg_params, run_params):
-    """Execute ultrasound image tracking, tracking evaluation, and tracking visualization.
+    """Execute ultrasound image tracking, tracking evaluation, and tracking
+    visualization.
 
-        arg_params: dictionary specifying algorithm to use, read path for segmented/raw files, and initial image name
-        run_params: instance of ParamValues class containing parameter values
-        run_type: integer determining tracking algorithm to run (see run_tracking.py for mapping from integer to algorithm)
+    Args:
+        arg_params (dict): dictionary specifying algorithm to use, read path
+            for raw and segmented files, and initial image name
+        run_params (ParamValues): instance of ParamValues class containing
+            parameter values for each optical flow algorithm
+        run_type (int): integer determining which tracking algorithm to run
+            (mappings documented in run_tracking.py)
     """
-
     READ_PATH = arg_params['img_path']
     SEG_PATH = arg_params['seg_path']
     OUT_PATH = arg_params['out_path']
@@ -30,13 +34,13 @@ def tracking_run(arg_params, run_params):
                      criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                                10, 0.03))
 
-    # params for ShiTomasi corner detection
+    # set parameters for Shi-Tomasi corner detection
     feature_params = dict(maxCorners=run_params.max_corners,
                           qualityLevel=run_params.quality_level,
                           minDistance=run_params.min_distance,
                           blockSize=run_params.block_size)
 
-    # initial image path
+    # set initial image path
     init_path = READ_PATH + init_img_name
     init_img = cv2.imread(init_path, -1)
 
