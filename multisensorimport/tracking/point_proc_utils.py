@@ -1,7 +1,9 @@
-"""
-Methods to extract, process, and filter contour points based on certain metrics (i.e. Shi-Tomasi Corner Score)
-"""
+#!/usr/bin/env python3
+"""Utility functions to filter image points.
 
+This module contains functions to extract, process, and filter contour points
+based on various metrics (e.g., Shi-Tomasi corner score).
+"""
 import os
 
 import cv2
@@ -9,7 +11,6 @@ import numpy as np
 import scipy
 
 from multisensorimport.tracking.image_proc_utils import *
-
 
 def extract_contour_pts_png(filename):
     """Extract points from largest contour in PNG image.
@@ -92,24 +93,27 @@ def extract_contour_pts_pgm(filename):
 
 
 def shi_tomasi_corner_score(point, block_size, img):
-    """
-    Calculates the Shi-Tomasi corner score for a point in the given image
+    """Calculates Shi-Tomasi corner score for point in the given image.
 
     Args:
-        point: 1 element numpy array whose element is a numpy array of x, y pixel coordinates
-        block_size: block size determining the neighborhood around point to consider
-        img: image in which the corner score is being calculated
+        point (numpy.ndarray): single-element array whose element is a
+            numpy.ndarray of x-y pixel coordinates
+        block_size (TODO type): block size determining neighborhood around
+            point to consider
+        img (TODO type): image in which corner score is being calculated
 
-    Returns: Shi-Tomasi corner score for given point in given image (scalar value)
+    Returns:
+        float Shi-Tomasi corner score for given point in given image
     """
     point = point[0]
 
-    # get x,y coords
+    # get x-y coordinates
     x = int(round(point[0]))
     y = int(round(point[1]))
 
-    # sets dimension of Sobel derivative kernel
+    # set dimension of Sobel derivative kernel
     k_size = 5
+
     # obtain eigenvalues and corresponding eigenvectors of image structure tensor
     eigen = cv2.cornerEigenValsAndVecs(img, block_size, ksize=k_size)
 
@@ -128,19 +132,28 @@ def filter_points(run_params,
                   img,
                   percent,
                   keep_bottom=False):
-    """
-    Filter the given contour points by removing those with low Shi-Tomasi corner scores. Used in FRLK, BFLK, and SBLK.
+    """Filter given contour points by Shi-Tomasi corner score.
+
+    This method extracts the top specified percentage of contour points based
+    on their Shi-Tomasi corner score and is used in FRLK, BFLK, and SBLK
+    algorithms.
 
     Args:
-        run_params: instance of ParamValues class, contains values of parameters used in tracking
-        window_size: size of neighborhood around point to consider when calculating corner score
-        img: image used to calculate corner scores
-        percent: percent of points to keep (keep the top percent% of points based on corner score)
-        keep_bottom: boolean determining if the bottom-most should be kept regardless of their corner score
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
+        window_size (TODO type): size of neighborhood around point to consider
+            when calculating corner score
+        pts (TODO type): TODO description
+        img (TODO type): image used to calculate corner scores
+        percent (TODO type): percent of points to keep based on corner score
+        keep_bottom (bool): whether points along bottom of contour should be
+            kept regardless of score (used to ensure contour contains bottom of
+            fascia)
 
-    Returns: numpy array of the filtered points, and a numpy array of their corresponding indeces in the original contour.
+    Returns:
+        numpy.ndarray of filtered points
+        numpy.ndarray of their corresponding indices in the original contour
     """
-
     # select image filter, determined by filterType argument
     filter = get_filter_from_num(filter_type)
 
@@ -161,8 +174,8 @@ def filter_points(run_params,
     filtered_points = []
     filtered_points_ind = []
 
-    # converts map to a list of 2-tuples (key, value), which are sorted in descending order by value
-    # key is index of point in the pts list
+    # convert map to  list of 2-tuples (key, value), sorted in descending order
+    # by value; key is index of point in pts list
     sorted_corner_mapping = sorted(ind_to_score_map.items(),
                                    key=lambda x: x[1],
                                    reverse=True)
@@ -170,13 +183,13 @@ def filter_points(run_params,
                               key=lambda x: x[1],
                               reverse=True)
 
-    # get top percent% of points
+    # get top percent of points
     for i in range(0, int(np.rint(percent * len(sorted_corner_mapping)))):
         points_ind = sorted_corner_mapping[i][0]
         filtered_points.append(pts[points_ind])
         filtered_points_ind.append(points_ind)
 
-    # keep bottom most points if needed (to make sure the contour includes the bottom of fascia)
+    # keep bottom-most points if specified
     if keep_bottom:
         for i in range(run_params.num_bottom):
             points_ind = sorted_y_mapping[i][0]
@@ -187,22 +200,33 @@ def filter_points(run_params,
 
 
 def separate_points(run_params, img, pts):
-    """
-    Separate a given set of points into two subsets of those points, where each subset contains the points with the top X% of points (sorted by corner score), in the appropriately filtered images.
+    """Separate points into two subsets for use by different filters.
+
+    This method separates a given set of contour points into two sets of points
+    to be tracked by separate filters (i.e., a "coarse" and "aggressive"
+    bilateral filter). Each subset contains the top percentage (as specified in
+    the input parameter object) of contour points based on Shi-Tomasi corner
+    score, as evaluated on the correspondingly filtered image. If points are
+    considered high quality in both filtered images, they are tracked in the
+    more aggressively filtered frames.
 
     Args:
-        run_params: instance of ParamValues class, contains values of parameters used in tracking
-        img: image to use to determine corner scores
-        pts: numpy array of points to be filtered and separated
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
+        img (TODO type): image used to calculate corner scores
+        pts (numpy.ndarray): array of points to be filtered and separated
 
     Returns:
-        numpy arrays of the fine_pts and their corresponding indeces in the overall contour list, and the course points and their corresponding indeces in the overall contour.
+        numpy.ndarray of points to be tracked by fine/aggressive filter
+        numpy.ndarray of their corresponding indices in the original contour
+        numpy.ndarray of points to be tracked by coarse/less-aggressive filter
+        numpy.ndarray of their corresponding indices in the original contour
     """
-
-    # determine the image filters to use (bilateral filters)
+    # determine image filters to use (bilateral filters)
     fine_filter_type = 2
     course_filter_type = 3
 
+    # TODO add explanation for magic number
     corner_window_size = 7
 
     # separate points into two potentially overlapping subsets of pts
@@ -213,7 +237,8 @@ def separate_points(run_params, img, pts):
                                                 pts, course_filter_type, img,
                                                 run_params.percent_course)
 
-    # remove overlap between the two subsets; a point in both sets will be removed from the course_pts and kept in the fine_pts
+    # remove overlap between two subsets; a point in both sets will be removed
+    # from course_pts and kept in fine_pts
     course_kept_indeces = set()
     for i in range(len(course_pts)):
         course_pt = course_pts[i]
@@ -239,20 +264,27 @@ def separate_points(run_params, img, pts):
 
 
 def order_points(points_one, points_one_inds, points_two, points_two_inds):
-    """
-    Combines two subsets of contour points into one contour, while maintaining their original counter-clockwise order in the contour.
+    """Generate single contour from two sets of points.
+
+    This method combines two subsets of contour points into a single contour
+    while maintaining their original counter-clockwise order, and is used when
+    recombining points that have been tracked using different algorithms.
 
     Args:
-        points_one: first subset of contour points
-        points_one_inds: Indeces of the first subset of points, in the original contour
-        points_two: second subset of contour points
-        points_two_inds: Indeces of the second subset of points, in the original contour
+        points_one (numpy.ndarray): first subset of contour points
+        points_one_inds (TODO type): indices of first subset of points in
+            original contour
+        points_two (numpy.ndarray): second subset of contour points
+        points_two_inds (TODO type): indices of second subset of points in
+            original contour
 
     Returns:
-        numpy array combining points_one and points_two, in order of the original contour
+        numpy.ndarray of points_one and points_two, ordered as in original
+            contour
     """
     # init dictionary mapping index to point
     point_dict = dict()
+
     # populate dictionary
     for i in range(len(points_one)):
         point = points_one[i]
@@ -272,13 +304,18 @@ def order_points(points_one, points_one_inds, points_two, points_two_inds):
 
 
 def thickness(points):
-    """
-    Finds thickness in x and y direction given a set of points. Thickness along a certain dimension is defined as the maximal difference between two point along that dimension (x or y)
+    """Find contour thickness in x and y dimensions.
+
+    This method determines contour thickness (i.e., maximal extent/width) in x
+    and y dimensions given a set of contour points. Thickness is defined as the
+    maximal difference between two points along that dimension.
 
     Args:
-        points: numpy array of contour points
+        points (numpy.ndarray): array of contour points
 
-    Returns: thickness along x direction, and thickness along y direction.
+    Returns:
+        float thickness in x dimension
+        float thickness in y dimension
     """
     # initialize min and max values
     min_x = float("inf")
@@ -302,14 +339,14 @@ def thickness(points):
 
 
 def get_image_value(x, y, img):
-    """
-    Helper method to get the pixel value at a specified x, y coordinate of an image.
+    """Get pixel value at specified x-y coordinate of image.
 
     Args:
-        x: horizontal pixel coordinate
-        y: vertical pixel coordinate
+        x (int): horizontal pixel coordinate
+        y (int): vertical pixel coordinate
+        img (TODO type): TODO description
 
     Returns:
-        pixel value at the specified coordinate
+        TODO type pixel value at specified coordinate
     """
     return img[y][x]

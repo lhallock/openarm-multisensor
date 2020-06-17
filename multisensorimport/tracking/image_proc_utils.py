@@ -45,7 +45,8 @@ def no_filter(img, run_params):
 
     Args:
         img (TODO type): image to be (potentially) grayscaled
-        run_params (ParamValues): class containing values of parameters used in tracking
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
 
     Returns:
         TODO type grayscale, non-filtered version of input image
@@ -62,7 +63,8 @@ def median_filter(img, run_params):
 
     Args:
         img (TODO type): image to be filtered
-        run_params (ParamValues): class containing values of parameters used in tracking
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
 
     Returns:
         TODO type median-filtered version of input image
@@ -77,7 +79,8 @@ def fine_bilateral_filter(img, run_params):
 
     Args:
         img (TODO type): image to be filtered
-        run_params (ParamValues): class containing values of parameters used in tracking
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
 
     Returns:
         TODO type bilaterally-filtered version of input image
@@ -100,7 +103,8 @@ def course_bilateral_filter(img, run_params):
 
     Args:
         img (TODO type): image to be filtered
-        run_params (ParamValues): class containing values of parameters used in tracking
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
 
     Returns:
         TODO type bilaterally-filtered version of input image
@@ -122,7 +126,8 @@ def anisotropic_diffuse(img, run_params):
 
     Args:
         img (TODO type): image to be filtered
-        run_params (ParamValues): class containing values of parameters used in tracking
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
 
     Returns:
         TODO type anisotropic-diffused version of input image
