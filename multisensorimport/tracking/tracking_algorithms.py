@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Methods implementing different tracking algorithms: LK, FRLK, BFLK, and SBLK.
+"""Methods implementing LK, FRLK, BFLK, and SBLK tracking algorithms.
 
-This module contains algorithms to extract desired contour points for tracking, process and filter ultrasound images,  and track these points and their properties through ultrasound scans.
+This module contains functions to execute Lucas-Kanade (LK), feature-refined
+Lucas-Kanade (FRLK), bilaterally-filtered Lucas-Kanade (BFLK), and
+supporter-based Lucas-Kanade (SBLK) tracking algorithms, including processing
+and filtering of ultrasound images, extraction of contour points, and tracking
+of these points and their properties through series of scans.
 """
-
 import csv
 import os
 import time
@@ -17,7 +20,7 @@ from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
 
 
-def track_LK(run_params,
+def track_LK(run_params, 
              seg_filedir,
              filedir,
              pts,
@@ -25,23 +28,43 @@ def track_LK(run_params,
              viz=True,
              filter_type=0,
              filtered_LK_run=False):
-    """
-    Implements unmodified, iterative lucas kanade (LK), and feature refined lucas kanade (FRLK) algorithm to track a list of pre-determined keypoints in a sequence of images, and obtain values of interest.
+    """Unmodified Lucas-Kanade point tracking w/ optional feature refinement.
+
+    This method implements unmodified, iterative tracking of a list of
+    pre-determined keypoints in a sequence of images via Lucas-Kanade optical
+    flow tracking (LK), with the option to filter points based on tracking
+    quality and track only the best ones (FRLK), returning time series ground
+    truth and tracking error data and including (optional) visualization. This
+    method also supports periodic re-setting of tracking to ground-truth
+    contour values for drift evaluation.
 
     Args:
-        run_params: instance of ParamValues class, contains values of parameters used in tracking
-        seg_fildir: path to directory containing hand segmented (ground truth) images
-        filedir: path to directory containing raw images
-        pts: numpy array of pts to be tracked
-        lk_params: dictionary of parameters to pass into OpenCV's Lucas Kanade method
-        viz: boolean value specifying if the video should be displayed
-        filter_type: number specifiying the type of image filter to apply on frames, before they are passed into Lucas Kanade
-        filtered_LK_run: if contour points are filtered based on corner score (for FRLK)
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
+        seg_fildir (str): path to directory of ground truth (hand-segmented)
+            contour images
+        filedir (str): path to directory of raw (ultrasound) images
+        pts (numpy.ndarray): array of points to be tracked
+        lk_params (dict): dictionary of tracking parameters for use by OpenCV's
+            Lucas-Kanade tracking method
+        viz (bool): whether tracking video should be displayed
+        filter_type (int): number specifying type of image filter to apply to
+            frames before executing tracking (TODO: reference method location)
+        filtered_LK_run (bool): whether contour points should be filtered based
+            on Shi-Tomasi corner score (for FRLK run)
 
-    Returns: contour time series, thickness time series, aspect ratio time series, for both tracking and ground truth, and IoU accuracy measures
-
+    Returns:
+        TODO type predicted contour area time series
+        TODO type ground truth contour area time series
+        TODO type ground truth thickness time series
+        TODO type ground truth thickness/aspect ratio time series
+        TODO type predicted thickness time series
+        TODO type predicted thickness/aspect ratio time series
+        TODO type normalized intersection-over-union (IoU) error time series
+            (TODO: sharpen)
+        TODO type IoU accuracy time series (TODO: sharpen)
+        TODO: this return order seems weird
     """
-
     # obtain image filter function
     filter = get_filter_from_num(filter_type)
 
@@ -60,7 +83,7 @@ def track_LK(run_params,
     # keep track of tracked thickness
     predicted_thickness = []
 
-    # keep track of tracked thickness ratio (x to y
+    # keep track of tracked thickness ratio (x to y)
     predicted_thickness_ratio = []
 
     # keep track of iou accuracy over time
@@ -105,7 +128,7 @@ def track_LK(run_params,
 
     frame_num = 0
 
-    # cumulative intersection over union error (sum over all frames)
+    # cumulative intersection-over-union (IoU) error (sum over all frames)
     cumulative_iou_error = 0
 
     for num in range(len(sorted_image_filenames)):
@@ -129,14 +152,16 @@ def track_LK(run_params,
                 frame = cv2.imread(filepath, -1)
                 frame_filtered = filter(frame, run_params)
 
-                # obtain key frame, for re-initializing points and/or intersection/union computation
+                # obtain key frame for re-initializing points and/or IoU
+                # computation
                 key_frame_path = seg_filedir + segmented_filename
 
-                # if we are resetting the tracked contour to a ground truth frame
+                # if resetting the tracked contour to a ground truth frame
                 if frame_num % run_params.reset_frequency == 0:
                     seg_contour = extract_contour_pts_pgm(key_frame_path)
 
-                    # if tracking is done via a FRLK, filter the points and order them counter-clockwise
+                    # if tracking via FRLK, filter points and order them
+                    # counter-clockwise
                     if filtered_LK_run:
                         filtered_contour, indeces = filter_points(
                             run_params, run_params.block_size, seg_contour, 0,
@@ -147,7 +172,8 @@ def track_LK(run_params,
                         tracked_contour = filtered_contour.copy()
                     else:
                         tracked_contour = seg_contour.copy()
-                # use tracking
+
+                # if not resetting, use tracking
                 else:
                     tracked_contour, status, error = cv2.calcOpticalFlowPyrLK(
                         old_frame_filtered, frame_filtered, pts, None,
@@ -191,15 +217,15 @@ def track_LK(run_params,
                 ground_truth_contour_areas.append(
                     cv2.contourArea(segmented_contour))
 
-                # calculate intersection over union accuracy:
+                # calculate IoU accuracy:
 
-                # initialize matrices of zeros
+                # initialize matrices of zeros corresponding to image area
                 mat_predicted = np.zeros(
                     cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
                 mat_segmented = np.zeros(
                     cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
 
-                # fill the initialized matrices with nonzero numbers in the area of the contour
+                # fill matrices with nonzero numbers inside contour area
                 cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)], 255)
                 cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)],
                              255)
@@ -214,7 +240,7 @@ def track_LK(run_params,
 
                 iou_accuracy_series.append(iou_error)
 
-                # visualize if flag is set:
+                # visualize if specified
                 if viz:
                     cv2.imshow('Frame', frame_color)
                     key = cv2.waitKey(1)
@@ -222,7 +248,7 @@ def track_LK(run_params,
                         break
                     time.sleep(0.01)
 
-    # final average iou
+    # compute final average IoU
     normalized_iou_error = cumulative_iou_error / frame_num
 
     return predicted_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, predicted_thickness, predicted_thickness_ratio, normalized_iou_error, iou_accuracy_series
@@ -237,22 +263,47 @@ def track_BFLK(run_params,
                course_pts_inds,
                lk_params,
                viz=True):
-    """
-    Bilaterally filtered lucas kanade (BFLK) algorithm to track a list of pre-determined keypoints in a sequence of images, and obtain values of interest. *This can also be used with other image filters*
+    """Bilaterally-filtered Lucas-Kanade point tracking.
+
+    This method implements bilaterally-filtered Lucas-Kanade (BFLK) optical
+    flow tracking of a list of pre-determined keypoints in a series of images,
+    returning time series ground truth and tracking error data and including
+    (optional) visualization. This method also supports periodic re-setting of
+    tracking to ground-truth contour values for drift evaluation and can be
+    used with other non-bilateral image filters.
+
+    TODO: It actually looks like this one doesn't support periodic re-setting,
+    even though track_LK and track_SBLK do. Is there a reason for that?
 
     Args:
-        run_params: instance of ParamValues class, contains values of parameters used in tracking
-        seg_fildir: path to directory containing hand segmented (ground truth) images
-        filedir: path to directory containing raw images
-        fine_pts: numpy array of pts to be tracked using the more aggressive filter
-        fine_pts_inds: numpy array containing the indeces of the fine_pts in the overall contour; used for ordering the contour and visualizing
-        course_pts: numpy array of pts to be tracked using the less aggressive filter
-        course_pts_inds: numpy array containing the indeces of the course_pts in the overall contour; used for ordering the contour and visualizing
-        lk_params: dictionary of parameters to pass into OpenCV's Lucas Kanade method
-        viz: boolean value specifying if the video should be displayed
+        run_params (ParamValues): class containing values of parameters used in
+            tracking
+        seg_fildir (str): path to directory of ground truth (hand-segmented)
+            contour images
+        filedir (str): path to directory of raw (ultrasound) images
+        fine_pts (numpy.ndarray): array of points to be tracked using more
+            aggressive bilateral filter
+        fine_pts_inds (numpy.ndarray): array of indices of fine_pts in the
+            overall contour; used for ordering the contour and visualizing
+        course_pts (numpy.ndarray): array of points to be tracked using less
+            aggressive bilateral filter
+        course_pts_inds (numpy.ndarray): array of indices of fine_pts in the
+            overall contours; used for ordering the contour and visualizing
+        lk_params (dict): dictionary of tracking parameters for use by OpenCV's
+            Lucas-Kanade tracking method
+        viz (bool): whether tracking video should be displayed
 
-    Returns: contour time series, thickness time series, aspect ratio time series, for both tracking and ground truth, and IoU accuracy measures
-
+    Returns:
+        TODO type predicted contour area time series
+        TODO type ground truth contour area time series
+        TODO type ground truth thickness time series
+        TODO type ground truth thickness/aspect ratio time series
+        TODO type predicted thickness time series
+        TODO type predicted thickness/aspect ratio time series
+        TODO type normalized intersection-over-union (IoU) error time series
+            (TODO: sharpen)
+        TODO type IoU accuracy time series (TODO: sharpen)
+        TODO: this return order seems weird
     """
     course_filter = course_bilateral_filter
     fine_filter = fine_bilateral_filter
@@ -272,14 +323,14 @@ def track_BFLK(run_params,
     # keep track of tracked thickness
     predicted_thickness = []
 
-    # keep track of tracked thickness ratio (x to y
+    # keep track of tracked thickness ratio (x to y)
     predicted_thickness_ratio = []
 
+    # keep track of iou accuracy over time
     iou_accuracy_series = []
-
     iou_accuracy_series.append(1)
 
-    # combine pts to form contour
+    # combine points to form contour
     tracked_contour = order_points(fine_pts, fine_pts_inds, course_pts,
                                    course_pts_inds)
 
@@ -321,7 +372,7 @@ def track_BFLK(run_params,
 
     frame_num = 0
 
-    # cumulative intersection over union error (sum over all frames)
+    # cumulative intersection-over-union (IoU) error (sum over all frames)
     cumulative_iou_error = 0
 
     for num in range(len(sorted_image_filenames)):
@@ -343,7 +394,7 @@ def track_BFLK(run_params,
                 old_frame_color = cv2.cvtColor(old_frame,
                                                cv2.COLOR_GRAY2RGB).copy()
 
-                # visualize if needed:
+                # visualize if specified
                 if viz:
                     cv2.imshow('Frame', old_frame_color)
                     key = cv2.waitKey(1)
@@ -355,14 +406,17 @@ def track_BFLK(run_params,
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
 
-                # apply image filters to the frames
+                # apply filters to frames
                 frame_course_filtered = course_filter(frame, run_params)
                 frame_fine_filtered = fine_filter(frame, run_params)
 
-                # obtain key frame, for re-initializing points and/or intersection/union computation
+                # obtain key frame for re-initializing points and/or IoU
+                # computation
                 key_frame_path = seg_filedir + segmented_filename
 
-                # find tracked locations of the points (for both fine and course) using lucas kanade, and update for next iteration
+                # find tracked locations of points (both fine- and
+                # coarse-filtered) via Lucas-Kanade and update for next
+                # iteration
                 fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
                     old_frame_fine_filtered, frame_fine_filtered, fine_pts,
                     None, **lk_params)
@@ -370,7 +424,8 @@ def track_BFLK(run_params,
                     old_frame_course_filtered, frame_course_filtered,
                     course_pts, None, **lk_params)
 
-                # combine fine and course points into full contour, in proper counter-clockwise order
+                # combine fine- and coarse-filtered points into full contour in
+                # proper counter-clockwise order
                 tracked_contour = order_points(fine_pts, fine_pts_inds,
                                                course_pts, course_pts_inds)
 
@@ -387,7 +442,7 @@ def track_BFLK(run_params,
                     x, y = course_pts[i].ravel()
                     cv2.circle(frame_color, (x, y), 3, (0, 255, 255), -1)
 
-                # calculate values of interest (thickness, CSA, AR) for ground truth and tracking
+                # add ground truth and tracked thickness and aspect ratio
                 segmented_thickness_x, segmented_thickness_y = thickness(
                     supporters_utils.format_supporters(segmented_contour))
 
@@ -406,19 +461,19 @@ def track_BFLK(run_params,
                 predicted_thickness_ratio.append(predicted_thickness_x /
                                                  predicted_thickness_y)
 
-                # append new predicted contour area
+                # add ground truth and tracked contour area
                 predicted_contour_areas.append(cv2.contourArea(tracked_contour))
                 ground_truth_contour_areas.append(
                     cv2.contourArea(segmented_contour))
 
-                # calculate intersection over union accuracy:
-                # initialize matrices of zeros
+                # calculate IoU accuracy:
+                # initialize matrices of zeros corresponding to image area
                 mat_predicted = np.zeros(
                     cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
                 mat_segmented = np.zeros(
                     cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
 
-                # fill the initialized matrices with nonzero numbers in the area of the contour
+                # fill matrices with nonzero numbers inside contour area
                 cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)], 255)
                 cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)],
                              255)
@@ -428,7 +483,6 @@ def track_BFLK(run_params,
                 union = np.sum(np.logical_or(mat_predicted, mat_segmented))
 
                 iou_error = intersection / union
-                # ("intersection over union error: ", iou_error)
                 cumulative_iou_error += iou_error
                 iou_accuracy_series.append(iou_error)
 
@@ -436,7 +490,7 @@ def track_BFLK(run_params,
                 old_frame_fine_filtered = frame_fine_filtered.copy()
                 old_frame_course_filtered = frame_course_filtered
 
-                # visualize if flag is set:
+                # visualize if specified
                 if viz:
                     cv2.imshow('Frame', frame_color)
                     key = cv2.waitKey(1)
@@ -444,7 +498,7 @@ def track_BFLK(run_params,
                         break
                     time.sleep(0.01)
 
-    # obtain averaged iou
+    # compute final average IoU
     normalized_iou_error = cumulative_iou_error / frame_num
 
     return predicted_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, predicted_thickness, predicted_thickness_ratio, normalized_iou_error, iou_accuracy_series
