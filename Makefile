@@ -18,7 +18,7 @@ format:
 
 ## Run linters
 lint: 
-	prospector 
+	prospector -i sandbox 
 
 ## Run unit tests
 test:
@@ -26,12 +26,12 @@ test:
 
 ## Check test coverage
 coverage:
-	coverage run --source muscledef -m pytest 
+	coverage run --source multisensorimport -m pytest 
 	coverage report
 
 ## Copy version info from git tags - NOT IMPLEMENTED
 version:
-	@sed -i "s/.*__version__.*/__version__ = '$(VERSION)'/" muscledef/__init__.py
+	@sed -i "s/.*__version__.*/__version__ = '$(VERSION)'/" multisensorimport/__init__.py
 
 ## Create a release object - NOT IMPLEMENTED
 release: version
