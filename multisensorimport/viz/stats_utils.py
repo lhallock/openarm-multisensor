@@ -13,8 +13,7 @@ TRACKER_STRINGS = ('LK', 'FRLK', 'BFLK-G', 'BFLK-T', 'SBLK-G', 'SBLK-T')
 def gen_refined_corr_dfs(df_corr,
                          ang_corr_out_path=None,
                          subj_corr_out_path=None):
-    """Generate print-ready angle and subject correlation tables for
-    [PUBLICATION FORTHCOMING].
+    """Generate print-ready angle/subject correlation tables for publication.
 
     Args:
         df_corr (pandas.DataFrame): general correlation table of all data
@@ -69,8 +68,10 @@ def gen_refined_corr_dfs(df_corr,
 
 
 def gen_ex_tracking_df(subj_dir):
-    """Generate tracking error (Jaccard distance, CSA, T, AR) data frames from raw time
-    series CSVs for single subject.
+    """Generate subject tracking error data frames from time series CSVs.
+
+    This method generates tracking error (Jaccard distance, CSA, T, AR) data
+    frames from raw time series CSV data for a single subject.
 
     Args:
         subj_dir (str): path to subject data directory, including final '/'
@@ -110,8 +111,10 @@ def gen_ex_tracking_df(subj_dir):
 
 
 def gen_tracking_dfs(subj_dirs, tracker_strings=TRACKER_STRINGS):
-    """Generate tracking error (Jaccard distance) data frames from raw IoU time
-    series CSVs of multiple subjects.
+    """Generate Jaccard distance data frames from IoU time series CSVs.
+
+    This method generates tracking error (Jaccard distance) data frames from
+    raw IoU time series CSVs of multiple subjects.
 
     Args:
         subj_dirs (list): list of file paths to each IoU CSV, ordered Sub1-SubN

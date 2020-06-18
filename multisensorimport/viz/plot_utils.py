@@ -5,9 +5,7 @@ This module contains functions used to plot time series data for [PUBLICATION
 FORTHCOMING].
 """
 import matplotlib as mpl
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import pandas as pd
 import seaborn as sns
 # deal with pandas index compatibility errors
 from pandas.plotting import register_matplotlib_converters
@@ -79,8 +77,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
 
 def gen_debug_time_plot(trialdata):
-    """Generate unformatted time series plot of force, sEMG, and ultrasound
-    data for fit debugging.
+    """Generate force/sEMG/ultrasound time series plot for fit debugging.
 
     Colors used in plotting:
         blue: unmodified signal
