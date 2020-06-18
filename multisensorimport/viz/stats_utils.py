@@ -43,7 +43,8 @@ def gen_refined_corr_dfs(df_corr,
         'us-t-dt': 'T-DT',
         'us-tr': 'AR',
         'us-tr-dt': 'AR-DT'
-    }, inplace=True)
+    },
+                       inplace=True)
 
     # aggregate angle correlation data
     df_corr_ang = df_corr_ref[[
