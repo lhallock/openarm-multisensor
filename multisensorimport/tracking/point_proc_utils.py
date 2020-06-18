@@ -12,6 +12,7 @@ import scipy
 
 from multisensorimport.tracking.image_proc_utils import *
 
+
 def extract_contour_pts_png(filename):
     """Extract points from largest contour in PNG image.
 

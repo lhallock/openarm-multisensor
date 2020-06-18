@@ -20,7 +20,7 @@ from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
 
 
-def  track_LK(run_params, 
+def track_LK(run_params,
              seg_filedir,
              filedir,
              pts,
@@ -743,16 +743,27 @@ def track_SBLK(run_params,
                     if reset_supporters:
                         # reset all points to contour and re-initialize a new
                         # set of supporters based on good corner features
-                        (course_pts, course_pts_inds, fine_pts, fine_pts_inds, supporter_pts, supporter_params) = initialize_supporters(run_params, filedir, key_frame_path, frame, feature_params, lk_params, 2)
+                        (course_pts, course_pts_inds, fine_pts, fine_pts_inds,
+                         supporter_pts,
+                         supporter_params) = initialize_supporters(
+                             run_params, filedir, key_frame_path, frame,
+                             feature_params, lk_params, 2)
                     else:
                         # reset tracking points to contour, but do not set new
                         # supporter points
-                        (course_pts, course_pts_inds, fine_pts, fine_pts_inds, _, _) = initialize_supporters(run_params, filedir, key_frame_path, frame, feature_params, lk_params, 2)
+                        (course_pts, course_pts_inds, fine_pts, fine_pts_inds,
+                         _, _) = initialize_supporters(run_params, filedir,
+                                                       key_frame_path, frame,
+                                                       feature_params,
+                                                       lk_params, 2)
                         # re-initialize parameters for supporters
                         supporter_params = []
                         for i in range(len(course_pts)):
                             point = course_pts[i][0]
-                            (_, supporter_param) = supporters_utils.initialize_supporters_for_point(supporter_pts, point, run_params.supporter_variance)
+                            (_, supporter_param
+                            ) = supporters_utils.initialize_supporters_for_point(
+                                supporter_pts, point,
+                                run_params.supporter_variance)
                             supporter_params.append(supporter_param)
                 else:
                     # calculate new point locations for fine_points using frame
@@ -798,10 +809,11 @@ def track_SBLK(run_params,
 
                         # obtain point predictions and updated parameters for
                         # target point
-                        (point_location, new_params) = supporters_utils.apply_supporters_model(
-                            run_params, predicted_point, supporter_pts,
-                            new_supporter_pts, param_list, use_tracking,
-                            run_params.update_rate)
+                        (point_location,
+                         new_params) = supporters_utils.apply_supporters_model(
+                             run_params, predicted_point, supporter_pts,
+                             new_supporter_pts, param_list, use_tracking,
+                             run_params.update_rate)
                         updated_feature_params.append(new_params)
                         new_course_pts.append(
                             np.array([[point_location[0], point_location[1]]],

@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import scipy
 
+
 def get_filter_from_num(filter_type):
     """Map numbers to corresponding image filters.
 
@@ -120,6 +121,7 @@ def course_bilateral_filter(img, run_params):
 
     # convert back to grayscale and return
     return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
+
 
 def anisotropic_diffuse(img, run_params):
     """Applies a Perona-Malik anisotropic diffusion filter to the given image.

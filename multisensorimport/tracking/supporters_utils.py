@@ -14,6 +14,7 @@ from scipy import stats
 from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
 
+
 def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
                           feature_params, lk_params, which_contour):
     """Initialize all point groups and parameters for SBLK tracking.
@@ -269,7 +270,7 @@ def apply_supporters_model(run_params, predicted_target_point,
 
     # otherwise, track point as a weighted average of mean supporter point
     # displacements, weighted by probability of supporter and prediction (TODO:
-        # what does "probability of supporter and prediction" mean?)
+    # what does "probability of supporter and prediction" mean?)
     else:
         # quantities used in calculation TODO: sharpen
         numerator = 0
