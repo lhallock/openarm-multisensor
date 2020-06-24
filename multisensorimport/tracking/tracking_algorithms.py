@@ -49,7 +49,7 @@ def track_LK(run_params,
             Lucas-Kanade tracking method
         viz (bool): whether tracking video should be displayed
         filter_type (int): number specifying type of image filter to apply to
-            frames before executing tracking (TODO: reference method location)
+            frames before executing tracking. Filter methods located in image_proc_utils.py
         filtered_LK_run (bool): whether contour points should be filtered based
             on Shi-Tomasi corner score (for FRLK run)
 
@@ -745,14 +745,14 @@ def track_SBLK(run_params,
                         # set of supporters based on good corner features
                         (course_pts, course_pts_inds, fine_pts, fine_pts_inds,
                          supporter_pts,
-                         supporter_params) = initialize_supporters(
+                         supporter_params) = supporters_utils.initialize_supporters(
                              run_params, filedir, key_frame_path, frame,
                              feature_params, lk_params, 2)
                     else:
                         # reset tracking points to contour, but do not set new
                         # supporter points
                         (course_pts, course_pts_inds, fine_pts, fine_pts_inds,
-                         _, _) = initialize_supporters(run_params, filedir,
+                         _, _) = supporters_utils.initialize_supporters(run_params, filedir,
                                                        key_frame_path, frame,
                                                        feature_params,
                                                        lk_params, 2)

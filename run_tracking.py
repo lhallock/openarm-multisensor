@@ -16,7 +16,9 @@ Example:
             4: SBLK
         filepath_us: file path to raw ultrasound PGM frames
         filepath_seg: file path to segmented PGM images
-        filepath_out: file path to which [TODO: spec. files] will be written
+        filepath_out: file path to which ground_truth_csa.csv, ground_truth_thickness.csv,
+            ground_truth_thickness_ratio.csv, tracking_csa.csv, tracking_thickness.csv,
+            tracking_thickness_ratio.csv, and iou_series.csv  will be written
         filename_init: file name of first image in ultrasound frame series
 """
 import argparse
