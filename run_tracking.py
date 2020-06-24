@@ -20,9 +20,7 @@ Example:
         filename_init: file name of first image in ultrasound frame series
 """
 
-import numpy as np
-
-import ultrasoundviz as viz
+from multisensorimport.tracking import tracking_executor as viz
 
 
 class ParamValues():
