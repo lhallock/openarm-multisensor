@@ -22,8 +22,10 @@ Example:
         filename_init: file name of first image in ultrasound frame series
 """
 import argparse
+
 from multisensorimport.tracking import tracking_executor
 from multisensorimport.tracking.paramvalues import ParamValues
+
 
 def main():
     """Execute tracking run based on command line arguments given.

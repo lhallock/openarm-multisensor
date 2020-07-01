@@ -5,8 +5,8 @@ specified algorithm.
 import cv2
 import numpy as np
 
-from multisensorimport.tracking import supporters_utils as supporters_utils
 from multisensorimport.tracking import point_proc_utils as point_proc
+from multisensorimport.tracking import supporters_utils as supporters_utils
 from multisensorimport.tracking import tracking_algorithms as track
 
 

@@ -1,7 +1,7 @@
 """Class containing tracking algorithm parameter values."""
 
-class ParamValues():
 
+class ParamValues():
     """
     This class contains all parameters used in optical flow tracking of
     ultrasound images as instance variables, as well as a method to modify
@@ -10,10 +10,28 @@ class ParamValues():
     but can be changed when constructing, or via the setter method.
     """
 
-    def __init__(self, LK_window=35, pyr_level=3, quality_level=0.4, min_distance=0, max_corners=300, block_size=7, point_frac=0.7,
-                 course_diam=5, course_sigma_color=100, course_sigma_space=100, fine_diam=20, fine_sigma_color=80, fine_sigma_space=80,
-                 percent_fine=0.2, percent_course=0.8, displacement_weight=40, fine_threshold=0.45, update_rate=0.7, num_bottom=0, fix_top=False,
-                 reset_frequency = 10000):
+    def __init__(self,
+                 LK_window=35,
+                 pyr_level=3,
+                 quality_level=0.4,
+                 min_distance=0,
+                 max_corners=300,
+                 block_size=7,
+                 point_frac=0.7,
+                 course_diam=5,
+                 course_sigma_color=100,
+                 course_sigma_space=100,
+                 fine_diam=20,
+                 fine_sigma_color=80,
+                 fine_sigma_space=80,
+                 percent_fine=0.2,
+                 percent_course=0.8,
+                 displacement_weight=40,
+                 fine_threshold=0.45,
+                 update_rate=0.7,
+                 num_bottom=0,
+                 fix_top=False,
+                 reset_frequency=10000):
         """
         Args:
             ###########################################################################
@@ -75,8 +93,6 @@ class ParamValues():
         self.num_bottom = num_bottom
         self.fix_top = fix_top
         self.reset_frequency = reset_frequency
-
-
 
     ###########################################################################
     ## GETTERS/SETTERS
