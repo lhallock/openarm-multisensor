@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 from multisensorimport.tracking import supporters_utils as supporters_utils
+from multisensorimport.tracking import point_proc_utils as point_proc
 from multisensorimport.tracking import tracking_algorithms as track
 
 
@@ -52,7 +53,7 @@ def tracking_run(arg_params, run_params):
     if run_type == 1:
         print("LK tracking")
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_LK(
+        tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_LK(
             run_params,
             SEG_PATH,
             READ_PATH,
@@ -79,7 +80,7 @@ def tracking_run(arg_params, run_params):
                                                       indeces, np.array([]),
                                                       np.array([]))
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_LK(
+        tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_LK(
             run_params,
             SEG_PATH,
             READ_PATH,
@@ -92,11 +93,11 @@ def tracking_run(arg_params, run_params):
     elif run_type == 3:
         print("BFLK tracking")
         # separate points into those to be tracked with the less aggressive bilateral filter, and those to be tracked with the more aggressive bilateral filter
-        fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds = track.separate_points(
+        fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds = point_proc.separate_points(
             run_params, init_img, initial_contour_pts)
 
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_BFLK(
+        tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_BFLK(
             run_params, SEG_PATH, READ_PATH, fine_filtered_points,
             fine_pts_inds, course_filtered_points, course_pts_inds, lk_params)
 
@@ -121,7 +122,8 @@ def tracking_run(arg_params, run_params):
         courseFilterNum = 3
 
         # obtain results from tracking
-        tracking_contour_areas, ground_truth_contour_areas, ground_truth_thickness, ground_truth_thickness_ratio, tracking_thickness, tracking_thickness_ratio, iou_error, iou_series = track.track_SBLK(
+
+        tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_SBLK(
             run_params,
             SEG_PATH,
             READ_PATH,
