@@ -22,7 +22,7 @@ Example:
         filename_init: file name of first image in ultrasound frame series
 """
 import argparse
-from multisensorimport.tracking import tracking_executor as viz
+from multisensorimport.tracking import tracking_executor
 from multisensorimport.tracking.paramvalues import ParamValues
 
 def main():
@@ -54,7 +54,7 @@ def main():
     # initialize parameters for running tracking. If non-default parameter values are to be used, set them here.
     parameter_values = ParamValues()
 
-    viz.tracking_run(arg_params, parameter_values)
+    tracking_executor.tracking_run(arg_params, parameter_values)
 
 
 if __name__ == "__main__":
