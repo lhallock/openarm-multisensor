@@ -99,9 +99,9 @@ def shi_tomasi_corner_score(point, block_size, img):
     Args:
         point (numpy.ndarray): single-element array whose element is a
             numpy.ndarray of x-y pixel coordinates
-        block_size (TODO type): block size determining neighborhood around
+        block_size (int): block size determining neighborhood around
             point to consider
-        img (TODO type): image in which corner score is being calculated
+        img (numpy.ndarray): image in which corner score is being calculated
 
     Returns:
         float Shi-Tomasi corner score for given point in given image
@@ -131,7 +131,7 @@ def filter_points(run_params,
                   pts,
                   filter_type,
                   img,
-                  percent,
+                  frac,
                   keep_bottom=False):
     """Filter given contour points by Shi-Tomasi corner score.
 
@@ -142,11 +142,12 @@ def filter_points(run_params,
     Args:
         run_params (ParamValues): class containing values of parameters used in
             tracking
-        window_size (TODO type): size of neighborhood around point to consider
+        window_size (int): size of neighborhood around point to consider
             when calculating corner score
-        pts (TODO type): TODO description
-        img (TODO type): image used to calculate corner scores
-        percent (TODO type): percent of points to keep based on corner score
+        pts (np.ndarray): numpy array containing points to filter, where each point is a 1-element numpy array containing
+        an numpy array of [x, y] values.
+        img (np.ndarray): image used to calculate corner scores
+        frac (float): fraction of points to keep based on corner score
         keep_bottom (bool): whether points along bottom of contour should be
             kept regardless of score (used to ensure contour contains bottom of
             fascia)
@@ -155,6 +156,7 @@ def filter_points(run_params,
         numpy.ndarray of filtered points
         numpy.ndarray of their corresponding indices in the original contour
     """
+
     # select image filter, determined by filterType argument
     filter = get_filter_from_num(filter_type)
 
@@ -184,8 +186,8 @@ def filter_points(run_params,
                               key=lambda x: x[1],
                               reverse=True)
 
-    # get top percent of points
-    for i in range(0, int(np.rint(percent * len(sorted_corner_mapping)))):
+    # get top fraction of points
+    for i in range(0, int(np.rint(frac * len(sorted_corner_mapping)))):
         points_ind = sorted_corner_mapping[i][0]
         filtered_points.append(pts[points_ind])
         filtered_points_ind.append(points_ind)
@@ -214,7 +216,7 @@ def separate_points(run_params, img, pts):
     Args:
         run_params (ParamValues): class containing values of parameters used in
             tracking
-        img (TODO type): image used to calculate corner scores
+        img (np.ndarray): image used to calculate corner scores
         pts (numpy.ndarray): array of points to be filtered and separated
 
     Returns:
@@ -227,7 +229,8 @@ def separate_points(run_params, img, pts):
     fine_filter_type = 2
     course_filter_type = 3
 
-    # TODO add explanation for magic number
+    # block size (neighborhood size) for Shi-Tomasi corner scoring; set to 7 across algorithms,
+    # as this value consistently worked well
     corner_window_size = 7
 
     # separate points into two potentially overlapping subsets of pts
@@ -273,10 +276,10 @@ def order_points(points_one, points_one_inds, points_two, points_two_inds):
 
     Args:
         points_one (numpy.ndarray): first subset of contour points
-        points_one_inds (TODO type): indices of first subset of points in
+        points_one_inds (np.ndarray): indices of first subset of points in
             original contour
         points_two (numpy.ndarray): second subset of contour points
-        points_two_inds (TODO type): indices of second subset of points in
+        points_two_inds (np.ndarray): indices of second subset of points in
             original contour
 
     Returns:
@@ -345,9 +348,9 @@ def get_image_value(x, y, img):
     Args:
         x (int): horizontal pixel coordinate
         y (int): vertical pixel coordinate
-        img (TODO type): TODO description
+        img (np.ndarray): image from which to get get pixel value
 
     Returns:
-        TODO type pixel value at specified coordinate
+        float: pixel value at specified coordinate
     """
     return img[y][x]

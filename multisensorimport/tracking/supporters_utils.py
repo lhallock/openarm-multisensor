@@ -4,8 +4,11 @@
 This module contains functions to initialize supporter points (i.e.,
 non-contour points that are easy to track) and to use them to infer non-tracked
 points along the desired contour. These methods are employed when tracking
-using the supporter-based Lucas-Kanade tracking (SBLK) algorithm. TODO: a
-citation on what this work is based on would be helpful here.
+using the supporter-based Lucas-Kanade tracking (SBLK) algorithm. (see
+
+Supporters algorithm based off this work:
+H. Grabner, J. Matas, L. Van Gool, and P. Cattin. Tracking the Invisible: Learning Where the Object Might be.
+In Proceedings IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2010.
 """
 import numpy as np
 import scipy
@@ -29,19 +32,21 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
             tracking
         READ_PATH (str): path to raw ultrasound frames
         key_frame_path (str): path to ground truth hand-segmented frames
-        init_img (TODO type): first frame in ultrasound image sequence
-        feature_params (TODO type): parameters to find good features to track
-        lk_params (TODO type): parameters for Lucas-Kanade tracking
+        init_img (np.ndarray): first frame in ultrasound image sequence
+        feature_params (dict): parameters to find good features to track
+        lk_params (dict): parameters for Lucas-Kanade tracking
         which_contour (int): integer indicating if image containing contour is
             a PNG (1) or PGM (2)
 
     Returns:
         numpy.ndarray of points to be tracked via supporters
-        numpy.ndarray of their corresponding indices in the original contour
+        numpy.ndarray of the corresponding indices of the supporters-tracked points in the original contour
         numpy.ndarray of points to be tracked via Lucas-Kanade
-        numpy.ndarray of their corresponding indices in the original contour
-        TODO type list of parameters for each supporter point
+        numpy.ndarray of the corresponding indices of the Lucas-Kanade tracked points in the original contour
+        numpy.ndarray of supporter points
+        List of params used for each supporter points
     """
+
     # extract contour
     if which_contour == 1:
         pts = extract_contour_pts_png(keyframe_path)
@@ -73,9 +78,7 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
     course_filter = get_filter_from_num(courseFilterNum)
     filtered_init_img = course_filter(init_img, run_params)
 
-    # remove points w/ low Shi-Tomasi corner score (kept for LK tracking)
-    # TODO not sure I understand this description; is "keep points w/ high
-    # Shi-Tomasi corner score for LK tracking" accurate/better?
+    # Keep points with high Shi-Tomasi corner score for LK tracking
     lucas_kanade_points, lucas_kanade_points_indeces = filter_points(
         run_params,
         7,
@@ -166,20 +169,19 @@ def initialize_supporters_for_point(supporter_points, target_point, variance):
     """Format supporter point list and initialize parameters for
     supporter-tracked point.
 
-    This method reformats (TODO: sharpen; what does this mean?) the list of
-    supporter points and initializes their corresponding parameters
-    (displacement and convariance) for a given supporter-tracked target point.
+    This method reformats a numpy array of supporter points (see args) into a list of supporter points (see return type)
+    for easier use in tracking algorithms. This method also initializes the supporters points and parameters used for
+    supporters-based tracking.
 
     Args:
         supporter_points (numpy.ndarray): array of 1-element arrays, where each
             element is a 2-element array containing supporter point locations
         target point (numpy.ndarray): x-y coordinates of target point to track
-        variance (float): initial variance for each element of the displacement
-            (TODO: what is "element of the displacement"?)
+        variance (float): initial variance used for supporter based tracking (see paper cited at top for algorithmic details)
 
     Returns:
         list of 2-element arrays containing supporter point locations
-        TODO type supporter parameters
+        list of 2-element tuples containing initial displacement and covariance matrices for each supporter point
     """
     # initialize empty lists
     supporters = []
@@ -192,7 +194,7 @@ def initialize_supporters_for_point(supporter_points, target_point, variance):
         # initialize displacement average w/ initial displacement, diagonal
         # covariance
         supporter_params.append(
-            (target_point - supporter_point, variance * np.eye(2)))
+            (target_point - supporter_point, variance * np.eye(1)))
 
     return supporters, supporter_params
 
@@ -200,31 +202,33 @@ def initialize_supporters_for_point(supporter_points, target_point, variance):
 def apply_supporters_model(run_params, predicted_target_point,
                            prev_feature_points, feature_points, feature_params,
                            use_tracking, alpha):
-    """Execute model learning or prediction based on conditions of image
-    tracking.
-
-    TODO: I don't understand this one-line explanation; add a short paragraph
-    explanation here.
+    """
+    Performs a supporters-based tracking update, and ultimately finds the final predicted location of the target point.
+    This entails either one of two things:
+        1. If use_tracking is true, then the Lucas-Kanade predicted target point is "trusted" and returned as the final
+            target location, and the supporters' parameters are updated based on the Lucas-Kanade predicted target.
+        2. If use_tracking is false, then the the final predicted target point location is determined based on
+            supporter points, and no parameter updates are done.
 
     Args:
         run_params (ParamValues): class containing values of parameters used in
             tracking
         predicted_target_point (numpy.ndarray): 2-element array of x-y
             coordinates of LK tracking prediction of target point
-        prev_feature_points (TODO type): list of x-y coordinates of feature
+        prev_feature_points (list): list of x-y coordinates of feature
             (supporter) points in previous frame
-        feature_points (TODO type): list of x-y coordinates of feature
+        feature_points (list): list of x-y coordinates of feature
             (supporter) points in current frame
         feature_params (list): list of 2-tuples of (displacement vector
             average, covariance matrix average) for each feature point
         use_tracking (bool): whether to return pure Lucas-Kanade prediction or
             supporters-based prediction (former used in first n frames for
             training, where n is determined a priori)
-        alpha (TODO type): learning rate for exponential forgetting principle
+        alpha (float): update rate for exponential forgetting principle
 
     Returns:
-        TODO type predicted location of target point
-        TODO type updated supporter point parameters
+        numpy.ndarray containing predicted location of target point
+        list of updated supporter point parameters
     """
     # reformat feature points for easier processing
     feature_points = format_supporters(feature_points)
@@ -238,9 +242,7 @@ def apply_supporters_model(run_params, predicted_target_point,
     # initialize new target param tuple array
     new_feature_params = []
 
-    # if specified, use LK tracking to track point directly and update
-    # supporter parameters
-    # TODO: make sure I'm understanding these variables correctly
+    # if use_tracking is True, use the LK tracked point as the final prediction, and update the supporter parameters
     if use_tracking:
 
         target_point_final = predicted_target_point
@@ -269,13 +271,16 @@ def apply_supporters_model(run_params, predicted_target_point,
                 (new_displacement_average, new_covariance_matrix))
 
     # otherwise, track point as a weighted average of mean supporter point
-    # displacements, weighted by probability of supporter and prediction (TODO:
-    # what does "probability of supporter and prediction" mean?)
+    # displacements, where the weights are determined based on the covariance matrix associated with each supporter point.
+    # The higher the determinant of the covariance matrix, the lower the weight. Weights are also affected by the
+    # amount of movement of the supporter points between consecutive frames.
+
     else:
-        # quantities used in calculation TODO: sharpen
+        # initialize intermediate values used for the weighted average calculation; numerator holds the unnormalized final point calculation,
+        # and denominator contains the normalization constant to ensure weights add to one.
+
         numerator = 0
         denominator = 0
-        displacements = []
 
         for i in range(len(feature_points)):
             feature_point = feature_points[i]
@@ -283,14 +288,14 @@ def apply_supporters_model(run_params, predicted_target_point,
             displacement_norm = np.linalg.norm(feature_point -
                                                prev_feature_point)
             # determine weight to assign to point (function of displacement)
-            weight = weight_function(run_params, displacement_norm)
+            displacement_weight = weight_function(run_params, displacement_norm)
             covariance = feature_params[i][1]
             displacement = feature_params[i][0]
 
             numerator += (
-                weight *
+                displacement_weight *
                 (displacement + feature_point)) / np.linalg.det(covariance)
-            denominator += weight / np.linalg.det(covariance)
+            denominator += displacement_weight / np.linalg.det(covariance)
 
         # return weighted average
         target_point_final = numerator / denominator
@@ -305,12 +310,15 @@ def apply_supporters_model(run_params, predicted_target_point,
 
 
 def weight_function(run_params, displacement_norm):
-    """Determine prediction weight of given supporter point.
+    """Determine prediction weight of given supporter point due to the movement of the supporter points.
 
     This method determines the weight to apply to each supporter point when
-    using it for prediction of target point based on the norm of its
-    displacement vector. TODO: add sentence on a) the specific calculation it
-    performs, and b) why that's a good idea for weighting
+    using it for prediction of target point, based on the norm of its
+    displacement vector. The larger the displacement, the higher weight the supporter point receives. The weight
+    is a linear function of the displacement norm, with an offset of 1.
+
+    Displacement-based weighting is used to give less importance to supporter points which are part of the "background"
+    of frames and just have little correlation to the movement of the muscle fascia.
 
     Args:
         run_params (ParamValues): class containing values of parameters used in
