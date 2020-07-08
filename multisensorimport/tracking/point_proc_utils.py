@@ -243,7 +243,7 @@ def separate_points(run_params, img, pts):
 
     # remove overlap between two subsets; a point in both sets will be removed
     # from course_pts and kept in fine_pts
-    course_kept_indeces = set()
+    course_kept_indices = set()
     for i in range(len(course_pts)):
         course_pt = course_pts[i]
         add = True
@@ -252,11 +252,11 @@ def separate_points(run_params, img, pts):
             if np.linalg.norm(course_pt - fine_pt) < 0.001:
                 add = False
         if add:
-            course_kept_indeces.add(i)
+            course_kept_indices.add(i)
 
     course_to_keep = []
     course_to_keep_inds = []
-    for index in course_kept_indeces:
+    for index in course_kept_indices:
         course_to_keep.append(course_pts[index])
         course_to_keep_inds.append(course_pts_inds[index])
 

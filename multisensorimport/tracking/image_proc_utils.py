@@ -32,7 +32,7 @@ def get_filter_from_num(filter_type):
     elif filter_type == 2:
         filter = fine_bilateral_filter
     elif filter_type == 3:
-        filter = course_bilateral_filter
+        filter = coarse_bilateral_filter
     elif filter_type == 4:
         filter = anisotropic_diffuse
     else:
@@ -99,7 +99,7 @@ def fine_bilateral_filter(img, run_params):
     return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
 
 
-def course_bilateral_filter(img, run_params):
+def coarse_bilateral_filter(img, run_params):
     """Applies a "less aggressive" bilateral filter to the given image.
 
     Args:
@@ -114,9 +114,9 @@ def course_bilateral_filter(img, run_params):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
     # hyperparameters
-    diam = run_params.course_diam
-    sigmaColor = run_params.course_sigma_color
-    sigmaSpace = run_params.course_sigma_space
+    diam = run_params.coarse_diam
+    sigmaColor = run_params.coarse_sigma_color
+    sigmaSpace = run_params.coarse_sigma_space
     bilateralColor = cv2.bilateralFilter(img, diam, sigmaColor, sigmaSpace)
 
     # convert back to grayscale and return

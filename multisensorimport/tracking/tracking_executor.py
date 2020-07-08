@@ -22,9 +22,9 @@ def tracking_run(arg_params, run_params):
         run_type (int): integer determining which tracking algorithm to run
             (mappings documented in run_tracking.py)
     """
-    READ_PATH = arg_params['img_path']
-    SEG_PATH = arg_params['seg_path']
-    OUT_PATH = arg_params['out_path']
+    read_path = arg_params['img_path']
+    seg_path = arg_params['seg_path']
+    out_path = arg_params['out_path']
     init_img_name = arg_params['init_img']
     run_type = arg_params['run_type']
 
@@ -42,11 +42,11 @@ def tracking_run(arg_params, run_params):
                           blockSize=run_params.block_size)
 
     # set initial image path
-    init_path = READ_PATH + init_img_name
+    init_path = read_path + init_img_name
     init_img = cv2.imread(init_path, -1)
 
     # extract initial contour from keyframe path
-    keyframe_path = SEG_PATH + init_img_name
+    keyframe_path = seg_path + init_img_name
     initial_contour_pts = track.extract_contour_pts_pgm(keyframe_path)
 
     # track points
@@ -55,8 +55,8 @@ def tracking_run(arg_params, run_params):
         # obtain results from tracking
         tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_LK(
             run_params,
-            SEG_PATH,
-            READ_PATH,
+            seg_path,
+            read_path,
             initial_contour_pts,
             lk_params,
             viz=True,
@@ -72,18 +72,18 @@ def tracking_run(arg_params, run_params):
         filter_type_tomasi = 0
 
         # filter the contour points to track based on their corner scores
-        filtered_initial_contour, indeces = track.filter_points(
+        filtered_initial_contour, indices = track.filter_points(
             run_params, shi_tomasi_window, initial_contour_pts,
             filter_type_tomasi, init_img, fraction_points)
         # order the contour points in counter-clockwise order for easier OpenCV contour analysis
         filtered_initial_contour = track.order_points(filtered_initial_contour,
-                                                      indeces, np.array([]),
+                                                      indices, np.array([]),
                                                       np.array([]))
         # obtain results from tracking
         tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_LK(
             run_params,
-            SEG_PATH,
-            READ_PATH,
+            seg_path,
+            read_path,
             filtered_initial_contour,
             lk_params,
             viz=True,
@@ -93,44 +93,44 @@ def tracking_run(arg_params, run_params):
     elif run_type == 3:
         print("BFLK tracking")
         # separate points into those to be tracked with the less aggressive bilateral filter, and those to be tracked with the more aggressive bilateral filter
-        fine_filtered_points, fine_pts_inds, course_filtered_points, course_pts_inds = point_proc.separate_points(
+        fine_filtered_points, fine_pts_inds, coarse_filtered_points, coarse_pts_inds = point_proc.separate_points(
             run_params, init_img, initial_contour_pts)
 
         # obtain results from tracking
         tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_BFLK(
-            run_params, SEG_PATH, READ_PATH, fine_filtered_points,
-            fine_pts_inds, course_filtered_points, course_pts_inds, lk_params)
+            run_params, seg_path, read_path, fine_filtered_points,
+            fine_pts_inds, coarse_filtered_points, coarse_pts_inds, lk_params)
 
     elif run_type == 4:
         print("SBLK tracking")
 
         # initialize contours and supporters
-        course_filtered_points, course_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = supporters_utils.initialize_supporters(
-            run_params, READ_PATH, keyframe_path, init_img, feature_params,
+        coarse_filtered_points, coarse_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = supporters_utils.initialize_supporters(
+            run_params, read_path, keyframe_path, init_img, feature_params,
             lk_params, 2)
 
         # initialize supporters
         supporter_params = []
-        for i in range(len(course_filtered_points)):
-            point = course_filtered_points[i][0]
+        for i in range(len(coarse_filtered_points)):
+            point = coarse_filtered_points[i][0]
             _, sup_params = supporters_utils.initialize_supporters_for_point(
                 supporters_tracking, point, 10)
             supporter_params.append(sup_params)
 
         # determine image filters to apply on frames
         fineFilterNum = 2
-        courseFilterNum = 3
+        coarseFilterNum = 3
 
         # obtain results from tracking
 
         tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_SBLK(
             run_params,
-            SEG_PATH,
-            READ_PATH,
+            seg_path,
+            read_path,
             fine_filtered_points,
             fine_pts_inds,
-            course_filtered_points,
-            course_pts_inds,
+            coarse_filtered_points,
+            coarse_pts_inds,
             supporters_tracking,
             supporter_params,
             lk_params,
@@ -138,7 +138,7 @@ def tracking_run(arg_params, run_params):
             feature_params,
             True,
             fine_filter_type=fineFilterNum,
-            course_filter_type=courseFilterNum)
+            coarse_filter_type=coarseFilterNum)
 
     # Errors/Accuracy measures from tracking
     thickness_error = np.linalg.norm(
@@ -166,44 +166,44 @@ def tracking_run(arg_params, run_params):
     write_tracking = True
 
     if write_ground_truth:
-        out_path_csa_ground_truth = OUT_PATH + 'ground_truth_csa.csv'
+        out_path_csa_ground_truth = out_path + 'ground_truth_csa.csv'
         with open(out_path_csa_ground_truth, 'w') as outfile:
             for ctr in ground_truth_contour_areas:
                 outfile.write(str(ctr))
                 outfile.write('\n')
 
-        out_path_thickness_ground_truth = OUT_PATH + 'ground_truth_thickness.csv'
+        out_path_thickness_ground_truth = out_path + 'ground_truth_thickness.csv'
         with open(out_path_thickness_ground_truth, 'w') as outfile:
             for thickness in ground_truth_thickness:
                 outfile.write(str(thickness))
                 outfile.write('\n')
 
-        out_path_thickness_ratio_ground_truth = OUT_PATH + 'ground_truth_thickness_ratio.csv'
+        out_path_thickness_ratio_ground_truth = out_path + 'ground_truth_thickness_ratio.csv'
         with open(out_path_thickness_ratio_ground_truth, 'w') as outfile:
             for thickness_ratio in ground_truth_thickness_ratio:
                 outfile.write(str(thickness_ratio))
                 outfile.write('\n')
 
     if write_tracking:
-        out_path_tracking_csa = OUT_PATH + 'tracking_csa.csv'
+        out_path_tracking_csa = out_path + 'tracking_csa.csv'
         with open(out_path_tracking_csa, 'w') as outfile:
             for ctr in tracking_contour_areas:
                 outfile.write(str(ctr))
                 outfile.write('\n')
 
-        out_path_tracking_thickness = OUT_PATH + 'tracking_thickness.csv'
+        out_path_tracking_thickness = out_path + 'tracking_thickness.csv'
         with open(out_path_tracking_thickness, 'w') as outfile:
             for ctr in tracking_thickness:
                 outfile.write(str(ctr))
                 outfile.write('\n')
 
-        out_path_tracking_thickness_ratio = OUT_PATH + 'tracking_thickness_ratio.csv'
+        out_path_tracking_thickness_ratio = out_path + 'tracking_thickness_ratio.csv'
         with open(out_path_tracking_thickness_ratio, 'w') as outfile:
             for ctr in tracking_thickness_ratio:
                 outfile.write(str(ctr))
                 outfile.write('\n')
 
-        out_path_tracking_iou_series = OUT_PATH + 'iou_series.csv'
+        out_path_tracking_iou_series = out_path + 'iou_series.csv'
         with open(out_path_tracking_iou_series, 'w') as outfile:
             for ctr in iou_series:
                 outfile.write(str(ctr))

@@ -186,11 +186,11 @@ def track_LK(run_params,
                     # if tracking via FRLK, filter points and order them
                     # counter-clockwise
                     if filtered_LK_run:
-                        filtered_contour, indeces = filter_points(
+                        filtered_contour, indices = filter_points(
                             run_params, run_params.block_size, seg_contour, 0,
                             frame, run_params.point_frac)
                         filtered_contour = order_points(filtered_contour,
-                                                        indeces, np.array([]),
+                                                        indices, np.array([]),
                                                         np.array([]))
                         tracked_contour = filtered_contour.copy()
                     else:
@@ -297,8 +297,8 @@ def track_BFLK(run_params,
                filedir,
                fine_pts,
                fine_pts_inds,
-               course_pts,
-               course_pts_inds,
+               coarse_pts,
+               coarse_pts_inds,
                lk_params,
                viz=True):
     """Bilaterally-filtered Lucas-Kanade point tracking.
@@ -320,9 +320,9 @@ def track_BFLK(run_params,
             aggressive bilateral filter
         fine_pts_inds (numpy.ndarray): array of indices of fine_pts in the
             overall contour; used for ordering the contour and visualizing
-        course_pts (numpy.ndarray): array of points to be tracked using less
+        coarse_pts (numpy.ndarray): array of points to be tracked using less
             aggressive bilateral filter
-        course_pts_inds (numpy.ndarray): array of indices of fine_pts in the
+        coarse_pts_inds (numpy.ndarray): array of indices of fine_pts in the
             overall contours; used for ordering the contour and visualizing
         lk_params (dict): dictionary of tracking parameters for use by OpenCV's
             Lucas-Kanade tracking method
@@ -340,7 +340,7 @@ def track_BFLK(run_params,
     """
     # set filters (coarse_filter is less aggressive, fine_filter is more
     # aggressive)
-    course_filter = course_bilateral_filter
+    coarse_filter = coarse_bilateral_filter
     fine_filter = fine_bilateral_filter
 
     # keep track of contour areas that are being tracked
@@ -366,8 +366,8 @@ def track_BFLK(run_params,
     iou_accuracy_series.append(1)
 
     # combine points to form contour
-    tracked_contour = order_points(fine_pts, fine_pts_inds, course_pts,
-                                   course_pts_inds)
+    tracked_contour = order_points(fine_pts, fine_pts_inds, coarse_pts,
+                                   coarse_pts_inds)
 
     # add first contour area
     predicted_contour_areas.append(cv2.contourArea(tracked_contour))
@@ -436,7 +436,7 @@ def track_BFLK(run_params,
                 old_frame = cv2.imread(filepath, -1)
 
                 # apply filters to frame
-                old_frame_course_filtered = course_filter(old_frame, run_params)
+                old_frame_coarse_filtered = coarse_filter(old_frame, run_params)
                 old_frame_fine_filtered = fine_filter(old_frame, run_params)
 
                 first_loop = False
@@ -457,7 +457,7 @@ def track_BFLK(run_params,
                 frame = cv2.imread(filepath, -1)
 
                 # apply filters to frames
-                frame_course_filtered = course_filter(frame, run_params)
+                frame_coarse_filtered = coarse_filter(frame, run_params)
                 frame_fine_filtered = fine_filter(frame, run_params)
 
                 # obtain key frame for re-initializing points and/or IoU
@@ -467,7 +467,7 @@ def track_BFLK(run_params,
                 # reset tracked contour to ground truth contour if the frame is a reset frame
                 if frame_num % run_params.reset_frequency == 0:
                     seg_contour = extract_contour_pts_pgm(key_frame_path)
-                    fine_pts, fine_pts_inds, course_pts, course_pts_inds = separate_points(
+                    fine_pts, fine_pts_inds, coarse_pts, coarse_pts_inds = separate_points(
                         run_params, frame, seg_contour)
                 else:
                     # find tracked locations of points (both fine- and
@@ -476,14 +476,14 @@ def track_BFLK(run_params,
                     fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
                         old_frame_fine_filtered, frame_fine_filtered, fine_pts,
                         None, **lk_params)
-                    course_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                        old_frame_course_filtered, frame_course_filtered,
-                        course_pts, None, **lk_params)
+                    coarse_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                        old_frame_coarse_filtered, frame_coarse_filtered,
+                        coarse_pts, None, **lk_params)
 
                 # combine fine- and coarse-filtered points into full contour in
                 # proper counter-clockwise order
                 tracked_contour = order_points(fine_pts, fine_pts_inds,
-                                               course_pts, course_pts_inds)
+                                               coarse_pts, coarse_pts_inds)
 
                 # obtain ground truth contour for current frame
                 segmented_contour = extract_contour_pts_pgm(key_frame_path)
@@ -546,7 +546,7 @@ def track_BFLK(run_params,
 
                 # update frames for next iteration
                 old_frame_fine_filtered = frame_fine_filtered.copy()
-                old_frame_course_filtered = frame_course_filtered
+                old_frame_coarse_filtered = frame_coarse_filtered
 
                 # visualize if specified
                 if viz:
@@ -554,8 +554,8 @@ def track_BFLK(run_params,
                     for i in range(len(fine_pts)):
                         x, y = fine_pts[i].ravel()
                         cv2.circle(frame_color, (x, y), 3, (0, 0, 255), -1)
-                    for i in range(len(course_pts)):
-                        x, y = course_pts[i].ravel()
+                    for i in range(len(coarse_pts)):
+                        x, y = coarse_pts[i].ravel()
                         cv2.circle(frame_color, (x, y), 3, (0, 255, 255), -1)
 
                     cv2.imshow('Frame', frame_color)
@@ -580,8 +580,8 @@ def track_SBLK(run_params,
                filedir,
                fine_pts,
                fine_pts_inds,
-               course_pts,
-               course_pts_inds,
+               coarse_pts,
+               coarse_pts_inds,
                supporter_pts,
                supporter_params,
                lk_params,
@@ -589,7 +589,7 @@ def track_SBLK(run_params,
                feature_params,
                viz=False,
                fine_filter_type=0,
-               course_filter_type=0):
+               coarse_filter_type=0):
     """Supporter-based Lucas-Kanade point tracking.
 
     This method implements supporter-based Lucas-Kanade (SBLK) optical flow
@@ -608,9 +608,9 @@ def track_SBLK(run_params,
             aggressive bilateral filter
         fine_pts_inds (numpy.ndarray): array of indices of fine_pts in the
             overall contour; used for ordering the contour and visualizing
-        course_pts (numpy.ndarray): array of points to be tracked using less
+        coarse_pts (numpy.ndarray): array of points to be tracked using less
             aggressive bilateral filter
-        course_pts_inds (numpy.ndarray): array of indices of fine_pts in the
+        coarse_pts_inds (numpy.ndarray): array of indices of fine_pts in the
             overall contours; used for ordering the contour and visualizing
         supporter_pts (numpy.ndarray): array containing the x, y pixel coordinates of the supporter points to be used to
             predict the contour points
@@ -622,7 +622,7 @@ def track_SBLK(run_params,
         feature_params (dict): parameters to find good features to track
         viz (bool): whether tracking video should be displayed
         fine_filter_type (int): number specifying the image filter used to aggressively filter the image
-        course_filter_type (int): number specifying the image filter used to coarsely filter the image
+        coarse_filter_type (int): number specifying the image filter used to coarsely filter the image
 
     Returns:
         list: predicted contour area at each frame (time series)
@@ -637,12 +637,12 @@ def track_SBLK(run_params,
 
     # set filters (coarse_filter is less aggressive, fine_filter is more
     # aggressive)
-    course_filter = get_filter_from_num(course_filter_type)
+    coarse_filter = get_filter_from_num(coarse_filter_type)
     fine_filter = get_filter_from_num(fine_filter_type)
 
     # combine coarse and fine points, maintaining counter-clockwise ordering so OpenCV
     # can interpret contours
-    pts = order_points(fine_pts, fine_pts_inds, course_pts, course_pts_inds)
+    pts = order_points(fine_pts, fine_pts_inds, coarse_pts, coarse_pts_inds)
 
     # keep track of ground truth contour areas
     ground_truth_contour_areas = []
@@ -740,7 +740,7 @@ def track_SBLK(run_params,
                 old_frame = cv2.imread(filepath, -1)
 
                 # apply filters to frame
-                old_frame_course = course_filter(old_frame, run_params)
+                old_frame_coarse = coarse_filter(old_frame, run_params)
                 old_frame_fine = fine_filter(old_frame, run_params)
 
                 first_loop = False
@@ -764,7 +764,7 @@ def track_SBLK(run_params,
                 key_frame_path = seg_filedir + segmented_filename
 
                 # apply filters to frame
-                frame_course = course_filter(frame, run_params)
+                frame_coarse = coarse_filter(frame, run_params)
                 frame_fine = fine_filter(frame, run_params)
                 frame_color = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
@@ -774,22 +774,23 @@ def track_SBLK(run_params,
                     if reset_supporters:
                         # reset all points to contour and re-initialize a new
                         # set of supporters based on good corner features
-                        (course_pts, course_pts_inds, fine_pts, fine_pts_inds,
-                         supporter_pts, supporter_params
-                        ) = supporters_utils.initialize_supporters(
-                            run_params, filedir, key_frame_path, frame,
-                            feature_params, lk_params, 2)
+                        (coarse_pts, coarse_pts_inds, fine_pts, fine_pts_inds,
+                         supporter_pts,
+                         supporter_params) = supporters_utils.initialize_supporters(
+                             run_params, filedir, key_frame_path, frame,
+                             feature_params, lk_params, 2)
                     else:
                         # reset tracking points to contour, but do not set new
                         # supporter points
-                        (course_pts, course_pts_inds, fine_pts, fine_pts_inds,
-                         _, _) = supporters_utils.initialize_supporters(
-                             run_params, filedir, key_frame_path, frame,
-                             feature_params, lk_params, 2)
+                        (coarse_pts, coarse_pts_inds, fine_pts, fine_pts_inds,
+                         _, _) = supporters_utils.initialize_supporters(run_params, filedir,
+                                                       key_frame_path, frame,
+                                                       feature_params,
+                                                       lk_params, 2)
                         # re-initialize parameters for supporters
                         supporter_params = []
-                        for i in range(len(course_pts)):
-                            point = course_pts[i][0]
+                        for i in range(len(coarse_pts)):
+                            point = coarse_pts[i][0]
                             (_, supporter_param
                             ) = supporters_utils.initialize_supporters_for_point(
                                 supporter_pts, point,
@@ -801,27 +802,27 @@ def track_SBLK(run_params,
                     new_fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
                         old_frame_fine, frame_fine, fine_pts, None, **lk_params)
 
-                    # calculate new point locations for course_points using
+                    # calculate new point locations for coarse_points using
                     # frame filtered by coarse filter (predictions, might be
                     # updated by supporters)
-                    predicted_course_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                        old_frame_course, frame_course, course_pts, None,
+                    predicted_coarse_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                        old_frame_coarse, frame_coarse, coarse_pts, None,
                         **lk_params)
 
                     # calculate new supporter locations in coarsely filtered
                     # frame
                     new_supporter_pts, status, error = cv2.calcOpticalFlowPyrLK(
-                        old_frame_course, frame_course, supporter_pts, None,
+                        old_frame_coarse, frame_coarse, supporter_pts, None,
                         **lk_params)
 
                     # re-format predicted points from multidimensional numpy array of supporter points to a list of supporter points
                     # for easier processing
-                    predicted_course_pts = supporters_utils.format_supporters(
-                        predicted_course_pts)
+                    predicted_coarse_pts = supporters_utils.format_supporters(
+                        predicted_coarse_pts)
 
                     # initialize new feature parameters
                     updated_feature_params = []
-                    new_course_pts = []
+                    new_coarse_pts = []
 
                     # whether to trust LK tracking or not
                     use_tracking = ((frame_num % run_params.reset_frequency) <=
@@ -829,8 +830,8 @@ def track_SBLK(run_params,
 
                     # get supporter predictions (returns LK predictions if
                     # use_tracking is True)
-                    for i in range(len(predicted_course_pts)):
-                        predicted_point = predicted_course_pts[i]
+                    for i in range(len(predicted_coarse_pts)):
+                        predicted_point = predicted_coarse_pts[i]
                         param_list = supporter_params[i]
 
                         # obtain point predictions and updated parameters for
@@ -841,15 +842,15 @@ def track_SBLK(run_params,
                              new_supporter_pts, param_list, use_tracking,
                              run_params.update_rate)
                         updated_feature_params.append(new_params)
-                        new_course_pts.append(
+                        new_coarse_pts.append(
                             np.array([[point_location[0], point_location[1]]],
                                      dtype=np.float32))
 
-                    new_course_pts = np.array(new_course_pts)
+                    new_coarse_pts = np.array(new_coarse_pts)
 
                     # update point locations for next iteration
                     fine_pts = new_fine_pts
-                    course_pts = new_course_pts
+                    coarse_pts = new_coarse_pts
                     supporter_pts = new_supporter_pts
 
                     # update supporter params
@@ -857,13 +858,13 @@ def track_SBLK(run_params,
 
                     # save old frame for optical flow calculation in next
                     # iteration
-                    old_frame_course = frame_course.copy()
+                    old_frame_coarse = frame_coarse.copy()
                     old_frame_fine = frame_fine.copy()
 
                     # combine fine- and coarse-filtered points into full contour in
                     # proper counter-clockwise order
                     tracked_contour = order_points(fine_pts, fine_pts_inds,
-                                                   course_pts, course_pts_inds)
+                                                   coarse_pts, coarse_pts_inds)
 
                     # set y coordinate of first and last point to 0 to fix downward
                     # boundary drift, if specified
@@ -884,8 +885,8 @@ def track_SBLK(run_params,
                         for i in range(len(fine_pts)):
                             x, y = fine_pts[i].ravel()
                             cv2.circle(frame_color, (x, y), 4, (0, 0, 255), -1)
-                        for i in range(len(course_pts)):
-                            x, y = course_pts[i].ravel()
+                        for i in range(len(coarse_pts)):
+                            x, y = coarse_pts[i].ravel()
                             cv2.circle(frame_color, (x, y), 4, (0, 255, 0), -1)
                         for i in range(len(supporter_pts)):
                             x, y = supporter_pts[i].ravel()
