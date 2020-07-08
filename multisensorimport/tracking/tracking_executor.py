@@ -22,9 +22,9 @@ def tracking_run(arg_params, run_params):
         run_type (int): integer determining which tracking algorithm to run
             (mappings documented in run_tracking.py)
     """
-    READ_PATH = arg_params['img_path']
-    SEG_PATH = arg_params['seg_path']
-    OUT_PATH = arg_params['out_path']
+    read_path = arg_params['img_path']
+    seg_path = arg_params['seg_path']
+    out_path = arg_params['out_path']
     init_img_name = arg_params['init_img']
     run_type = arg_params['run_type']
 
@@ -42,11 +42,11 @@ def tracking_run(arg_params, run_params):
                           blockSize=run_params.block_size)
 
     # set initial image path
-    init_path = READ_PATH + init_img_name
+    init_path = read_path + init_img_name
     init_img = cv2.imread(init_path, -1)
 
     # extract initial contour from keyframe path
-    keyframe_path = SEG_PATH + init_img_name
+    keyframe_path = seg_path + init_img_name
     initial_contour_pts = track.extract_contour_pts_pgm(keyframe_path)
 
     # track points
@@ -55,8 +55,8 @@ def tracking_run(arg_params, run_params):
         # obtain results from tracking
         tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_LK(
             run_params,
-            SEG_PATH,
-            READ_PATH,
+            seg_path,
+            read_path,
             initial_contour_pts,
             lk_params,
             viz=True,
@@ -82,8 +82,8 @@ def tracking_run(arg_params, run_params):
         # obtain results from tracking
         tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_LK(
             run_params,
-            SEG_PATH,
-            READ_PATH,
+            seg_path,
+            read_path,
             filtered_initial_contour,
             lk_params,
             viz=True,
@@ -98,7 +98,7 @@ def tracking_run(arg_params, run_params):
 
         # obtain results from tracking
         tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_BFLK(
-            run_params, SEG_PATH, READ_PATH, fine_filtered_points,
+            run_params, seg_path, read_path, fine_filtered_points,
             fine_pts_inds, coarse_filtered_points, coarse_pts_inds, lk_params)
 
     elif run_type == 4:
@@ -106,7 +106,7 @@ def tracking_run(arg_params, run_params):
 
         # initialize contours and supporters
         coarse_filtered_points, coarse_pts_inds, fine_filtered_points, fine_pts_inds, supporters_tracking, _ = supporters_utils.initialize_supporters(
-            run_params, READ_PATH, keyframe_path, init_img, feature_params,
+            run_params, read_path, keyframe_path, init_img, feature_params,
             lk_params, 2)
 
         # initialize supporters
@@ -125,8 +125,8 @@ def tracking_run(arg_params, run_params):
 
         tracking_contour_areas, ground_truth_contour_areas, tracking_thickness, ground_truth_thickness, tracking_thickness_ratio, ground_truth_thickness_ratio, iou_series, iou_error = track.track_SBLK(
             run_params,
-            SEG_PATH,
-            READ_PATH,
+            seg_path,
+            read_path,
             fine_filtered_points,
             fine_pts_inds,
             coarse_filtered_points,
@@ -166,44 +166,44 @@ def tracking_run(arg_params, run_params):
     write_tracking = True
 
     if write_ground_truth:
-        out_path_csa_ground_truth = OUT_PATH + 'ground_truth_csa.csv'
+        out_path_csa_ground_truth = out_path + 'ground_truth_csa.csv'
         with open(out_path_csa_ground_truth, 'w') as outfile:
             for ctr in ground_truth_contour_areas:
                 outfile.write(str(ctr))
                 outfile.write('\n')
 
-        out_path_thickness_ground_truth = OUT_PATH + 'ground_truth_thickness.csv'
+        out_path_thickness_ground_truth = out_path + 'ground_truth_thickness.csv'
         with open(out_path_thickness_ground_truth, 'w') as outfile:
             for thickness in ground_truth_thickness:
                 outfile.write(str(thickness))
                 outfile.write('\n')
 
-        out_path_thickness_ratio_ground_truth = OUT_PATH + 'ground_truth_thickness_ratio.csv'
+        out_path_thickness_ratio_ground_truth = out_path + 'ground_truth_thickness_ratio.csv'
         with open(out_path_thickness_ratio_ground_truth, 'w') as outfile:
             for thickness_ratio in ground_truth_thickness_ratio:
                 outfile.write(str(thickness_ratio))
                 outfile.write('\n')
 
     if write_tracking:
-        out_path_tracking_csa = OUT_PATH + 'tracking_csa.csv'
+        out_path_tracking_csa = out_path + 'tracking_csa.csv'
         with open(out_path_tracking_csa, 'w') as outfile:
             for ctr in tracking_contour_areas:
                 outfile.write(str(ctr))
                 outfile.write('\n')
 
-        out_path_tracking_thickness = OUT_PATH + 'tracking_thickness.csv'
+        out_path_tracking_thickness = out_path + 'tracking_thickness.csv'
         with open(out_path_tracking_thickness, 'w') as outfile:
             for ctr in tracking_thickness:
                 outfile.write(str(ctr))
                 outfile.write('\n')
 
-        out_path_tracking_thickness_ratio = OUT_PATH + 'tracking_thickness_ratio.csv'
+        out_path_tracking_thickness_ratio = out_path + 'tracking_thickness_ratio.csv'
         with open(out_path_tracking_thickness_ratio, 'w') as outfile:
             for ctr in tracking_thickness_ratio:
                 outfile.write(str(ctr))
                 outfile.write('\n')
 
-        out_path_tracking_iou_series = OUT_PATH + 'iou_series.csv'
+        out_path_tracking_iou_series = out_path + 'iou_series.csv'
         with open(out_path_tracking_iou_series, 'w') as outfile:
             for ctr in iou_series:
                 outfile.write(str(ctr))
