@@ -12,8 +12,10 @@ import pandas as pd
 
 from multisensorimport.viz import plot_utils, print_utils, stats_utils
 
+# directory containing all data (script path + relative string)
 DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
+# paths to all precomputed subject data CSVs
 DATA_DIR_SUB1 = DATA_DIR + 'sub1/wp5t11/'
 DATA_DIR_SUB2 = DATA_DIR + 'sub2/wp5t28/'
 DATA_DIR_SUB3 = DATA_DIR + 'sub3/wp5t33/'
@@ -22,8 +24,7 @@ DATA_DIR_SUB5 = DATA_DIR + 'sub5/wp5t37/'
 
 
 def main():
-    """Generate all plots reported in [PUBLICATION FORTHCOMING].
-    """
+    """Generate all plots reported in BioRob 2020 publication."""
     # generate angle correlation plot
     df_ang = pd.read_csv(DATA_DIR + 'ang_corr.csv', header=0, index_col=0).T
 

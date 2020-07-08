@@ -12,7 +12,7 @@ from multisensorimport.dataobj import data_utils
 from multisensorimport.dataobj import trialdata as td
 from multisensorimport.viz import plot_utils, print_utils, stats_utils
 
-# directory containing all data
+# directory containing all data (script path + relative string)
 DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
 # paths to MATLAB structured data (force, sEMG, etc.)
@@ -45,7 +45,7 @@ PRINT_PUB_PLOTS = False
 
 
 def main():
-    """Execute all time series data analysis for [PUBLICATION FORTHCOMING]."""
+    """Execute all time series data analysis for BioRob 2020 publication."""
     # import all time series data, detrend via polynomial fit
     # NOTE: AMG data not currently analyzed, peaks inaccurate
     print('Aggregating and fitting time series data (Sub1, 25deg)...')
