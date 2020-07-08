@@ -53,9 +53,7 @@ RESET_FREQUENCY = 10000
 
 
 def main():
-    """Execute tracking run based on command line arguments and parameters
-    above.
-    """
+    """Execute tracking run based on above and command line parameters."""
     # set up command line arguments
     parser = argparse.ArgumentParser()
 
