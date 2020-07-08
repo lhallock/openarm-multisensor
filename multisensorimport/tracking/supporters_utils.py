@@ -194,7 +194,7 @@ def initialize_supporters_for_point(supporter_points, target_point, variance):
         # initialize displacement average w/ initial displacement, diagonal
         # covariance
         supporter_params.append(
-            (target_point - supporter_point, variance * np.eye(1)))
+            (target_point - supporter_point, variance * np.eye(2)))
 
     return supporters, supporter_params
 

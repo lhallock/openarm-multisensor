@@ -170,7 +170,6 @@ def track_LK(run_params,
                         break
                     time.sleep(0.01)
 
-
             else:
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
@@ -212,7 +211,8 @@ def track_LK(run_params,
                     first_contour_point = tracked_contour[0]
                     first_contour_point[0][1] = 0
 
-                    last_contour_point = tracked_contour[len(tracked_contour) - 1]
+                    last_contour_point = tracked_contour[len(tracked_contour) -
+                                                         1]
                     last_contour_point[0][1] = 0
 
                 # update for next iteration
@@ -494,7 +494,8 @@ def track_BFLK(run_params,
                     first_contour_point = tracked_contour[0]
                     first_contour_point[0][1] = 0
 
-                    last_contour_point = tracked_contour[len(tracked_contour) - 1]
+                    last_contour_point = tracked_contour[len(tracked_contour) -
+                                                         1]
                     last_contour_point[0][1] = 0
 
                 # add ground truth and tracked thickness and aspect ratio
@@ -754,7 +755,6 @@ def track_SBLK(run_params,
                         break
                     time.sleep(0.01)
 
-
             else:
                 # read in new frame
                 frame = cv2.imread(filepath, -1)
@@ -872,7 +872,8 @@ def track_SBLK(run_params,
                         first_contour_point = tracked_contour[0]
                         first_contour_point[0][1] = 0
 
-                        last_contour_point = tracked_contour[len(tracked_contour) -1]
+                        last_contour_point = tracked_contour[
+                            len(tracked_contour) - 1]
                         last_contour_point[0][1] = 0
 
                     # obtain ground truth contour for current frame
@@ -910,15 +911,16 @@ def track_SBLK(run_params,
                     if segmented_thickness_x == 0 or segmented_thickness_y == 0:
                         ground_truth_thickness_ratio.append(0)
                     else:
-                        ground_truth_thickness_ratio.append(segmented_thickness_x /
-                                                            segmented_thickness_y)
+                        ground_truth_thickness_ratio.append(
+                            segmented_thickness_x / segmented_thickness_y)
 
                     predicted_thickness.append(predicted_thickness_x)
                     predicted_thickness_ratio.append(predicted_thickness_x /
                                                      predicted_thickness_y)
 
                     # add ground truth and tracked contour area
-                    predicted_contour_areas.append(cv2.contourArea(tracked_contour))
+                    predicted_contour_areas.append(
+                        cv2.contourArea(tracked_contour))
                     ground_truth_contour_areas.append(
                         cv2.contourArea(segmented_contour))
 
@@ -930,7 +932,8 @@ def track_SBLK(run_params,
                         cv2.cvtColor(frame_color, cv2.COLOR_RGB2GRAY).shape)
 
                     # fill matrices with nonzero numbers inside contour area
-                    cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)], 255)
+                    cv2.fillPoly(mat_predicted, [tracked_contour.astype(int)],
+                                 255)
                     cv2.fillPoly(mat_segmented, [segmented_contour.astype(int)],
                                  255)
 
@@ -953,4 +956,3 @@ def track_SBLK(run_params,
             predicted_thickness, ground_truth_thickness,
             predicted_thickness_ratio, ground_truth_thickness_ratio,
             iou_accuracy_series, normalized_iou_error)
-

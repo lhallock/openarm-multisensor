@@ -4,7 +4,7 @@
 Example:
     Once filepaths are set appropriately, run this function via
 
-        $ python gen_biorob_figs.py
+        $ python gen_pub_figs.py
 """
 import os
 
