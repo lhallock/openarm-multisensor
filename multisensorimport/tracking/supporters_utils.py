@@ -18,7 +18,7 @@ from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
 
 
-def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
+def initialize_supporters(run_params, read_path, keyframe_path, init_img,
                           feature_params, lk_params, which_contour):
     """Initialize all point groups and parameters for SBLK tracking.
 
@@ -30,7 +30,7 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
     Args:
         run_params (ParamValues): class containing values of parameters used in
             tracking
-        READ_PATH (str): path to raw ultrasound frames
+        read_path (str): path to raw ultrasound frames
         key_frame_path (str): path to ground truth hand-segmented frames
         init_img (np.ndarray): first frame in ultrasound image sequence
         feature_params (dict): parameters to find good features to track
@@ -73,13 +73,13 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
     #    4: anisotropic diffusion
     #    other: no filter
     fineFilterNum = 2
-    courseFilterNum = 3
+    coarseFilterNum = 3
 
-    course_filter = get_filter_from_num(courseFilterNum)
-    filtered_init_img = course_filter(init_img, run_params)
+    coarse_filter = get_filter_from_num(coarseFilterNum)
+    filtered_init_img = coarse_filter(init_img, run_params)
 
     # Keep points with high Shi-Tomasi corner score for LK tracking
-    lucas_kanade_points, lucas_kanade_points_indeces = filter_points(
+    lucas_kanade_points, lucas_kanade_points_indices = filter_points(
         run_params,
         7,
         pts,
@@ -92,36 +92,36 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
     lucas_kanade_points = np.append(lucas_kanade_points,
                                     np.array([pts[0]]),
                                     axis=0)
-    lucas_kanade_points_indeces = np.append(lucas_kanade_points_indeces, 0)
+    lucas_kanade_points_indices = np.append(lucas_kanade_points_indices, 0)
 
     # initialize list of supporter-tracked points
     supporter_tracked_points = pts.copy()
-    supporter_tracked_points_indeces = np.arange(0, len(pts))
+    supporter_tracked_points_indices = np.arange(0, len(pts))
 
     # restrict supporter-tracked points to those in desired region (i.e., top
     # right image quadrant, x>[mean x], y<[mean y])
-    supporter_kept_indeces = set()
+    supporter_kept_indices = set()
     for i in range(len(supporter_tracked_points)):
         supporter_tracked_point = supporter_tracked_points[i]
         add = (supporter_tracked_point[0][0] > mean_x_pts and
                supporter_tracked_point[0][1] < mean_y_pts)
         if add:
-            supporter_kept_indeces.add(i)
+            supporter_kept_indices.add(i)
 
     # list only top-right-quadrant points as determined above
     supporter_tracked_to_keep = []
     supporter_tracked_to_keep_inds = []
-    for index in supporter_kept_indeces:
+    for index in supporter_kept_indices:
         supporter_tracked_to_keep.append(supporter_tracked_points[index])
         supporter_tracked_to_keep_inds.append(
-            supporter_tracked_points_indeces[index])
+            supporter_tracked_points_indices[index])
 
     # reset supporter-tracked points list to right-top-quadrant points only
     supporter_tracked_points = np.array(supporter_tracked_to_keep)
-    supporter_tracked_points_indeces = np.array(supporter_tracked_to_keep_inds)
+    supporter_tracked_points_indices = np.array(supporter_tracked_to_keep_inds)
 
     # remove points from LK tracking list if they're tracked via supporters
-    LK_kept_indeces = set()
+    LK_kept_indices = set()
     for i in range(len(lucas_kanade_points)):
         lucas_kanade_point = lucas_kanade_points[i]
         add = True
@@ -135,18 +135,18 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
                         lucas_kanade_point[0][1] < mean_y_pts)):
                 add = False
         if add:
-            LK_kept_indeces.add(i)
+            LK_kept_indices.add(i)
 
     # keep only non-supporter points for LK tracking as determined above
     LK_to_keep = []
     LK_to_keep_inds = []
-    for index in LK_kept_indeces:
+    for index in LK_kept_indices:
         LK_to_keep.append(lucas_kanade_points[index])
-        LK_to_keep_inds.append(lucas_kanade_points_indeces[index])
+        LK_to_keep_inds.append(lucas_kanade_points_indices[index])
 
     # reset LK-tracked points list
     lucas_kanade_points = np.array(LK_to_keep)
-    lucas_kanade_points_indeces = np.array(LK_to_keep_inds)
+    lucas_kanade_points_indices = np.array(LK_to_keep_inds)
 
     # find supporters based on good points
     supporters = cv2.goodFeaturesToTrack(filtered_init_img,
@@ -162,7 +162,7 @@ def initialize_supporters(run_params, READ_PATH, keyframe_path, init_img,
             supporters, supporter_tracked_point, initial_variance)
         supporter_params.append(run_params)
 
-    return supporter_tracked_points, supporter_tracked_points_indeces, lucas_kanade_points, lucas_kanade_points_indeces, supporters, supporter_params
+    return supporter_tracked_points, supporter_tracked_points_indices, lucas_kanade_points, lucas_kanade_points_indices, supporters, supporter_params
 
 
 def initialize_supporters_for_point(supporter_points, target_point, variance):
