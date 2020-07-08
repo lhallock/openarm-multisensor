@@ -775,18 +775,17 @@ def track_SBLK(run_params,
                         # reset all points to contour and re-initialize a new
                         # set of supporters based on good corner features
                         (coarse_pts, coarse_pts_inds, fine_pts, fine_pts_inds,
-                         supporter_pts,
-                         supporter_params) = supporters_utils.initialize_supporters(
-                             run_params, filedir, key_frame_path, frame,
-                             feature_params, lk_params, 2)
+                         supporter_pts, supporter_params
+                        ) = supporters_utils.initialize_supporters(
+                            run_params, filedir, key_frame_path, frame,
+                            feature_params, lk_params, 2)
                     else:
                         # reset tracking points to contour, but do not set new
                         # supporter points
                         (coarse_pts, coarse_pts_inds, fine_pts, fine_pts_inds,
-                         _, _) = supporters_utils.initialize_supporters(run_params, filedir,
-                                                       key_frame_path, frame,
-                                                       feature_params,
-                                                       lk_params, 2)
+                         _, _) = supporters_utils.initialize_supporters(
+                             run_params, filedir, key_frame_path, frame,
+                             feature_params, lk_params, 2)
                         # re-initialize parameters for supporters
                         supporter_params = []
                         for i in range(len(coarse_pts)):
