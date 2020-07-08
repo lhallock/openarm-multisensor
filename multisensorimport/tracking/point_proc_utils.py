@@ -227,7 +227,7 @@ def separate_points(run_params, img, pts):
     """
     # determine image filters to use (bilateral filters)
     fine_filter_type = 2
-    course_filter_type = 3
+    coarse_filter_type = 3
 
     # block size (neighborhood size) for Shi-Tomasi corner scoring; set to 7 across algorithms,
     # as this value consistently worked well
@@ -237,34 +237,34 @@ def separate_points(run_params, img, pts):
     fine_pts, fine_pts_inds = filter_points(run_params, corner_window_size, pts,
                                             fine_filter_type, img,
                                             run_params.percent_fine)
-    course_pts, course_pts_inds = filter_points(run_params, corner_window_size,
-                                                pts, course_filter_type, img,
-                                                run_params.percent_course)
+    coarse_pts, coarse_pts_inds = filter_points(run_params, corner_window_size,
+                                                pts, coarse_filter_type, img,
+                                                run_params.percent_coarse)
 
     # remove overlap between two subsets; a point in both sets will be removed
-    # from course_pts and kept in fine_pts
-    course_kept_indices = set()
-    for i in range(len(course_pts)):
-        course_pt = course_pts[i]
+    # from coarse_pts and kept in fine_pts
+    coarse_kept_indices = set()
+    for i in range(len(coarse_pts)):
+        coarse_pt = coarse_pts[i]
         add = True
         for j in range(len(fine_pts)):
             fine_pt = fine_pts[j]
-            if np.linalg.norm(course_pt - fine_pt) < 0.001:
+            if np.linalg.norm(coarse_pt - fine_pt) < 0.001:
                 add = False
         if add:
-            course_kept_indices.add(i)
+            coarse_kept_indices.add(i)
 
-    course_to_keep = []
-    course_to_keep_inds = []
-    for index in course_kept_indices:
-        course_to_keep.append(course_pts[index])
-        course_to_keep_inds.append(course_pts_inds[index])
+    coarse_to_keep = []
+    coarse_to_keep_inds = []
+    for index in coarse_kept_indices:
+        coarse_to_keep.append(coarse_pts[index])
+        coarse_to_keep_inds.append(coarse_pts_inds[index])
 
     # convert to numpy arrays and return
-    course_pts = np.array(course_to_keep)
-    course_pts_inds = np.array(course_to_keep_inds)
+    coarse_pts = np.array(coarse_to_keep)
+    coarse_pts_inds = np.array(coarse_to_keep_inds)
 
-    return fine_pts, fine_pts_inds, course_pts, course_pts_inds
+    return fine_pts, fine_pts_inds, coarse_pts, coarse_pts_inds
 
 
 def order_points(points_one, points_one_inds, points_two, points_two_inds):
