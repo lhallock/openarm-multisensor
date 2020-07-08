@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Utility functions for basic dataframe statistics (mean, stdev, etc.).
-
-This module contains functions used to compute statistics for [PUBLICATION
-FORTHCOMING].
-"""
+"""Utility functions for basic dataframe statistics (mean, stdev, etc.)."""
 import pandas as pd
 
 # list of tracker identifiers

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Utility functions for pretty-printing to console.
-"""
+"""Utility functions for pretty-printing to console."""
 import os
 
 # extract dimensions of current terminal window
@@ -19,8 +18,7 @@ def print_header(header_string):
 
 
 def print_div():
-    """Print divider to console (two dashed lines across full console width).
-    """
+    """Print divider to console (two console-width dashed lines)."""
     print('\n')
     print('-' * int(TERM_DIM[1]))
     print('-' * int(TERM_DIM[1]))

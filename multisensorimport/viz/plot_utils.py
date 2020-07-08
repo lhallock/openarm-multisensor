@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Utility functions for plotting.
-
-This module contains functions used to plot time series data for [PUBLICATION
-FORTHCOMING].
-"""
+"""Utility functions for plotting."""
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
