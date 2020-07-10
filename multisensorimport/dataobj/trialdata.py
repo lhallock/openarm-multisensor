@@ -7,7 +7,6 @@ class is used to aggregate associated surface electromyography (sEMG), acoustic
 myography (AMG), force, and quantitative features associated with time series
 ultrasound (e.g., muscle cross-sectional area, or CSA), alongside subject
 metadata.
-
 """
 import math
 
@@ -45,11 +44,14 @@ class TrialData():
         data_force_abs (TimeSeriesData): 1D force data containing absolute
             value of output force only
         data_us_csa (TimeSeriesData): ultrasound-extracted time series data of
-            muscle cross-sectional area, extracted using FUNCTION TODO
+            muscle cross-sectional area, extracted to CSV using
+            multisensorimport.tracking module
         data_us_thickness (TimeSeriesData): ultrasound-extracted time series
-            data of muscle thickness, extracted using FUNCTION TODO
+            data of muscle thickness, extracted to CSV using
+            multisensorimport.tracking module
         data_us_th_rat (TimeSeriesData): ultrasound-extracted time series data
-            of maximum length/width ration, extracted using FUNCTION TODO
+            of maximum length/width ration, extracted to CSV using
+            multisensorimport.tracking module
         df (pandas.DataFrame): pandas dataframe containing all timesynced data
             streams
         df_dt (pandas.DataFrame): truncated version of df containing only
@@ -327,6 +329,9 @@ class TrialData():
 
     def _compute_abs_force(self):
         """Compute absolute value of force from 6-channel force data.
+
+        Returns:
+           numpy.ndarray absolute force time series
         """
         force_data_comps = self.data_force.data
         force_abs = np.zeros((force_data_comps.shape[0], 1))

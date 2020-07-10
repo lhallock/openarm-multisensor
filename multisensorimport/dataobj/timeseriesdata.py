@@ -7,9 +7,7 @@ class is generic and designed for use with electromyography (EMG), acoustic
 myography (AMG), and force data, as well as quantitative features extracted
 from ultrasound (e.g., muscle cross-sectional area, or CSA). In practice, this
 class can be used to describe any time-series data, biometric or non-biometric.
-
 """
-
 import numpy as np
 from scipy.io import wavfile
 
@@ -28,7 +26,6 @@ class TimeSeriesData():
             TimeSeriesData objects), in terms of number of samples
         label (str): human-readable identifier for data series (e.g., 'EMG')
         ch_labels (list): length-n_ch ordered list of data channel labels
-
     """
 
     def __init__(self, label):
@@ -165,7 +162,7 @@ class TimeSeriesData():
         Args:
             filename (str): path to desired data series file
 
-        Todo:
+        TODO:
             check if data type is consistent w/ CSV read
         """
         self._freq, self._data = wavfile.read(filename)

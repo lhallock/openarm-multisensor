@@ -58,7 +58,7 @@ def as_pd_freq(freq):
     When pandas says they want frequency, what they're actually asking for
     is period, which is stupid and confusing. This method converts a
     frequency expressed in Hz to its equivalent pandas frequency, aka its
-    period in microseconds. WARNING: Don't use this with data sample at
+    period in microseconds. WARNING: Don't use this with data sampled at
     >1MHz, since this will run into precision errors!
 
     Args:
@@ -138,14 +138,14 @@ def calculate_pvalues(df):
 
     This method outputs a table just like that of pandas' corr() function, but
     with p-values instead of correlations. Stolen shamelessly from this post:
-    https://stackoverflow.com/questions/25571882/pandas-columns-correlation-with-statistical-significance.
+    https://stackoverflow.com/questions/25571882/pandas-columns-correlation-with-statistical-significance
 
     Args:
         df (pandas.DataFrame): table on which to compute correlation
 
     Returns:
         pandas.DataFrame containing p-values, in the style of corr()
-    """
+    """ # noqa
     df = df.dropna()._get_numeric_data()
     dfcols = pd.DataFrame(columns=df.columns)
     pvalues = dfcols.transpose().join(dfcols, how='outer')
