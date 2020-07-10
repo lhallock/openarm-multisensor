@@ -4,11 +4,8 @@
 This module contains functions to extract, process, and filter contour points
 based on various metrics (e.g., Shi-Tomasi corner score).
 """
-import os
-
 import cv2
 import numpy as np
-import scipy
 
 from multisensorimport.tracking.image_proc_utils import *
 
@@ -147,6 +144,8 @@ def filter_points(run_params,
         pts (numpy.ndarray): array of points to filter, where each point is a
             1-element numpy.ndarray containing a numpy.ndarray of x-y values
         img (numpy.ndarray): image used to calculate corner scores
+        filter_type (int): number specifying type of filter to apply to frames
+            before executing point filtering (see image_proc_utils.py)
         frac (float): fraction of points to keep based on corner score
         keep_bottom (bool): whether points along bottom of contour should be
             kept regardless of score (used to ensure contour contains bottom of
@@ -156,13 +155,11 @@ def filter_points(run_params,
         numpy.ndarray of filtered points
         numpy.ndarray of their corresponding indices in the original contour
     """
-
-    # select image filter, determined by filterType argument
-    filter = get_filter_from_num(filter_type)
+    # select image filter, determined by filter_type argument
+    image_filter = get_filter_from_num(filter_type)
 
     # apply filter
-    filtered_img = filter(img, run_params)
-    x = (len(pts))
+    filtered_img = image_filter(img, run_params)
 
     # convert pts from np array to list for convenience, create dict for sorting
     pts = list(pts)

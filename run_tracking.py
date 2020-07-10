@@ -4,8 +4,8 @@
 Example:
     Run this function via
 
-        $ python run_tracking.py --run_type <alg_int> --img_path <filepath_us>\
-        --seg_path <filepath_seg> --out_path <filepath_out> --init_img\
+        $ python run_tracking.py --run_type <alg_int> --img_path <filepath_us>
+        --seg_path <filepath_seg> --out_path <filepath_out> --init_img
         <filename_init>
 
     for

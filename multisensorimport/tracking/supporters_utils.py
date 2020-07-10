@@ -12,8 +12,8 @@ H. Grabner, J. Matas, L. Van Gool, and P. Cattin. "Tracking the Invisible:
     Computer Vision and Pattern Recognition (CVPR), 2010.
 """
 import numpy as np
-import scipy
-from scipy import stats
+
+import cv2
 
 from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
@@ -31,7 +31,7 @@ def initialize_supporters(run_params, read_path, keyframe_path, init_img,
     Args:
         run_params (ParamValues): values of parameters used in tracking
         read_path (str): path to raw ultrasound frames
-        key_frame_path (str): path to ground truth hand-segmented frames
+        keyframe_path (str): path to ground truth hand-segmented frames
         init_img (numpy.ndarray): first frame in ultrasound image sequence
         feature_params (dict): parameters to find good features to track
         lk_params (dict): parameters for Lucas-Kanade tracking
@@ -73,10 +73,10 @@ def initialize_supporters(run_params, read_path, keyframe_path, init_img,
     #    3: coarse bilateral filter
     #    4: anisotropic diffusion
     #    other: no filter
-    fineFilterNum = 2
-    coarseFilterNum = 3
+    fine_filter_num = 2
+    coarse_filter_num = 3
 
-    coarse_filter = get_filter_from_num(coarseFilterNum)
+    coarse_filter = get_filter_from_num(coarse_filter_num)
     filtered_init_img = coarse_filter(init_img, run_params)
 
     # keep points with high Shi-Tomasi corner score for LK tracking
@@ -84,7 +84,7 @@ def initialize_supporters(run_params, read_path, keyframe_path, init_img,
         run_params,
         7,
         pts,
-        fineFilterNum,
+        fine_filter_num,
         init_img,
         run_params.fine_threshold,
         keep_bottom=True)
@@ -122,7 +122,7 @@ def initialize_supporters(run_params, read_path, keyframe_path, init_img,
     supporter_tracked_points_indices = np.array(supporter_tracked_to_keep_inds)
 
     # remove points from LK tracking list if they're tracked via supporters
-    LK_kept_indices = set()
+    lk_kept_indices = set()
     for i in range(len(lucas_kanade_points)):
         lucas_kanade_point = lucas_kanade_points[i]
         add = True
@@ -136,18 +136,18 @@ def initialize_supporters(run_params, read_path, keyframe_path, init_img,
                         lucas_kanade_point[0][1] < mean_y_pts)):
                 add = False
         if add:
-            LK_kept_indices.add(i)
+            lk_kept_indices.add(i)
 
     # keep only non-supporter points for LK tracking as determined above
-    LK_to_keep = []
-    LK_to_keep_inds = []
-    for index in LK_kept_indices:
-        LK_to_keep.append(lucas_kanade_points[index])
-        LK_to_keep_inds.append(lucas_kanade_points_indices[index])
+    lk_to_keep = []
+    lk_to_keep_inds = []
+    for index in lk_kept_indices:
+        lk_to_keep.append(lucas_kanade_points[index])
+        lk_to_keep_inds.append(lucas_kanade_points_indices[index])
 
     # reset LK-tracked points list
-    lucas_kanade_points = np.array(LK_to_keep)
-    lucas_kanade_points_indices = np.array(LK_to_keep_inds)
+    lucas_kanade_points = np.array(lk_to_keep)
+    lucas_kanade_points_indices = np.array(lk_to_keep_inds)
 
     # find supporters based on good points
     supporters = cv2.goodFeaturesToTrack(filtered_init_img,
@@ -163,12 +163,13 @@ def initialize_supporters(run_params, read_path, keyframe_path, init_img,
             supporters, supporter_tracked_point, initial_variance)
         supporter_params.append(run_params)
 
-    return supporter_tracked_points, supporter_tracked_points_indices, lucas_kanade_points, lucas_kanade_points_indices, supporters, supporter_params
+    return (supporter_tracked_points, supporter_tracked_points_indices,
+            lucas_kanade_points, lucas_kanade_points_indices, supporters,
+            supporter_params)
 
 
 def initialize_supporters_for_point(supporter_points, target_point, variance):
-    """Format supporter point list and initialize parameters for
-    supporter-tracked point.
+    """Format single point supporter point list and supporter point parameters.
 
     This method reformats an input array of supporter points into a list of
     supporter points for easier use in tracking algorithms. It also initializes
@@ -177,7 +178,7 @@ def initialize_supporters_for_point(supporter_points, target_point, variance):
     Args:
         supporter_points (numpy.ndarray): array of 1-element arrays, where each
             element is a 2-element array containing supporter point locations
-        target point (numpy.ndarray): x-y coordinates of target point to track
+        target_point (numpy.ndarray): x-y coordinates of target point to track
         variance (float): initial variance used for supporter based tracking
             (see paper cited above for algorithmic details)
 
@@ -324,8 +325,7 @@ def apply_supporters_model(run_params, predicted_target_point,
 
 
 def weight_function(run_params, displacement_norm):
-    """Determine prediction weight of given supporter point based on movement
-    of all supporter points.
+    """Determine motion-dependent prediction weight of given supporter point.
 
     This method determines the weight to apply to each supporter point when
     using it for prediction of a target point based on the norm of its

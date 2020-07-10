@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 
 from multisensorimport.tracking import point_proc_utils as point_proc
-from multisensorimport.tracking import supporters_utils as supporters_utils
+from multisensorimport.tracking import supporters_utils
 from multisensorimport.tracking import tracking_algorithms as track
 
 
@@ -17,8 +17,7 @@ def tracking_run(arg_params,
                  run_params,
                  write_ground_truth=True,
                  write_tracking=True):
-    """Execute ultrasound image tracking, tracking evaluation, and tracking
-    visualization.
+    """Execute ultrasound image tracking, evaluation, and visualization.
 
     Args:
         arg_params (dict): dictionary specifying algorithm to use, read path
@@ -151,8 +150,8 @@ def tracking_run(arg_params,
             supporter_params.append(sup_params)
 
         # set image filters to apply on frames
-        fineFilterNum = 2
-        coarseFilterNum = 3
+        fine_filter_num = 2
+        coarse_filter_num = 3
 
         # obtain results from tracking
         (tracking_contour_areas, ground_truth_contour_areas, tracking_thickness,
@@ -171,8 +170,8 @@ def tracking_run(arg_params,
                                        True,
                                        feature_params,
                                        True,
-                                       fine_filter_type=fineFilterNum,
-                                       coarse_filter_type=coarseFilterNum)
+                                       fine_filter_type=fine_filter_num,
+                                       coarse_filter_type=coarse_filter_num)
 
     # errors/accuracy measures from tracking
     thickness_error = np.linalg.norm(

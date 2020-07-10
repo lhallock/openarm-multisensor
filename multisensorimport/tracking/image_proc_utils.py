@@ -26,18 +26,18 @@ def get_filter_from_num(filter_type):
     Returns:
         image filter function that takes two arguments (img, run_params)
     """
-    filter = None
+    filter_out = None
     if filter_type == 1:
-        filter = median_filter
+        filter_out = median_filter
     elif filter_type == 2:
-        filter = fine_bilateral_filter
+        filter_out = fine_bilateral_filter
     elif filter_type == 3:
-        filter = coarse_bilateral_filter
+        filter_out = coarse_bilateral_filter
     elif filter_type == 4:
-        filter = anisotropic_diffuse
+        filter_out = anisotropic_diffuse
     else:
-        filter = no_filter
-    return filter
+        filter_out = no_filter
+    return filter_out
 
 
 def no_filter(img, run_params):
@@ -67,9 +67,8 @@ def median_filter(img, run_params):
     Returns:
         numpy.ndarray median-filtered version of input image
     """
-
-    kernelSize = 5
-    return cv2.medianBlur(img, kernelSize)
+    kernel_size = 5
+    return cv2.medianBlur(img, kernel_size)
 
 
 def fine_bilateral_filter(img, run_params):
@@ -87,12 +86,12 @@ def fine_bilateral_filter(img, run_params):
 
     # hyperparameters
     diam = run_params.fine_diam
-    sigmaColor = run_params.fine_sigma_color
-    sigmaSpace = run_params.fine_sigma_space
-    bilateralColor = cv2.bilateralFilter(img, diam, sigmaColor, sigmaSpace)
+    sigma_color = run_params.fine_sigma_color
+    sigma_space = run_params.fine_sigma_space
+    bilateral_color = cv2.bilateralFilter(img, diam, sigma_color, sigma_space)
 
     # convert back to grayscale and return
-    return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
+    return cv2.cvtColor(bilateral_color, cv2.COLOR_RGB2GRAY)
 
 
 def coarse_bilateral_filter(img, run_params):
@@ -110,12 +109,12 @@ def coarse_bilateral_filter(img, run_params):
 
     # hyperparameters
     diam = run_params.coarse_diam
-    sigmaColor = run_params.coarse_sigma_color
-    sigmaSpace = run_params.coarse_sigma_space
-    bilateralColor = cv2.bilateralFilter(img, diam, sigmaColor, sigmaSpace)
+    sigma_color = run_params.coarse_sigma_color
+    sigma_space = run_params.coarse_sigma_space
+    bilateral_color = cv2.bilateralFilter(img, diam, sigma_color, sigma_space)
 
     # convert back to grayscale and return
-    return cv2.cvtColor(bilateralColor, cv2.COLOR_RGB2GRAY)
+    return cv2.cvtColor(bilateral_color, cv2.COLOR_RGB2GRAY)
 
 
 def anisotropic_diffuse(img, run_params):
@@ -132,29 +131,29 @@ def anisotropic_diffuse(img, run_params):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
     # hyperparameters
-    alphaVar = 0.1
-    KVar = 5
-    nitersVar = 5
-    diffusedColor = cv2.ximgproc.anisotropicDiffusion(src=img,
-                                                      alpha=alphaVar,
-                                                      K=KVar,
-                                                      niters=nitersVar)
+    alpha_var = 0.1
+    k_var = 5
+    niters_var = 5
+    diffused_color = cv2.ximgproc.anisotropicDiffusion(src=img,
+                                                       alpha=alpha_var,
+                                                       K=k_var,
+                                                       niters=niters_var)
 
     # convert back to grayscale and return
-    return cv2.cvtColor(diffusedColor, cv2.COLOR_RGB2GRAY)
+    return cv2.cvtColor(diffused_color, cv2.COLOR_RGB2GRAY)
 
 
 def otsu_binarization(gray_image):
     """Applies Otsu binarization to the given image.
 
     Args:
-        gray_img (numpy.ndarray): grayscale image to be binarized
+        gray_image (numpy.ndarray): grayscale image to be binarized
 
     Returns:
         numpy.ndarray binarized version of input image
     """
-    ret2, th2 = cv2.threshold(gray_image, 0, 255,
-                              cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    _, th2 = cv2.threshold(gray_image, 0, 255,
+                           cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return th2
 
 
@@ -162,12 +161,11 @@ def canny(gray_image):
     """Applies Canny edge detection to the given image.
 
     Args:
-        gray_img (numpy.ndarray): grayscale image in which edges should be
+        gray_image (numpy.ndarray): grayscale image in which edges should be
             detected
 
     Returns:
         numpy.ndarray edges present in input image
     """
-
     edges = cv2.Canny(gray_image, 180, 200)
     return edges

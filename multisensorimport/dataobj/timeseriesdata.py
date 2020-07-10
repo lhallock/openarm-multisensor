@@ -159,11 +159,11 @@ class TimeSeriesData():
     def _init_from_wav(self, filename):
         """Internal helper method for instantiation from WAV.
 
+        TODO: check if data type is consistent w/ CSV read
+
         Args:
             filename (str): path to desired data series file
 
-        TODO:
-            check if data type is consistent w/ CSV read
         """
         self._freq, self._data = wavfile.read(filename)
         self._n_ch = self._data.shape[1]

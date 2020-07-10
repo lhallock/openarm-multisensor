@@ -14,12 +14,16 @@ class ParamValues():
 
     Attributes:
 
-        Lucas-Kanade (LK) tracking parameters:
+        #######################################################################
+        ## Lucas-Kanade (LK) tracking parameters
+        #######################################################################
 
-            LK_window (int): window size for Lucas Kanade
-            pyr_level (int): level of image pyramiding for Lucas Kanade
+            lk_window (int): window size for Lucas-Kanade
+            pyr_level (int): level of image pyramiding for Lucas-Kanade
 
-        Feature-refined Lucas-Kanade (FRLK) tracking parameters:
+        #######################################################################
+        ## Feature-refined Lucas-Kanade (FRLK) tracking parameters
+        #######################################################################
 
             quality_level (float): quality level of corners chosen via
                 Shi-Tomasi corner detection
@@ -32,7 +36,9 @@ class ParamValues():
             point_frac (float): fraction of top points (based on Shi-Tomasi
                 corner score) to keep during FRLK tracking
 
-        Bilaterally-Filtered Lucas-Kanade (BFLK) tracking parameters:
+        #######################################################################
+        ## Bilaterally-Filtered Lucas-Kanade (BFLK) tracking parameters
+        #######################################################################
 
             coarse_diam (int): bilateral filter diameter for coarse (i.e., less
                 aggressive) filter
@@ -51,7 +57,9 @@ class ParamValues():
             percent_coarse (float): fraction of points (ordered by Shi-Tomasi
                 corner score) to track using coarse bilateral filter
 
-        Supporter-Based Lucas-Kanade (SBLK) tracking parameters:
+        #######################################################################
+        ## Supporter-Based Lucas-Kanade (SBLK) tracking parameters
+        #######################################################################
 
             displacement_weight (float): offset (alpha) used in weighting
                 function for supporter points
@@ -69,7 +77,7 @@ class ParamValues():
     """
 
     def __init__(self,
-                 LK_window=35,
+                 lk_window=35,
                  pyr_level=3,
                  quality_level=0.4,
                  min_distance=0,
@@ -97,7 +105,7 @@ class ParamValues():
         Returns:
             ParamValues object with default or argument-specified values
         """
-        self.LK_window = LK_window
+        self.lk_window = lk_window
         self.pyr_level = pyr_level
         self.quality_level = quality_level
         self.min_distance = min_distance
@@ -153,7 +161,7 @@ class ParamValues():
         if fine_sigma_s is not None:
             self.fine_sigma_space = fine_sigma_s
         if window is not None:
-            self.LK_window = window
+            self.lk_window = window
         if pyr is not None:
             self.pyr_level = pyr
         if fine_thresh is not None:

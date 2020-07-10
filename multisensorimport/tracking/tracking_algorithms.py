@@ -7,15 +7,13 @@ supporter-based Lucas-Kanade (SBLK) tracking algorithms, including processing
 and filtering of ultrasound images, extraction of contour points, and tracking
 of these points and their properties through series of scans.
 """
-import csv
 import os
 import time
 
 import cv2
 import numpy as np
-import scipy
 
-from multisensorimport.tracking import supporters_utils as supporters_utils
+from multisensorimport.tracking import supporters_utils
 from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
 
@@ -40,7 +38,7 @@ def track_LK(run_params,
 
     Args:
         run_params (ParamValues): values of parameters used in tracking
-        seg_fildir (str): path to directory of ground truth (hand-segmented)
+        seg_filedir (str): path to directory of ground truth (hand-segmented)
             contour images
         filedir (str): path to directory of raw (ultrasound) images
         pts (numpy.ndarray): array of points to be tracked
@@ -107,10 +105,10 @@ def track_LK(run_params,
 
     # obtain the right image files and sort
     for image_filename in image_filenames:
-        if (image_filename.endswith('.pgm')):
+        if image_filename.endswith('.pgm'):
             filtered_image_filenames.append(image_filename)
     for segmented_filename in segmented_filenames:
-        if (segmented_filename.endswith('.pgm')):
+        if segmented_filename.endswith('.pgm'):
             filtered_segmented_filenames.append(segmented_filename)
 
     # sort by the image number
@@ -145,7 +143,7 @@ def track_LK(run_params,
                 '.pgm'):
 
             # make sure segmented and image filenames are the same
-            assert (segmented_filename == image_filename)
+            assert segmented_filename == image_filename
 
             # filepath to the image
             filepath = filedir + image_filename
@@ -198,7 +196,7 @@ def track_LK(run_params,
 
                 # if not resetting, use tracking
                 else:
-                    tracked_contour, status, error = cv2.calcOpticalFlowPyrLK(
+                    tracked_contour, _, _ = cv2.calcOpticalFlowPyrLK(
                         old_frame_filtered, frame_filtered, pts, None,
                         **lk_params)
 
@@ -312,7 +310,7 @@ def track_BFLK(run_params,
 
     Args:
         run_params (ParamValues): values of parameters used in tracking
-        seg_fildir (str): path to directory of ground truth (hand-segmented)
+        seg_filedir (str): path to directory of ground truth (hand-segmented)
             contour images
         filedir (str): path to directory of raw (ultrasound) images
         fine_pts (numpy.ndarray): array of points to be tracked using more
@@ -392,10 +390,10 @@ def track_BFLK(run_params,
 
     # obtain the right image files and sort
     for image_filename in image_filenames:
-        if (image_filename.endswith('.pgm')):
+        if image_filename.endswith('.pgm'):
             filtered_image_filenames.append(image_filename)
     for segmented_filename in segmented_filenames:
-        if (segmented_filename.endswith('.pgm')):
+        if segmented_filename.endswith('.pgm'):
             filtered_segmented_filenames.append(segmented_filename)
 
     # sort by the image number
@@ -425,7 +423,7 @@ def track_BFLK(run_params,
                 '.pgm'):
 
             # make sure segmented and image filenames are the same
-            assert (segmented_filename == image_filename)
+            assert segmented_filename == image_filename
 
             # filepath to the image
             filepath = filedir + image_filename
@@ -473,10 +471,10 @@ def track_BFLK(run_params,
                     # find tracked locations of points (both fine- and
                     # coarse-filtered) via Lucas-Kanade and update for next
                     # iteration
-                    fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    fine_pts, _, _ = cv2.calcOpticalFlowPyrLK(
                         old_frame_fine_filtered, frame_fine_filtered, fine_pts,
                         None, **lk_params)
-                    coarse_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    coarse_pts, _, _ = cv2.calcOpticalFlowPyrLK(
                         old_frame_coarse_filtered, frame_coarse_filtered,
                         coarse_pts, None, **lk_params)
 
@@ -600,7 +598,7 @@ def track_SBLK(run_params,
 
     Args:
         run_params (ParamValues): values of parameters used in tracking
-        seg_fildir (str): path to directory of ground truth (hand-segmented)
+        seg_filedir (str): path to directory of ground truth (hand-segmented)
             contour images
         filedir (str): path to directory of raw (ultrasound) images
         fine_pts (numpy.ndarray): array of points to be tracked using more
@@ -704,10 +702,10 @@ def track_SBLK(run_params,
 
     # obtain the right image files and sort
     for image_filename in image_filenames:
-        if (image_filename.endswith('.pgm')):
+        if image_filename.endswith('.pgm'):
             filtered_image_filenames.append(image_filename)
     for segmented_filename in segmented_filenames:
-        if (segmented_filename.endswith('.pgm')):
+        if segmented_filename.endswith('.pgm'):
             filtered_segmented_filenames.append(segmented_filename)
 
     # sort by the image number
@@ -733,7 +731,7 @@ def track_SBLK(run_params,
                 '.pgm'):
 
             # make sure segmented and image filenames are the same
-            assert (segmented_filename == image_filename)
+            assert segmented_filename == image_filename
 
             # filepath to the image
             filepath = filedir + image_filename
@@ -802,19 +800,19 @@ def track_SBLK(run_params,
                 else:
                     # calculate new point locations for fine_points using frame
                     # filtered by fine filter
-                    new_fine_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    new_fine_pts, _, _ = cv2.calcOpticalFlowPyrLK(
                         old_frame_fine, frame_fine, fine_pts, None, **lk_params)
 
                     # calculate new point locations for coarse_points using
                     # frame filtered by coarse filter (predictions, might be
                     # updated by supporters)
-                    predicted_coarse_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    predicted_coarse_pts, _, _ = cv2.calcOpticalFlowPyrLK(
                         old_frame_coarse, frame_coarse, coarse_pts, None,
                         **lk_params)
 
                     # calculate new supporter locations in coarsely filtered
                     # frame
-                    new_supporter_pts, status, error = cv2.calcOpticalFlowPyrLK(
+                    new_supporter_pts, _, _ = cv2.calcOpticalFlowPyrLK(
                         old_frame_coarse, frame_coarse, supporter_pts, None,
                         **lk_params)
 
