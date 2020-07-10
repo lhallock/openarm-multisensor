@@ -11,9 +11,8 @@ H. Grabner, J. Matas, L. Van Gool, and P. Cattin. "Tracking the Invisible:
     Learning Where the Object Might Be." Proceedings of the IEEE Conference on
     Computer Vision and Pattern Recognition (CVPR), 2010.
 """
-import numpy as np
-
 import cv2
+import numpy as np
 
 from multisensorimport.tracking.image_proc_utils import *
 from multisensorimport.tracking.point_proc_utils import *
