@@ -1,13 +1,71 @@
-"""Class containing tracking algorithm parameter values."""
+#!/usr/bin/env python3
+"""Class containing optical flow tracking algorithm parameter values.
+
+This module contains the ParamValues class, which contains as instance
+variables all parameters used in optical flow tracking of ultrasound images.
+All parameters are defaulted to values used commonly across algorithms, but can
+be changed either during construction or via the provided setter method for
+easy algorithm tuning.
+"""
 
 
 class ParamValues():
-    """
-    This class contains all parameters used in optical flow tracking of
-    ultrasound images as instance variables, as well as a method to modify
-    these variables. It is used to easily modify parameters for tuning.
-    Parameter values are defaulted to values used commonly across algorithms,
-    but can be changed when constructing, or via the setter method.
+    """Class containing all optical flow parameter values.
+
+    Attributes:
+
+        Lucas-Kanade (LK) tracking parameters:
+
+            LK_window (int): window size for Lucas Kanade
+            pyr_level (int): level of image pyramiding for Lucas Kanade
+
+        Feature-refined Lucas-Kanade (FRLK) tracking parameters:
+
+            quality_level (float): quality level of corners chosen via
+                Shi-Tomasi corner detection
+            min_distance (int): minimum pixel distance between corners chosen
+                via Shi-Tomasi corner detection
+            max_corners (int): maximum number of good corner points chosen by
+                Shi-Tomasi corner detection
+            block_size (int): block size used for Sobel derivative kernel in
+                Shi-Tomasi corner scoring
+            point_frac (float): fraction of top points (based on Shi-Tomasi
+                corner score) to keep during FRLK tracking
+
+        Bilaterally-Filtered Lucas-Kanade (BFLK) tracking parameters:
+
+            coarse_diam (int): bilateral filter diameter for coarse (i.e., less
+                aggressive) filter
+            coarse_sigma_color (int): bilateral filter color sigma parameter
+            for coarse (i.e., less aggressive) filter
+            coarse_sigma_space (int): bilateral filter spatial sigma parameter
+                for coarse (i.e., less aggressive) filter
+            fine_diam (int): bilateral filter diameter for fine (i.e., more
+                aggressive) filter
+            fine_sigma_color (int): bilateral filter color sigma parameter for
+                fine (i.e., more aggressive) filter
+            fine_sigma_space (int): bilateral filter spatial sigma parameter
+                for fine (i.e., more aggressive) filter
+            percent_fine (float): fraction of points (ordered by Shi-Tomasi
+                corner score) to track using fine bilateral filter
+            percent_coarse (float): fraction of points (ordered by Shi-Tomasi
+                corner score) to track using coarse bilateral filter
+
+        Supporter-Based Lucas-Kanade (SBLK) tracking parameters:
+
+            displacement_weight (float): offset (alpha) used in weighting
+                function for supporter points
+            fine_threshold (float): fraction of points to track without using
+                supporter points (i.e., to track using pure Lucas-Kanade)
+            update_rate (float): update rate for exponential moving average
+            num_bottom (int): number of (spatially) bottom-most contour points
+                to keep (used to ensure points along the entire contour are
+                tracked)
+            fix_top (bool): whether to maintain the top set of contour points
+                across tracking (mitigates downward drift)
+            reset_frequency (int): how often to reset contour points to ground
+                truth (used to analyze when and how often tracking drift
+                occurs)
     """
 
     def __init__(self,
@@ -32,46 +90,13 @@ class ParamValues():
                  num_bottom=0,
                  fix_top=False,
                  reset_frequency=10000):
+        """Standard initializer for ParamValues objects.
+
+        Args: see class attributes above
+
+        Returns:
+            ParamValues object with default or argument-specified values
         """
-        Args:
-            ###########################################################################
-            ## LK PARAMETERS
-            ###########################################################################
-            LK_window (int): window size for Lucas Kanade
-            pyr_level (int): level of image pyramiding for Lucas Kanade
-
-            ###########################################################################
-            ## FRLK PARAMETERS
-            ###########################################################################
-            quality_level (float): Quality Level of Corners chosen via Shi-Tomasi corner detection
-            min_distance (int): minimum pixel distance between corners chosen via Shi-Tomasi corner detection
-            max_corners (int): maximum number of good corner points chosen by shi-Tomasi corner detection
-            block_size (int): block size used for Sobel derivative kernel in Shi-Tomasi corner scoring
-            point_frac (float): fraction of top points (based on corner score) to keep in FRLK
-
-            ###########################################################################
-            ## BFLK PARAMETERS
-            ###########################################################################
-            coarse_diam (int): bilateral filter diameter for the coarse/less aggressive filter
-            coarse_sigma_color (int): bilateral filter color sigma parameter for the coarse/less aggressive filter
-            coarse_sigma_space (int): bilateral filter spacial sigma parameter for the coarse/less aggressive filter
-            fine_diam (int): bilateral filter diameter for the fine/more aggressive filter
-            fine_sigma_color (int): bilateral filter color sigma parameter for the fine/more aggressive filter
-            fine_sigma_space (int): bilateral filter spacial sigma parameter for the fine/more aggressive filter
-            percent_fine (float): fraction of points (ordered by corner score) to track using fine bilateral filter
-            percent_coarse (float): fraction of points (ordered by corner score) to track using coarse bilateral filter
-
-            ###########################################################################
-            ## SBLK PARAMETERS
-            ###########################################################################
-            displacement_weight (float): offset (alpha) used in weighting function for supporter points
-            fine_threshold (float): fraction of points to tracking without using supporters (i.e. track using pure Lucas Kanade)
-            update_rate (float): update rate for exponential moving average
-            num_bottom (int): number of bottom-most contour points to keep (used to ensure points along the entire contour are track)
-            fix_top (bool): boolean indicating whether to maintain the top set of contour points across tracking (mitigates downward drift)
-            reset_frequency (int): how often to reset contour points to ground truth (used to analyze when and how often tracking drift occurs)
-        """
-
         self.LK_window = LK_window
         self.pyr_level = pyr_level
         self.quality_level = quality_level
@@ -104,8 +129,10 @@ class ParamValues():
                       perc_fine, perc_coarse, reset_freq):
         """Modify parameter instance variables to given arguments.
 
-        This method is used for parameter tuning, and only changes arguments
+        This method is used for parameter tuning and only changes arguments
         that are not None.
+
+        Args: see class attributes above
         """
         if disp_weight is not None:
             self.displacement_weight = disp_weight

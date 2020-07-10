@@ -39,8 +39,7 @@ def track_LK(run_params,
     contour values for drift evaluation.
 
     Args:
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        run_params (ParamValues): values of parameters used in tracking
         seg_fildir (str): path to directory of ground truth (hand-segmented)
             contour images
         filedir (str): path to directory of raw (ultrasound) images
@@ -49,19 +48,20 @@ def track_LK(run_params,
             Lucas-Kanade tracking method
         viz (bool): whether tracking video should be displayed
         filter_type (int): number specifying type of image filter to apply to
-            frames before executing tracking. Filter methods located in image_proc_utils.py
+            frames before executing tracking (see image_proc_utils.py)
         filtered_LK_run (bool): whether contour points should be filtered based
             on Shi-Tomasi corner score (for FRLK run)
 
     Returns:
-        list: predicted contour area at each frame (time series)
-        list: ground truth contour area at each frame (time series)
-        list: predicted thickness at each frame (time series)
-        list: ground truth thickness at each frame (time series)
-        list: predicted thickness/aspect ratio at each frame (time series)
-        list: ground truth thickness/aspect ratio at each frame (time series)
-        list: IoU accuracy at each frame (time series)
-        float: average intersection-over-union (IoU) error value (average over all frames)
+        list predicted contour area at each frame (time series)
+        list ground truth contour area at each frame (time series)
+        list predicted thickness at each frame (time series)
+        list ground truth thickness at each frame (time series)
+        list predicted thickness/aspect ratio at each frame (time series)
+        list ground truth thickness/aspect ratio at each frame (time series)
+        list IoU accuracy at each frame (time series)
+        float average intersection-over-union (IoU) error value (average over
+            all frames)
     """
     # obtain image filter function
     image_filter = get_filter_from_num(filter_type)
@@ -311,8 +311,7 @@ def track_BFLK(run_params,
     used with other non-bilateral image filters.
 
     Args:
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        run_params (ParamValues): values of parameters used in tracking
         seg_fildir (str): path to directory of ground truth (hand-segmented)
             contour images
         filedir (str): path to directory of raw (ultrasound) images
@@ -329,14 +328,15 @@ def track_BFLK(run_params,
         viz (bool): whether tracking video should be displayed
 
     Returns:
-        list: predicted contour area at each frame (time series)
-        list: ground truth contour area at each frame (time series)
-        list: predicted thickness at each frame (time series)
-        list: ground truth thickness at each frame (time series)
-        list: predicted thickness/aspect ratio at each frame (time series)
-        list: ground truth thickness/aspect ratio at each frame (time series)
-        list: IoU accuracy at each frame (time series)
-        float: average intersection-over-union (IoU) error value (average over all frames)
+        list predicted contour area at each frame (time series)
+        list ground truth contour area at each frame (time series)
+        list predicted thickness at each frame (time series)
+        list ground truth thickness at each frame (time series)
+        list predicted thickness/aspect ratio at each frame (time series)
+        list ground truth thickness/aspect ratio at each frame (time series)
+        list IoU accuracy at each frame (time series)
+        float average intersection-over-union (IoU) error value (average over
+            all frames)
     """
     # set filters (coarse_filter is less aggressive, fine_filter is more
     # aggressive)
@@ -599,8 +599,7 @@ def track_SBLK(run_params,
     tracking to ground-truth contour values for drift evaluation.
 
     Args:
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        run_params (ParamValues): values of parameters used in tracking
         seg_fildir (str): path to directory of ground truth (hand-segmented)
             contour images
         filedir (str): path to directory of raw (ultrasound) images
@@ -612,29 +611,34 @@ def track_SBLK(run_params,
             aggressive bilateral filter
         coarse_pts_inds (numpy.ndarray): array of indices of fine_pts in the
             overall contours; used for ordering the contour and visualizing
-        supporter_pts (numpy.ndarray): array containing the x, y pixel coordinates of the supporter points to be used to
-            predict the contour points
-        supporter_params (list): list containing the parameters (displacement, covariance matrix) for each supporter points.
+        supporter_pts (numpy.ndarray): array containing the x-y pixel
+            coordinates of supporter points to be used to predict contour
+            points
+        supporter_params (list): list containing parameters (displacement,
+            covariance matrix) for each supporter point
         lk_params (dict): dictionary of tracking parameters for use by OpenCV's
             Lucas-Kanade tracking method
-        reset_supporters (bool): if True, initialize a new set of supporters and corresponding parameters, at frequencies determined by
-            the reset frequency specified in run_params
+        reset_supporters (bool): whether to initialize a new set of supporters
+            and corresponding parameters at frequencies determined by the reset
+            frequency specified in run_params
         feature_params (dict): parameters to find good features to track
         viz (bool): whether tracking video should be displayed
-        fine_filter_type (int): number specifying the image filter used to aggressively filter the image
-        coarse_filter_type (int): number specifying the image filter used to coarsely filter the image
+        fine_filter_type (int): number specifying image filter used to
+            aggressively filter the image (see image_proc_utils.py)
+        coarse_filter_type (int): number specifying image filter used to
+            coarsely filter the image (see image_proc_utils.py)
 
     Returns:
-        list: predicted contour area at each frame (time series)
-        list: ground truth contour area at each frame (time series)
-        list: predicted thickness at each frame (time series)
-        list: ground truth thickness at each frame (time series)
-        list: predicted thickness/aspect ratio at each frame (time series)
-        list: ground truth thickness/aspect ratio at each frame (time series)
-        list: IoU accuracy at each frame (time series)
-        float: average intersection-over-union (IoU) error value (average over all frames)
+        list predicted contour area at each frame (time series)
+        list ground truth contour area at each frame (time series)
+        list predicted thickness at each frame (time series)
+        list ground truth thickness at each frame (time series)
+        list predicted thickness/aspect ratio at each frame (time series)
+        list ground truth thickness/aspect ratio at each frame (time series)
+        list IoU accuracy at each frame (time series)
+        float average intersection-over-union (IoU) error value (average over
+            all frames)
     """
-
     # set filters (coarse_filter is less aggressive, fine_filter is more
     # aggressive)
     coarse_filter = get_filter_from_num(coarse_filter_type)
@@ -814,8 +818,9 @@ def track_SBLK(run_params,
                         old_frame_coarse, frame_coarse, supporter_pts, None,
                         **lk_params)
 
-                    # re-format predicted points from multidimensional numpy array of supporter points to a list of supporter points
-                    # for easier processing
+                    # re-format predicted points from multidimensional numpy
+                    # array of supporter points to list of supporter points for
+                    # easier processing
                     predicted_coarse_pts = supporters_utils.format_supporters(
                         predicted_coarse_pts)
 

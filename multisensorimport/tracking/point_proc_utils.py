@@ -20,7 +20,7 @@ def extract_contour_pts_png(filename):
     contour in the provided PNG image and format them for use by OpenCV image
     tracking. In particular, this function is used to extract the fascial
     border of the brachioradialis muscle in a mask manually segmented from a
-    given ultrasound frame. Typically used to initialize points to track.
+    given ultrasound frame. It is typically used to initialize points to track.
 
     Args:
         filename (str): full path to PNG file
@@ -59,7 +59,7 @@ def extract_contour_pts_pgm(filename):
     contour in the provided PGM image and format them for use by OpenCV image
     tracking. In particular, this function is used to extract the fascial
     border of the brachioradialis muscle in a mask manually segmented from a
-    given ultrasound frame. Typically used to initialize points to track.
+    given ultrasound frame. It is typically used to initialize points to track.
 
     Args:
         filename (str): full path to PNG file
@@ -115,7 +115,8 @@ def shi_tomasi_corner_score(point, block_size, img):
     # set dimension of Sobel derivative kernel
     k_size = 5
 
-    # obtain eigenvalues and corresponding eigenvectors of image structure tensor
+    # obtain eigenvalues and corresponding eigenvectors of image structure
+    # tensor
     eigen = cv2.cornerEigenValsAndVecs(img, block_size, ksize=k_size)
 
     # extract eigenvalues
@@ -140,13 +141,12 @@ def filter_points(run_params,
     algorithms.
 
     Args:
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        run_params (ParamValues): values of parameters used in tracking
         window_size (int): size of neighborhood around point to consider
             when calculating corner score
-        pts (np.ndarray): numpy array containing points to filter, where each point is a 1-element numpy array containing
-        an numpy array of [x, y] values.
-        img (np.ndarray): image used to calculate corner scores
+        pts (numpy.ndarray): array of points to filter, where each point is a
+            1-element numpy.ndarray containing a numpy.ndarray of x-y values
+        img (numpy.ndarray): image used to calculate corner scores
         frac (float): fraction of points to keep based on corner score
         keep_bottom (bool): whether points along bottom of contour should be
             kept regardless of score (used to ensure contour contains bottom of
@@ -206,17 +206,16 @@ def separate_points(run_params, img, pts):
     """Separate points into two subsets for use by different filters.
 
     This method separates a given set of contour points into two sets of points
-    to be tracked by separate filters (i.e., a "coarse" and "aggressive"
-    bilateral filter). Each subset contains the top percentage (as specified in
-    the input parameter object) of contour points based on Shi-Tomasi corner
-    score, as evaluated on the correspondingly filtered image. If points are
-    considered high quality in both filtered images, they are tracked in the
-    more aggressively filtered frames.
+    to be tracked by separate filters (i.e., a "coarse" and "fine" bilateral
+    filter). Each subset contains the top percentage (as specified in the input
+    parameter object) of contour points based on Shi-Tomasi corner score, as
+    evaluated on the correspondingly filtered image. If points are considered
+    high quality in both filtered images, they are tracked in the more
+    aggressively filtered frames.
 
     Args:
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
-        img (np.ndarray): image used to calculate corner scores
+        run_params (ParamValues): values of parameters used in tracking
+        img (numpy.ndarray): image used to calculate corner scores
         pts (numpy.ndarray): array of points to be filtered and separated
 
     Returns:
@@ -271,15 +270,15 @@ def order_points(points_one, points_one_inds, points_two, points_two_inds):
     """Generate single contour from two sets of points.
 
     This method combines two subsets of contour points into a single contour
-    while maintaining their original counter-clockwise order, and is used when
+    while maintaining their original counter-clockwise order and is used when
     recombining points that have been tracked using different algorithms.
 
     Args:
         points_one (numpy.ndarray): first subset of contour points
-        points_one_inds (np.ndarray): indices of first subset of points in
+        points_one_inds (numpy.ndarray): indices of first subset of points in
             original contour
         points_two (numpy.ndarray): second subset of contour points
-        points_two_inds (np.ndarray): indices of second subset of points in
+        points_two_inds (numpy.ndarray): indices of second subset of points in
             original contour
 
     Returns:
@@ -348,7 +347,7 @@ def get_image_value(x, y, img):
     Args:
         x (int): horizontal pixel coordinate
         y (int): vertical pixel coordinate
-        img (np.ndarray): image from which to get get pixel value
+        img (numpy.ndarray): image from which to get get pixel value
 
     Returns:
         float: pixel value at specified coordinate

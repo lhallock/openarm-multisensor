@@ -44,14 +44,12 @@ class TrialData():
         data_force_abs (TimeSeriesData): 1D force data containing absolute
             value of output force only
         data_us_csa (TimeSeriesData): ultrasound-extracted time series data of
-            muscle cross-sectional area, extracted to CSV using
-            multisensorimport.tracking module
+            muscle cross-sectional area, extracted to CSV using tracking module
         data_us_thickness (TimeSeriesData): ultrasound-extracted time series
-            data of muscle thickness, extracted to CSV using
-            multisensorimport.tracking module
+            data of muscle thickness, extracted to CSV using tracking module
         data_us_th_rat (TimeSeriesData): ultrasound-extracted time series data
-            of maximum length/width ration, extracted to CSV using
-            multisensorimport.tracking module
+            of maximum length/width ration, extracted to CSV using tracking
+            module
         df (pandas.DataFrame): pandas dataframe containing all timesynced data
             streams
         df_dt (pandas.DataFrame): truncated version of df containing only

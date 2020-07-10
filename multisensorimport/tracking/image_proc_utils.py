@@ -5,14 +5,14 @@ This module contains functions used within image processing algorithms, such as
 filters and edge detectors.
 """
 import cv2
-import numpy as np
-import scipy
 
 
 def get_filter_from_num(filter_type):
     """Map numbers to corresponding image filters.
 
-    This function maps integer values to corresponding image filter functions, to be used for ultrasound frame processing.
+    This function maps integer value to corresponding image filter functions,
+    which are then used in ultrasound frame processing.
+
     The mapping is as follows:
         1: median filter
         2: aggressive (fine) bilateral filter
@@ -40,17 +40,15 @@ def get_filter_from_num(filter_type):
     return filter
 
 
-# image filtering
 def no_filter(img, run_params):
     """Applies no filter and converts image to grayscale (if color).
 
     Args:
-        img (np.ndarray): image to be (potentially) grayscaled
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        img (numpy.ndarray): image to be (potentially) grayscaled
+        run_params (ParamValues): values of parameters used in tracking
 
     Returns:
-        np.ndarray: grayscale, non-filtered version of input image
+        numpy.ndarray grayscale, non-filtered version of input image
     """
     # check if image is color or grayscale, return grayscale version
     if len(img.shape) > 2:
@@ -63,12 +61,11 @@ def median_filter(img, run_params):
     """Applies a median filter to the given image.
 
     Args:
-        img (np.ndarray): image to be filtered
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        img (numpy.ndarray): image to be filtered
+        run_params (ParamValues): values of parameters used in tracking
 
     Returns:
-        np.ndarray: median-filtered version of input image
+        numpy.ndarray median-filtered version of input image
     """
 
     kernelSize = 5
@@ -79,12 +76,11 @@ def fine_bilateral_filter(img, run_params):
     """Applies an "aggressive" bilateral filter to the given image.
 
     Args:
-        img (np.ndarray): image to be filtered
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        img (numpy.ndarray): image to be filtered
+        run_params (ParamValues): values of parameters used in tracking
 
     Returns:
-        np.ndarray: bilaterally-filtered version of input image
+        numpy.ndarray bilaterally-filtered version of input image
     """
     # convert to color (what bilateral filter expects)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
@@ -103,12 +99,11 @@ def coarse_bilateral_filter(img, run_params):
     """Applies a "less aggressive" bilateral filter to the given image.
 
     Args:
-        img (np.ndarray): image to be filtered
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        img (numpy.ndarray): image to be filtered
+        run_params (ParamValues): values of parameters used in tracking
 
     Returns:
-        np.ndarray: bilaterally-filtered version of input image
+        numpy.ndarray bilaterally-filtered version of input image
     """
     # convert to color (what bilateral filter expects)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
@@ -127,12 +122,11 @@ def anisotropic_diffuse(img, run_params):
     """Applies a Perona-Malik anisotropic diffusion filter to the given image.
 
     Args:
-        img (np.ndarray): image to be filtered
-        run_params (ParamValues): class containing values of parameters used in
-            tracking
+        img (numpy.ndarray): image to be filtered
+        run_params (ParamValues): values of parameters used in tracking
 
     Returns:
-        np.ndarray: anisotropic-diffused version of input image
+        numpy.ndarray anisotropic-diffused version of input image
     """
     # convert to color
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
@@ -154,10 +148,10 @@ def otsu_binarization(gray_image):
     """Applies Otsu binarization to the given image.
 
     Args:
-        gray_img (np.ndarray): grayscale image to be binarized
+        gray_img (numpy.ndarray): grayscale image to be binarized
 
     Returns:
-        np.ndarray: binarized version of input image
+        numpy.ndarray binarized version of input image
     """
     ret2, th2 = cv2.threshold(gray_image, 0, 255,
                               cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -168,10 +162,11 @@ def canny(gray_image):
     """Applies Canny edge detection to the given image.
 
     Args:
-        gray_img (np.ndarray): grayscale image in which edges should be detected
+        gray_img (numpy.ndarray): grayscale image in which edges should be
+            detected
 
     Returns:
-        np.ndarray: type edges present in input image
+        numpy.ndarray edges present in input image
     """
 
     edges = cv2.Canny(gray_image, 180, 200)
