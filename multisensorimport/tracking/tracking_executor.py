@@ -13,7 +13,9 @@ from multisensorimport.tracking import supporters_utils as supporters_utils
 from multisensorimport.tracking import tracking_algorithms as track
 
 
-def tracking_run(arg_params, run_params, write_ground_truth=True,
+def tracking_run(arg_params,
+                 run_params,
+                 write_ground_truth=True,
                  write_tracking=True):
     """Execute ultrasound image tracking, tracking evaluation, and tracking
     visualization.
@@ -70,16 +72,16 @@ def tracking_run(arg_params, run_params, write_ground_truth=True,
     if run_type == 1:
         print("Tracking via LK...")
         # obtain results from tracking
-        (tracking_contour_areas, ground_truth_contour_areas,
-         tracking_thickness, ground_truth_thickness, tracking_thickness_ratio,
-         ground_truth_thickness_ratio, iou_series, iou_error) = track.track_LK(
-            run_params,
-            seg_path,
-            read_path,
-            initial_contour_pts,
-            lk_params,
-            viz=True,
-            filter_type=0)
+        (tracking_contour_areas, ground_truth_contour_areas, tracking_thickness,
+         ground_truth_thickness, tracking_thickness_ratio,
+         ground_truth_thickness_ratio, iou_series,
+         iou_error) = track.track_LK(run_params,
+                                     seg_path,
+                                     read_path,
+                                     initial_contour_pts,
+                                     lk_params,
+                                     viz=True,
+                                     filter_type=0)
 
     elif run_type == 2:
         print("Tracking via FRLK...")
@@ -100,41 +102,45 @@ def tracking_run(arg_params, run_params, write_ground_truth=True,
                                                       indices, np.array([]),
                                                       np.array([]))
         # obtain results from tracking
-        (tracking_contour_areas, ground_truth_contour_areas,
-         tracking_thickness, ground_truth_thickness, tracking_thickness_ratio,
-         ground_truth_thickness_ratio, iou_series, iou_error) = track.track_LK(
-            run_params,
-            seg_path,
-            read_path,
-            filtered_initial_contour,
-            lk_params,
-            viz=True,
-            filter_type=0,
-            filtered_LK_run=True)
+        (tracking_contour_areas, ground_truth_contour_areas, tracking_thickness,
+         ground_truth_thickness, tracking_thickness_ratio,
+         ground_truth_thickness_ratio, iou_series,
+         iou_error) = track.track_LK(run_params,
+                                     seg_path,
+                                     read_path,
+                                     filtered_initial_contour,
+                                     lk_params,
+                                     viz=True,
+                                     filter_type=0,
+                                     filtered_LK_run=True)
 
     elif run_type == 3:
         print("Tracking via BFLK...")
         # separate points into those to be tracked with more and less
         # aggressive bilateral filters
         (fine_filtered_points, fine_pts_inds, coarse_filtered_points,
-         coarse_pts_inds) = point_proc.separate_points(
-            run_params, init_img, initial_contour_pts)
+         coarse_pts_inds) = point_proc.separate_points(run_params, init_img,
+                                                       initial_contour_pts)
 
         # obtain results from tracking
-        (tracking_contour_areas, ground_truth_contour_areas,
-         tracking_thickness, ground_truth_thickness, tracking_thickness_ratio,
-         ground_truth_thickness_ratio, iou_series, iou_error) = track.track_BFLK(
-            run_params, seg_path, read_path, fine_filtered_points,
-            fine_pts_inds, coarse_filtered_points, coarse_pts_inds, lk_params)
+        (tracking_contour_areas, ground_truth_contour_areas, tracking_thickness,
+         ground_truth_thickness, tracking_thickness_ratio,
+         ground_truth_thickness_ratio, iou_series,
+         iou_error) = track.track_BFLK(run_params, seg_path, read_path,
+                                       fine_filtered_points, fine_pts_inds,
+                                       coarse_filtered_points, coarse_pts_inds,
+                                       lk_params)
 
     elif run_type == 4:
         print("Tracking via SBLK...")
 
         # initialize contours and supporters
         (coarse_filtered_points, coarse_pts_inds, fine_filtered_points,
-         fine_pts_inds, supporters_tracking, _) = supporters_utils.initialize_supporters(
-            run_params, read_path, keyframe_path, init_img, feature_params,
-            lk_params, 2)
+         fine_pts_inds, supporters_tracking,
+         _) = supporters_utils.initialize_supporters(run_params, read_path,
+                                                     keyframe_path, init_img,
+                                                     feature_params, lk_params,
+                                                     2)
 
         # initialize supporter parameters
         supporter_params = []
@@ -149,24 +155,24 @@ def tracking_run(arg_params, run_params, write_ground_truth=True,
         coarseFilterNum = 3
 
         # obtain results from tracking
-        (tracking_contour_areas, ground_truth_contour_areas,
-         tracking_thickness, ground_truth_thickness, tracking_thickness_ratio,
-         ground_truth_thickness_ratio, iou_series, iou_error) = track.track_SBLK(
-            run_params,
-            seg_path,
-            read_path,
-            fine_filtered_points,
-            fine_pts_inds,
-            coarse_filtered_points,
-            coarse_pts_inds,
-            supporters_tracking,
-            supporter_params,
-            lk_params,
-            True,
-            feature_params,
-            True,
-            fine_filter_type=fineFilterNum,
-            coarse_filter_type=coarseFilterNum)
+        (tracking_contour_areas, ground_truth_contour_areas, tracking_thickness,
+         ground_truth_thickness, tracking_thickness_ratio,
+         ground_truth_thickness_ratio, iou_series,
+         iou_error) = track.track_SBLK(run_params,
+                                       seg_path,
+                                       read_path,
+                                       fine_filtered_points,
+                                       fine_pts_inds,
+                                       coarse_filtered_points,
+                                       coarse_pts_inds,
+                                       supporters_tracking,
+                                       supporter_params,
+                                       lk_params,
+                                       True,
+                                       feature_params,
+                                       True,
+                                       fine_filter_type=fineFilterNum,
+                                       coarse_filter_type=coarseFilterNum)
 
     # errors/accuracy measures from tracking
     thickness_error = np.linalg.norm(
