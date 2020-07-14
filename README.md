@@ -85,9 +85,37 @@ to view all bar plots and aggregate correlation statistics in the publication ab
 ---
 
 ## Deformation tracking in ultrasound scans
+This section describes how to execute muscle deformation tracking via optical flow, and explains how to obtain and organize the necessary data for deformation tracking. There is one runner script for tracking: [`run_multisensorimport.py`](run_multisensorimport.py), which tracks all relevent deformation signals - both ground truth values, and optical-flow calculated values - and outputs the signal time series, as well as tracking error time series, in CSV format. The specific optical flow algorithm to use (LK, FRLK, BFLK, or SBLK) is specified when running this runner script.   
 
 ### Setup
+Download the ultrasound data from: [TODO], and within this folder, ensure the data is organized in the following manner:
+
+```
+├── ultrasound_data
+│   ├── sub[N]
+│   │   ├── segmented_data
+│   │   │   ├── xxx.pgm
+│   │   │   ├── ...
+│   │   ├── ultrasound_data
+│   │   │   ├── xxx.pgm
+│   │   │   ├── ...
+│   │   ├── ...
+│   ├── ...
+```
+It is critical that within a single sub[N] folder, the segmented_data folder and the ultrasound_data folder contain the same number of .pgm files, with the same names (this is to ensure the ground truth segmented frame matches properly with its corresponding ultrasound frame). 
 
 ### Usage
+To execute tracking of deformation signals, run the following:
+```bash
+python run_tracking.py --run_type <run_type> --img_path <path_to_ultrasound_frames> --seg_path <path_to_segmented_frames> --init_img <first_image_number.pgm> --out_path <path_to_output_folder>
+```
+The command line arguments are described below:
+- run_type (int) specifies which optical flow algorithm to use; 1 refers to LK, 2 to FRLK, 3 to BFLK, and 4 to SBLK. 
+- path_to_ultrasound_frames (filepath) specifies the path to the folder containing raw ultrasound frames; for example, ```/.../ultrasound_data/sub[N]/ultrasound_data/```
+- path_to_segmented_frames (filepath) specifies the path to the folder containing the ground-truth segmented ultrasound frames; for example, 
+```/.../ultrasound_data/sub[N]/segmented_data/```
+- first_image_number.pgm (filename) specifies the filename of the pgm file containing the first frame in the series of ultrasound frames located in ```ultrasound_data/```. This file will be the pgm file whose name is the smallest number in its respective folder.
+- path_to_output_folder (filepath) specifies the path to the folder into which the CSV files will be output. 
 
 ### Parameter values
+The ```run_tracking.py``` runner script also specifies the values for hyperparameters used throughout the computer vision algorithms for muscle deformation tracking. The currently specified values are defaults; the values at the start of the file can be changed. For a description of the hyperparameters, and for a table specifying the hyperparameter values used for each algorithm and each subject, see (TODO). 
