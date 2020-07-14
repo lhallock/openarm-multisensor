@@ -18,7 +18,7 @@ class ParamValues():
         ## Lucas-Kanade (LK) tracking parameters
         #######################################################################
 
-            lk_window (int): window size for Lucas-Kanade
+            LK_window (int): window size for Lucas-Kanade
             pyr_level (int): level of image pyramiding for Lucas-Kanade
 
         #######################################################################
@@ -77,7 +77,7 @@ class ParamValues():
     """
 
     def __init__(self,
-                 lk_window=35,
+                 LK_window=35,
                  pyr_level=3,
                  quality_level=0.4,
                  min_distance=0,
@@ -105,7 +105,7 @@ class ParamValues():
         Returns:
             ParamValues object with default or argument-specified values
         """
-        self.lk_window = lk_window
+        self.LK_window = LK_window
         self.pyr_level = pyr_level
         self.quality_level = quality_level
         self.min_distance = min_distance
@@ -161,7 +161,7 @@ class ParamValues():
         if fine_sigma_s is not None:
             self.fine_sigma_space = fine_sigma_s
         if window is not None:
-            self.lk_window = window
+            self.LK_window = window
         if pyr is not None:
             self.pyr_level = pyr
         if fine_thresh is not None:
