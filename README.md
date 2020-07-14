@@ -1,5 +1,7 @@
 # Muscle Time Series Data Aggregation, Analysis, & Deformation Tracking
 
+![openarm-multisensor tracking exemplar](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2020biorob/featured.png)
+
 This repo contains code used to 
 - import, manipulate, and visualize muscle time series data, including ultrasound, surface electromyography (sEMG), acoustic myography (AMG), and output force data streams; and
 - track muscle deformation (i.e., contour motion) using optical flow from time series ultrasound frames.
