@@ -14,6 +14,16 @@ This README primarily describes the methods needed to recreate the analyses desc
 
 ## Installation
 
+### Downloading this repository
+
+To download all modules and scripts, clone this repository via
+
+```bash
+git clone https://github.com/lhallock/openarm-multisensor.git
+```
+
+### Dependencies
+
 All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`. 
 
 ---
@@ -24,7 +34,7 @@ This section describes the file structure and code necessary to recreate all plo
 
 ### Setup
 
-Data should be downloaded from the [OpenArm multi-sensor data set](TODO) and arranged as follows:
+Data should be downloaded from the `time_series` folder of the [OpenArm multi-sensor data set](TODO) and arranged as follows:
 
 ```bash
 .
@@ -88,8 +98,36 @@ to view all bar plots and aggregate correlation statistics in the publication ab
 
 ## Deformation tracking in ultrasound scans
 
+This section describes the file structure and code necessary to recreate all muscle contour tracking results in the publication above (which can be readily adapted to track new image structures). Tracking (including both visualization and generation of CSV time series output) is accomplished via the included script [`run_tracking.py`](run_tracking.py) as detailed below.
+
 ### Setup
+
+Time series ultrasound data should be downloaded from the `ultrasound_frames` folder of the [OpenArm multi-sensor data set](TODO), which includes both raw ultrasound image frames (`sub[N]/wp[i]/t[j]/raw`) and (for select trials) corresponding frames in which the brachioradialis contour has been manually segmented (`sub[N]/wp[i]t[j]/seg`). Because the code evaluates tracking quality against these ground truth scans, both must be downloaded to use the current release.
+
+Paths to each folder are specified as command line arguments during script usage, so data may be stored anywhere.
 
 ### Usage
 
+Run
+
+```bash
+python run_tracking.py --run_type <alg_int> --img_path <filepath_us> --seg_path <filepath_seg> --out_path <filepath_out> --init_img <filename_init>
+```
+
+specifying the above command line arguments as follows:
+
+- `alg_int`: integer value corresponding to desired contour tracking algorithm
+  - `1`: Naive Lucas&ndash;Kanade (LK)
+  - `2`: Feature-Refined Lucas&ndash;Kanade (FRLK)
+  - `3`: Bilaterally-Filtered Lucas&ndash;Kanade (BFLK)
+  - `4`: Supporter-Based Lucas&ndash;Kanade (SBLK)
+- `filepath_us`: file path to raw ultrasound PGM frames
+- `filepath_seg`: file path to ground truth segmented PGM images
+- `filepath_out`: file path to which `ground_truth_csa.csv`, `ground_truth_thickness.csv`, `ground_truth_thickness_ratio.csv`, `tracking_csa.csv`, `tracking_thickness.csv`, `tracking_thickness_ratio.csv`, and `iou_series.csv` time series tracking data will be written
+- `filename_init`: file name of first image in ultrasound frame series
+
+If desired, parameter values associated with each tracking method can be modified via the static variables at the top of `run_tracking.py`.
+
 ### Parameter values
+
+Each of the supported optical flow tracking methods can be tuned via a number of parameters, which can be modified via the static variables at the top of `run_tracking.py`. A full list of parameters and their values used in the publication above can be found [here](params.md).
