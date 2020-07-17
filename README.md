@@ -2,7 +2,7 @@
 
 ![openarm-multisensor tracking exemplar](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2020biorob/featured.png)
 
-This repo contains code used to 
+This repo contains code used to
 - import, manipulate, and visualize muscle time series data, including ultrasound, surface electromyography (sEMG), acoustic myography (AMG), and output force data streams; and
 - track muscle deformation (i.e., contour motion) using optical flow from time series ultrasound frames.
 
@@ -24,7 +24,7 @@ git clone https://github.com/lhallock/openarm-multisensor.git
 
 ### Dependencies
 
-All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`. 
+All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`.
 
 ---
 
@@ -97,10 +97,26 @@ to view all bar plots and aggregate correlation statistics in the publication ab
 ---
 
 ## Deformation tracking in ultrasound scans
+This section describes how to execute muscle deformation tracking via optical flow, and explains how to obtain and organize the necessary data for deformation tracking. There is one runner script for tracking: [`run_multisensorimport.py`](run_multisensorimport.py), which tracks all relevent deformation signals - both ground truth values, and optical-flow calculated values - and outputs the signal time series, as well as tracking error time series, in CSV format. The specific optical flow algorithm to use (LK, FRLK, BFLK, or SBLK) is specified when running this runner script.   
 
 This section describes the file structure and code necessary to recreate all muscle contour tracking results in the publication above (which can be readily adapted to track new image structures). Tracking (including both extraction of ground truth contour values from manually segmented data and contour tracking via optical flow) is accomplished via the included script [`run_tracking.py`](run_tracking.py), which performs both visualization and generation of CSV tracking error time series.
 
 ### Setup
+Download the ultrasound data from: [TODO], and within this folder, ensure the data is organized in the following manner:
+
+```
+├── ultrasound_data
+│   ├── sub[N]
+│   │   ├── segmented_data
+│   │   │   ├── xxx.pgm
+│   │   │   ├── ...
+│   │   ├── ultrasound_data
+│   │   │   ├── xxx.pgm
+│   │   │   ├── ...
+│   │   ├── ...
+│   ├── ...
+```
+It is critical that within a single sub[N] folder, the segmented_data folder and the ultrasound_data folder contain the same number of .pgm files, with the same names (this is to ensure the ground truth segmented frame matches properly with its corresponding ultrasound frame).
 
 Time series ultrasound data should be downloaded from the `ultrasound_frames` folder of the [OpenArm multi-sensor data set](TODO), which includes both raw ultrasound image frames (`sub[N]/wp[i]/t[j]/raw`) and (for select trials) corresponding frames in which the brachioradialis contour has been manually segmented (`sub[N]/wp[i]t[j]/seg`). Because the code evaluates tracking quality against these ground truth scans, both must be downloaded to use the current release.
 
@@ -125,6 +141,17 @@ Paths to each folder are specified as command line arguments during script usage
 Note that within a single `sub[N]/wp[i]t[j]` folder, **the `seg` and `raw` folders should contain the same number of PGM files with the same frame numbers**. This ensures that the ground truth segmented frame is properly matched with its corresponding raw ultrasound frame when evaluating tracking quality.
 
 ### Usage
+To execute tracking of deformation signals, run the following:
+```bash
+python run_tracking.py --run_type <run_type> --img_path <path_to_ultrasound_frames> --seg_path <path_to_segmented_frames> --init_img <first_image_number.pgm> --out_path <path_to_output_folder>
+```
+The command line arguments are described below:
+- run_type (int) specifies which optical flow algorithm to use; 1 refers to LK, 2 to FRLK, 3 to BFLK, and 4 to SBLK.
+- path_to_ultrasound_frames (filepath) specifies the path to the folder containing raw ultrasound frames; for example, ```/.../ultrasound_data/sub[N]/ultrasound_data/```
+- path_to_segmented_frames (filepath) specifies the path to the folder containing the ground-truth segmented ultrasound frames; for example,
+```/.../ultrasound_data/sub[N]/segmented_data/```
+- first_image_number.pgm (filename) specifies the filename of the pgm file containing the first frame in the series of ultrasound frames located in ```ultrasound_data/```. This file will be the pgm file whose name is the smallest number in its respective folder.
+- path_to_output_folder (filepath) specifies the path to the folder into which the CSV files will be output.
 
 Run
 
@@ -147,5 +174,4 @@ specifying the above command line arguments as follows:
 If desired, parameter values associated with each tracking method can be modified via the static variables at the top of `run_tracking.py`.
 
 ### Parameter values
-
-Each of the supported optical flow tracking methods can be tuned via a number of hyperparameters, which can be modified via the static variables at the top of `run_tracking.py`. A full list of hyperparameters, descriptions, and values used in the publication above can be found [here](params.md).
+The ```run_tracking.py``` runner script also specifies the values for hyperparameters used throughout the computer vision algorithms for muscle deformation tracking. The currently specified values are defaults; the values at the start of the file can be changed. For a description of the hyperparameters, and for a table specifying the hyperparameter values used for each algorithm and each subject, see (TODO).
