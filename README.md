@@ -154,5 +154,5 @@ Each of the supported optical flow tracking methods can be tuned via a number of
 
 ## Contributing
 
-If you're interested in contributing or collaborating, please reach out to `lhallock [at] eecs.berkeley.edu`. If you're already a contributor to the project, please following the code formatting and linting guidelines found [here](README_DEV.md).
+If you're interested in contributing or collaborating, please reach out to `lhallock [at] eecs.berkeley.edu`. If you're already a contributor to the project, please follow the code formatting and linting guidelines found [here](README_DEV.md).
 
