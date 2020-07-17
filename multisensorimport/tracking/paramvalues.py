@@ -25,12 +25,6 @@ class ParamValues():
         ## Feature-refined Lucas-Kanade (FRLK) tracking parameters
         #######################################################################
 
-            quality_level (float): quality level of corners chosen via
-                Shi-Tomasi corner detection
-            min_distance (int): minimum pixel distance between corners chosen
-                via Shi-Tomasi corner detection
-            max_corners (int): maximum number of good corner points chosen by
-                Shi-Tomasi corner detection
             block_size (int): block size used for Sobel derivative kernel in
                 Shi-Tomasi corner scoring
             point_frac (float): fraction of top points (based on Shi-Tomasi
@@ -63,6 +57,12 @@ class ParamValues():
 
             displacement_weight (float): offset (alpha) used in weighting
                 function for supporter points
+            quality_level (float): quality level of corners chosen via
+                Shi-Tomasi corner detection
+            min_distance (int): minimum pixel distance between corners chosen
+                via Shi-Tomasi corner detection
+            max_corners (int): maximum number of good corner points chosen by
+                Shi-Tomasi corner detection
             fine_threshold (float): fraction of points to track without using
                 supporter points (i.e., to track using pure Lucas-Kanade)
             update_rate (float): update rate for exponential moving average
