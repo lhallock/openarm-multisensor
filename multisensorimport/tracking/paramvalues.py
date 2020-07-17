@@ -20,6 +20,11 @@ class ParamValues():
 
             LK_window (int): window size for Lucas-Kanade
             pyr_level (int): level of image pyramiding for Lucas-Kanade
+            fix_top (bool): whether to maintain the top set of contour points
+                across tracking (mitigates downward drift)
+            reset_frequency (int): how often to reset contour points to ground
+                truth (used to analyze when and how often tracking drift
+                occurs)
 
         #######################################################################
         ## Feature-refined Lucas-Kanade (FRLK) tracking parameters
@@ -37,7 +42,7 @@ class ParamValues():
             coarse_diam (int): bilateral filter diameter for coarse (i.e., less
                 aggressive) filter
             coarse_sigma_color (int): bilateral filter color sigma parameter
-            for coarse (i.e., less aggressive) filter
+                for coarse (i.e., less aggressive) filter
             coarse_sigma_space (int): bilateral filter spatial sigma parameter
                 for coarse (i.e., less aggressive) filter
             fine_diam (int): bilateral filter diameter for fine (i.e., more
@@ -69,11 +74,6 @@ class ParamValues():
             num_bottom (int): number of (spatially) bottom-most contour points
                 to keep (used to ensure points along the entire contour are
                 tracked)
-            fix_top (bool): whether to maintain the top set of contour points
-                across tracking (mitigates downward drift)
-            reset_frequency (int): how often to reset contour points to ground
-                truth (used to analyze when and how often tracking drift
-                occurs)
     """
 
     def __init__(self,

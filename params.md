@@ -4,56 +4,57 @@ This document contains a description of all hyperparameters used in optical flow
 
 ## Hyperparameter descriptions
 
-Included below are descriptions of all hyperparameters used in the four available optical flow tracking algorithms. Note that each description appears only once, but later algorithms may use parameters described in an earlier section; a full list of parameters used be each algorithm is available [here](#publication-values).
+Included below are descriptions of all hyperparameters used in the four available optical flow tracking algorithms. Note that each parameter description appears only once, but later algorithms may use parameters described in an earlier section; a full list of parameters used be each algorithm is available [here](#publication-values).
 
 ### Naive Lucas&ndash;Kanade (LK)
 
-`lk_window` (*int*): window size for Lucas&ndash;Kanade
+`LK_WINDOW` (*int*): window size for Lucas&ndash;Kanade
 
-`pyr_level` (*int*): level of image pyramiding for Lucas&ndash;Kanade
+`PYR_LEVEL` (*int*): level of image pyramiding for Lucas&ndash;Kanade
+
+`FIX_TOP` (*bool*): whether to maintain the top set of contour points across tracking (mitigates downward drift)
+
+`RESET_FREQUENCY` (*int*): how often to reset contour points to ground truth (used to analyze when and how often tracking drift occurs; set to number larger thans number of frames if no resets are required)
 
 ### Feature-Refined Lucas&ndash;Kanade (FRLK)
 
-`block_size` (*int*): block size used for Sobel derivative kernel in Shi&ndash;Tomasi corner scoring
+`BLOCK_SIZE` (*int*): block size used for Sobel derivative kernel in Shi&ndash;Tomasi corner scoring
 
-`point_frac` (*float*): fraction of top points (based on Shi&ndash;Tomasi corner score) to keep during FRLK tracking
+`POINT_FRAC` (*float*): fraction of top points (based on Shi&ndash;Tomasi corner score) to keep during FRLK tracking
 
 ### Bilaterally-Filtered Lucas&ndash;Kanade (BFLK)
 
-`coarse_diam` (*int*): bilateral filter diameter for coarse (i.e., less aggressive) filter
+`COARSE_DIAM` (*int*): bilateral filter diameter for coarse (i.e., less aggressive) filter
 
-`coarse_sigma_color` (*int*): bilateral filter color sigma parameter for coarse (i.e., less aggressive) filter
+`COARSE_SIGMA_COLOR` (*int*): bilateral filter color sigma parameter for coarse (i.e., less aggressive) filter
 
-`coarse_sigma_space` (*int*): bilateral filter spatial sigma parameter for coarse (i.e., less aggressive) filter
+`COARSE_SIGMA_SPACE` (*int*): bilateral filter spatial sigma parameter for coarse (i.e., less aggressive) filter
 
-`fine_diam` (*int*): bilateral filter diameter for fine (i.e., more aggressive) filter
+`FINE_DIAM` (*int*): bilateral filter diameter for fine (i.e., more aggressive) filter
 
-`fine_sigma_color` (*int*): bilateral filter color sigma parameter for fine (i.e., more aggressive) filter
+`FINE_SIGMA_COLOR` (*int*): bilateral filter color sigma parameter for fine (i.e., more aggressive) filter
 
-`fine_sigma_space` (*int*): bilateral filter spatial sigma parameter for fine (i.e., more aggressive) filter
+`FINE_SIGMA_SPACE` (*int*): bilateral filter spatial sigma parameter for fine (i.e., more aggressive) filter
 
-`percent_fine` (*float*): fraction of points (ordered by Shi&ndash;Tomasi corner score) to track using fine bilateral filter
+`PERCENT_FINE` (*float*): fraction of points (ordered by Shi&ndash;Tomasi corner score) to track using fine bilateral filter
 
-`percent_coarse` (*float*): fraction of points (ordered by Shi&ndash;Tomasi corner score) to track using coarse bilateral filter
+`PERCENT_COARSE` (*float*): fraction of points (ordered by Shi&ndash;Tomasi corner score) to track using coarse bilateral filter
 
 ### Supporter-Based Lucas&ndash;Kanade (SBLK)
-`quality_level` (*float*): quality level of supporter points chosen via Shi&ndash;Tomasi corner detection
 
-`min_distance` (*int*): minimum pixel distance between supporters chosen via Shi&ndash;Tomasi corner detection
+`DISPLACEMENT_WEIGHT` (*float*): offset (alpha) used in weighting function for supporter points
 
-`max_corners` (*int*): maximum number of supporter points chosen by Shi&ndash;Tomasi corner detection
+`QUALITY_LEVEL` (*float*): quality level of supporter points chosen via Shi&ndash;Tomasi corner detection
 
-`displacement_weight` (*float*): offset (alpha) used in weighting function for supporter points
+`MIN_DISTANCE` (*int*): minimum pixel distance between supporters chosen via Shi&ndash;Tomasi corner detection
 
-`fine_threshold` (*float*): fraction of points to track without using supporter points (i.e., to track using pure Lucas-Kanade)
+`MAX_CORNERS` (*int*): maximum number of supporter points chosen by Shi&ndash;Tomasi corner detection
 
-`update_rate` (*float*): update rate for exponential moving average
+`FINE_THRESHOLD` (*float*): fraction of points to track without using supporter points (i.e., to track using pure Lucas&ndash;Kanade)
 
-`num_bottom` (*int*): number of (spatially) bottom-most contour points to keep (used to ensure points along the entire contour are tracked)
+`UPDATE_RATE` (*float*): update rate for exponential moving average
 
-`fix_top` (*bool*): whether to maintain the top set of contour points across tracking (mitigates downward drift)
-
-`reset_frequency` (*int*): how often to reset contour points to ground truth (used to analyze when and how often tracking drift occurs). Set to a number larger    than the number of frames if no resets are required. 
+`NUM_BOTTOM` (*int*): number of (spatially) bottom-most contour points to keep (used to ensure points along the entire contour are tracked)
 
 ## Publication values
 
@@ -63,19 +64,23 @@ All values below were tuned on subject data at waypoint 5 (~69&deg; elbow flexio
 
 ### Naive Lucas&ndash;Kanade (LK)
 
-| **Parameter** | **All Subjects** |
-|---------------|------------------|
-| `LK_WINDOW`   | 35               |
-| `PYR_LEVEL`   | 3                |
+| **Parameter**     | **All Subjects** |
+|-------------------|------------------|
+| `LK_WINDOW`       | 35               |
+| `PYR_LEVEL`       | 3                |
+| `FIX_TOP`         | False            |
+| `RESET_FREQUENCY` | 1e04             |
 
 ### Feature-Refined Lucas&ndash;Kanade (FRLK)
 
-| **Parameter** | **All Subjects** |
-|---------------|------------------|
-| `LK_WINDOW`   | 35               |
-| `PYR_LEVEL`   | 3                |
-| `BLOCK_SIZE`  | 7                |
-| `POINT_FRAC`  | 0.7              |
+| **Parameter**     | **All Subjects** |
+|-------------------|------------------|
+| `LK_WINDOW`       | 35               |
+| `PYR_LEVEL`       | 3                |
+| `BLOCK_SIZE`      | 7                |
+| `POINT_FRAC`      | 0.7              |
+| `FIX_TOP`         | False            |
+| `RESET_FREQUENCY` | 1e04             |
 
 ### Bilaterally-Filtered Lucas&ndash;Kanade (BFLK)
 
@@ -91,6 +96,8 @@ All values below were tuned on subject data at waypoint 5 (~69&deg; elbow flexio
 | `FINE_SIGMA_SPACE`   | **100**    | 100        | 80         | 100        | 100        |
 | `PERCENT_FINE`       | **0.2**    | 0.2        | 0.2        | 0.2        | 0.5        |
 | `PERCENT_COARSE`     | **0.8**    | 0.8        | 1          | 0.8        | 0.8        |
+| `FIX_TOP`            | **False**  | False      | False      | False      | False      |
+| `RESET_FREQUENCY`    | **1e04**   | 1e04       | 1e04       | 1e04       | 1e04       |
 
 ### Supporter-Based Lucas&ndash;Kanade (SBLK)
 
@@ -110,10 +117,8 @@ All values below were tuned on subject data at waypoint 5 (~69&deg; elbow flexio
 | `PYR_LEVEL`           | **3**      | 3           | 3           | 5           | 3           |
 | `BLOCK_SIZE`          | **7**      | 7           | 7           | 7           | 7           |
 | `FINE_THRESHOLD`      | **0.45**   | 0.7         | 0.45        | 0.7         | 0.7         |
-| `NUM_BOTTOM`          | **0**      | 10          | 0           | 10          | 10           |
 | `UPDATE_RATE`         | **0.7**    | 0.7         | 0.7         | 0.7         | 0.7         |
+| `NUM_BOTTOM`          | **0**      | 10          | 0           | 10          | 10          |
 | `FIX_TOP`             | **False**  | False       | False       | False       | False       |
 | `RESET_FREQUENCY`     | **1e04**   | 1e04        | 1e04        | 1e04        | 1e04        |
-
-
 
