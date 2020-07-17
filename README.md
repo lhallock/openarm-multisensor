@@ -1,30 +1,18 @@
 # Muscle Time Series Data Aggregation, Analysis, & Deformation Tracking
 
-![openarm-multisensor tracking exemplar](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2020biorob/featured.png)
-
-This repo contains code used to
+This repo contains code used to 
 - import, manipulate, and visualize muscle time series data, including ultrasound, surface electromyography (sEMG), acoustic myography (AMG), and output force data streams; and
 - track muscle deformation (i.e., contour motion) using optical flow from time series ultrasound frames.
 
 **If you use this code for academic purposes, please cite the following publication**: Laura A. Hallock, Akash Velu, Amanda Schwartz, and Ruzena Bajcsy, "[Muscle deformation correlates with output force during isometric contraction](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2020biorob/)," in _IEEE RAS/EMBS International Conference on Biomedical Robotics & Biomechatronics (BioRob)_, IEEE, 2020.
 
-This README primarily describes the methods needed to recreate the analyses described in the publication above, as applied to the time OpenArm Multisensor 1.0 data set found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
+This README primarily describes the methods needed to recreate the analyses described in the publication above, as applied to the time series "multisensor" data found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
 ---
 
 ## Installation
 
-### Downloading this repository
-
-To download all modules and scripts, clone this repository via
-
-```bash
-git clone https://github.com/lhallock/openarm-multisensor.git
-```
-
-### Dependencies
-
-All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`.
+All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`. 
 
 ---
 
@@ -34,7 +22,7 @@ This section describes the file structure and code necessary to recreate all plo
 
 ### Setup
 
-Data should be downloaded from the `time_series` folder of the [OpenArm multi-sensor data set](TODO) and arranged as follows:
+Data should be downloaded from the [OpenArm multi-sensor data set](TODO) and arranged as follows:
 
 ```bash
 .
@@ -97,81 +85,9 @@ to view all bar plots and aggregate correlation statistics in the publication ab
 ---
 
 ## Deformation tracking in ultrasound scans
-This section describes how to execute muscle deformation tracking via optical flow, and explains how to obtain and organize the necessary data for deformation tracking. There is one runner script for tracking: [`run_multisensorimport.py`](run_multisensorimport.py), which tracks all relevent deformation signals - both ground truth values, and optical-flow calculated values - and outputs the signal time series, as well as tracking error time series, in CSV format. The specific optical flow algorithm to use (LK, FRLK, BFLK, or SBLK) is specified when running this runner script.   
-
-This section describes the file structure and code necessary to recreate all muscle contour tracking results in the publication above (which can be readily adapted to track new image structures). Tracking (including both extraction of ground truth contour values from manually segmented data and contour tracking via optical flow) is accomplished via the included script [`run_tracking.py`](run_tracking.py), which performs both visualization and generation of CSV tracking error time series.
 
 ### Setup
-Download the ultrasound data from: [TODO], and within this folder, ensure the data is organized in the following manner:
-
-```
-├── ultrasound_data
-│   ├── sub[N]
-│   │   ├── segmented_data
-│   │   │   ├── xxx.pgm
-│   │   │   ├── ...
-│   │   ├── ultrasound_data
-│   │   │   ├── xxx.pgm
-│   │   │   ├── ...
-│   │   ├── ...
-│   ├── ...
-```
-It is critical that within a single sub[N] folder, the segmented_data folder and the ultrasound_data folder contain the same number of .pgm files, with the same names (this is to ensure the ground truth segmented frame matches properly with its corresponding ultrasound frame).
-
-Time series ultrasound data should be downloaded from the `ultrasound_frames` folder of the [OpenArm multi-sensor data set](TODO), which includes both raw ultrasound image frames (`sub[N]/wp[i]/t[j]/raw`) and (for select trials) corresponding frames in which the brachioradialis contour has been manually segmented (`sub[N]/wp[i]t[j]/seg`). Because the code evaluates tracking quality against these ground truth scans, both must be downloaded to use the current release.
-
-Paths to each folder are specified as command line arguments during script usage, so data may be stored anywhere. For instance,
-
-```bash
-.
-├── run_tracking.py
-├── sandbox/data/FINAL_FRAMES
-│   ├── sub[N]
-│   │   ├── wp[i]t[j]
-│   │   │   ├── seg
-│   │   │   │   ├── [frame_no].pgm
-│   │   │   │   ├── ...
-│   │   │   └── raw
-│   │   │       ├── [frame_no].pgm
-│   │   │       ├── ...
-│   │   ├── ...
-│   ├── ...
-```
-
-Note that within a single `sub[N]/wp[i]t[j]` folder, **the `seg` and `raw` folders should contain the same number of PGM files with the same frame numbers**. This ensures that the ground truth segmented frame is properly matched with its corresponding raw ultrasound frame when evaluating tracking quality.
 
 ### Usage
-To execute tracking of deformation signals, run the following:
-```bash
-python run_tracking.py --run_type <run_type> --img_path <path_to_ultrasound_frames> --seg_path <path_to_segmented_frames> --init_img <first_image_number.pgm> --out_path <path_to_output_folder>
-```
-The command line arguments are described below:
-- run_type (int) specifies which optical flow algorithm to use; 1 refers to LK, 2 to FRLK, 3 to BFLK, and 4 to SBLK.
-- path_to_ultrasound_frames (filepath) specifies the path to the folder containing raw ultrasound frames; for example, ```/.../ultrasound_data/sub[N]/ultrasound_data/```
-- path_to_segmented_frames (filepath) specifies the path to the folder containing the ground-truth segmented ultrasound frames; for example,
-```/.../ultrasound_data/sub[N]/segmented_data/```
-- first_image_number.pgm (filename) specifies the filename of the pgm file containing the first frame in the series of ultrasound frames located in ```ultrasound_data/```. This file will be the pgm file whose name is the smallest number in its respective folder.
-- path_to_output_folder (filepath) specifies the path to the folder into which the CSV files will be output.
-
-Run
-
-```bash
-python run_tracking.py --run_type <alg_int> --img_path <filepath_us> --seg_path <filepath_seg> --out_path <filepath_out> --init_img <filename_init>
-```
-
-specifying the above command line arguments as follows:
-
-- `alg_int`: integer value corresponding to desired contour tracking algorithm
-  - `1`: Naive Lucas&ndash;Kanade (LK)
-  - `2`: Feature-Refined Lucas&ndash;Kanade (FRLK)
-  - `3`: Bilaterally-Filtered Lucas&ndash;Kanade (BFLK)
-  - `4`: Supporter-Based Lucas&ndash;Kanade (SBLK)
-- `filepath_us`: file path to raw ultrasound PGM frames relative to run script (e.g., `sandbox/data/FINAL_FRAMES/sub[N]/wp[i]t[j]/raw/`)
-- `filepath_seg`: file path to ground truth segmented PGM images relative to run script (e.g., `sandbox/data/FINAL_FRAMES/sub[N]/wp[i]t[j]/seg/`)
-- `filepath_out`: file path to which `ground_truth_csa.csv`, `ground_truth_thickness.csv`, `ground_truth_thickness_ratio.csv`, `tracking_csa.csv`, `tracking_thickness.csv`, `tracking_thickness_ratio.csv`, and `iou_series.csv` time series tracking data will be written
-- `filename_init`: file name of first image in ultrasound frame series (i.e., PGM file with the lowest frame number for a given trial; e.g., `618.pgm`)
-
-If desired, parameter values associated with each tracking method can be modified via the static variables at the top of `run_tracking.py`.
 
 ### Parameter values
-The ```run_tracking.py``` runner script also specifies the values for hyperparameters used throughout the computer vision algorithms for muscle deformation tracking. The currently specified values are defaults; the values at the start of the file can be changed. For a description of the hyperparameters, and for a table specifying the hyperparameter values used for each algorithm and each subject, see (TODO).
