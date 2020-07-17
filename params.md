@@ -110,7 +110,7 @@ All values below were tuned on subject data at waypoint 5 (~69&deg; elbow flexio
 | `PYR_LEVEL`           | **3**      | 3           | 3           | 5           | 3           |
 | `BLOCK_SIZE`          | **7**      | 7           | 7           | 7           | 7           |
 | `FINE_THRESHOLD`      | **0.45**   | 0.7         | 0.45        | 0.7         | 0.7         |
-| `NUM_BOTTOM`          | **0**      | 10          | 0           | 10          | 0           |
+| `NUM_BOTTOM`          | **0**      | 10          | 0           | 10          | 10           |
 | `UPDATE_RATE`         | **0.7**    | 0.7         | 0.7         | 0.7         | 0.7         |
 | `FIX_TOP`             | **False**  | False       | False       | False       | False       |
 | `RESET_FREQUENCY`     | **1e04**   | 1e04        | 1e04        | 1e04        | 1e04        |
