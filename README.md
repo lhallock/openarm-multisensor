@@ -94,6 +94,8 @@ python gen_pub_figs.py
 
 to view all bar plots and aggregate correlation statistics in the publication above.
 
+Note that within both scripts, plots must be manually closed before the next will appear.
+
 ---
 
 ## Deformation tracking in ultrasound scans
