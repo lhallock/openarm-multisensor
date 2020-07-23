@@ -24,7 +24,7 @@ git clone https://github.com/lhallock/openarm-multisensor.git
 
 ### Dependencies
 
-All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`. 
+All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`. **In particular, ensure that `opencv-python` and `pandas` are updated to the listed versions**; older installations may cause errors.
 
 ---
 
