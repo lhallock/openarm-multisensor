@@ -71,6 +71,72 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
+def gen_time_plot_w_tracking(trialdata, trialdata_tracked, no_titles=False, plot_font=PLOT_FONT):
+    """Generate time series plot of ground truth and tracked force, sEMG, and
+    ultrasound data.
+
+    Args:
+        trialdata (pandas.DataFrame): dataobj.TrialData object containing data
+            to to be plotted
+        trialdata_tracked (pandas.DataFrame): dataobj.TrialData object
+            containing corresponding tracked data
+        no_titles (bool): whether to omit axis/title labels that are redundant
+            with eventual use case (e.g., copying to table for publication)
+        plot_font (str): desired matplotlib font family
+    """
+    register_matplotlib_converters()
+    sns.set()
+
+    num_subplots = 6
+
+    fig, axs = plt.subplots(num_subplots)
+
+    plot_ind = trialdata.df.index.to_julian_date().to_numpy() - 2457780.5
+    plot_ind = plot_ind * 24 * 60 * 60
+
+    axs[0].plot(trialdata.df['force'], 'k')
+    if not trialdata.force_only:
+        axs[1].plot(trialdata.df['emg-bic'] * 1e3, color='#cccccc')
+        axs[1].plot(trialdata.df['emg-abs-bic'] * 1e4, color='#fdae6b')
+        axs[2].plot(trialdata.df['emg-brd'] * 1e3, color='#cccccc')
+        axs[2].plot(trialdata.df['emg-abs-brd'] * 1e4, color='#f16913')
+    axs[3].plot(trialdata.df['us-csa-dt'], color='#41b6c4')
+    axs[3].plot(trialdata_tracked.df['us-csa-dt'], color='#41b6c4',
+                linestyle='dashed')
+    axs[4].plot(trialdata.df['us-t-dt'], color='#225ea8')
+    axs[4].plot(trialdata_tracked.df['us-t-dt'], color='#225ea8',
+                linestyle='dashed')
+    axs[5].plot(plot_ind, trialdata.df['us-tr-dt'], color='#081d58')
+    axs[5].plot(plot_ind, trialdata_tracked.df['us-tr-dt'], color='#081d58',
+                linestyle='dashed')
+    axs[5].set_xlabel('time (s)', fontname=plot_font)
+    axs[5].xaxis.set_label_coords(1.0, -0.15)
+
+    if not no_titles:
+        tstring = trialdata.subj + ', ' + str(180 -
+                                              int(trialdata.ang)) + '$\degree$'
+        fig.suptitle(tstring, fontname=plot_font)
+        axs[0].set(ylabel='f')
+        axs[1].set(ylabel='sEMG-BIC')
+        axs[2].set(ylabel='sEMG-BRD')
+        axs[3].set(ylabel='CSA-DT')
+        axs[4].set(ylabel='T-DT')
+        axs[5].set(ylabel='AR-DT')
+
+    axs[0].xaxis.set_visible(False)
+    axs[1].xaxis.set_visible(False)
+    axs[2].xaxis.set_visible(False)
+    axs[3].xaxis.set_visible(False)
+    axs[4].xaxis.set_visible(False)
+
+    for i in range(num_subplots):
+        for tick in axs[i].get_xticklabels():
+            tick.set_fontname(plot_font)
+        for tick in axs[i].get_yticklabels():
+            tick.set_fontname(plot_font)
+
+    plt.show()
+
 
 def gen_debug_time_plot(trialdata):
     """Generate force/sEMG/ultrasound time series plot for fit debugging.
