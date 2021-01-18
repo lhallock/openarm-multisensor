@@ -87,7 +87,8 @@ class TrialData():
                                    amg_peak=0,
                                    force_peak=0,
                                    us_peak=0,
-                                   force_only=False):
+                                   force_only=False,
+                                   data_type='ground_truth'):
         """Initialize TrialData object from specialized MATLAB .mat file.
 
         This initializer is designed for use with publication-specific
@@ -103,6 +104,9 @@ class TrialData():
                 series, used for alignment across series (specified as index
                 within array)
             force_only (bool): build frame using force and ultrasound data only
+            data_type (str): whether data is 'ground_truth' (manually
+                annotated) or the result of 'tracking' (used in ultrasound .csv
+                filename parsing)
 
         Returns:
             TrialData object containing data from file
@@ -196,21 +200,21 @@ class TrialData():
         us_csa_labels = ['CSA']
         us_freq = 8.3856  # empirical calculation
         us_offset = utils.offset_from_peak(us_peak, us_freq, PREPEAK_VAL)
-        filename_us_csa = filedir_us + '/ground_truth_csa.csv'
+        filename_us_csa = filedir_us + '/' + data_type + '_csa.csv'
         td.data_us_csa = TimeSeriesData.from_file('US-CSA', filename_us_csa,
                                                   us_csa_labels, us_freq,
                                                   us_offset)
 
         # set ultrasound thickness data
         us_t_labels = ['T']
-        filename_us_t = filedir_us + '/ground_truth_thickness.csv'
+        filename_us_t = filedir_us + '/' + data_type + '_thickness.csv'
         td.data_us_thickness = TimeSeriesData.from_file('US-T', filename_us_t,
                                                         us_t_labels, us_freq,
                                                         us_offset)
 
         # set ultrasound thickness ratio data
         us_tr_labels = ['TR']
-        filename_us_tr = filedir_us + '/ground_truth_thickness_ratio.csv'
+        filename_us_tr = filedir_us + '/' + data_type + '_thickness_ratio.csv'
         td.data_us_th_rat = TimeSeriesData.from_file('US-TR', filename_us_tr,
                                                      us_tr_labels, us_freq,
                                                      us_offset)

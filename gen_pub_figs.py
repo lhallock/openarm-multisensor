@@ -71,6 +71,16 @@ def main():
     print_utils.print_header('EXAMPLE TRACKING ERROR (SUB3) - STDDEV')
     print(df_ex_stds)
 
+    # generate tracked angle correlation plot
+    df_ang = pd.read_csv(DATA_DIR + 'ang_corr_tracked.csv', header=0, index_col=0).T
+
+    print_utils.print_header('[SIGNAL]-FORCE CORRELATION ACROSS ANGLES (SUB1)')
+    print(df_ang)
+    plot_utils.gen_ang_plot(df_ang)
+
+    print_utils.print_div()
+
+
 
 if __name__ == "__main__":
     main()
