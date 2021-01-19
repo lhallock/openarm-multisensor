@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Utility functions for plotting."""
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -291,5 +292,23 @@ def gen_error_box_plot(df_box, plot_font=PLOT_FONT):
     """
     register_matplotlib_converters()
     sns.set()
-    ax = df_box.boxplot(column=['us-csa-e', 'us-t-e', 'us-tr-e', 'us-jd-e'])
+    # ax = df_box.boxplot(column=['us-csa-e', 'us-t-e', 'us-tr-e', 'us-jd-e'])
+    # plt.show()
+
+    df_box = df_box.rename(columns={'us-csa-e': 'Frac. CSA', 'us-t-e': 'Frac. T', 'us-tr-e': 'Frac. AR', 'us-jd-e': 'JD'})
+    df_sns = pd.melt(df_box[['Frac. CSA', 'Frac. T', 'Frac. AR', 'JD']])
+
+    box_pal = {'Frac. CSA': '#41b6c4', 'Frac. T': '#225ea8', 'Frac. AR':'#081d58', 'JD': 'r'}
+
+    ax = sns.violinplot(x='variable', y='value', data=df_sns, palette=box_pal)
+
+#    ax.set(xlabel='Error Type', ylabel='Error Magnitude')
+    print(plot_font)
+    ax.set_xlabel('Error Type', fontname=plot_font)
+    ax.set_ylabel('Error Magnitude', fontname=plot_font)
+    for tick in ax.get_xticklabels():
+        tick.set_fontname(plot_font)
+    for tick in ax.get_yticklabels():
+        tick.set_fontname(plot_font)
+
     plt.show()
