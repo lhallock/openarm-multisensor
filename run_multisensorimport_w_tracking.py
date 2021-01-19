@@ -15,6 +15,10 @@ from multisensorimport.viz import plot_utils, print_utils, stats_utils
 # tracking frame to generate
 TRACKER = 'SBLK-T'
 
+# times for tracking evaluation (box plots)
+TIME_IN = '00:00:00'
+TIME_OUT = '00:00:30'
+
 # directory containing all data (script path + relative string)
 DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
@@ -63,6 +67,9 @@ def main():
         us_peak=51,
         tracking_data_type=TRACKER)
     print('Done.')
+
+#    print(data_sub1_wp1.df.between_time('00:00:00', '00:00:30'))
+#    raise ValueError('break')
 
     print('\nAggregating and fitting time series data (Sub1, 44deg)...')
     data_sub1_wp2 = td.TrialData.from_preprocessed_mat_file(
@@ -207,15 +214,15 @@ def main():
 
     # generate final formatted box plots
     print('\nDisplaying final box plots...')
-    plot_utils.gen_error_box_plot(data_sub1_wp1, PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub1_wp2, PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub1_wp5, PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub1_wp8, PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub1_wp10, PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub2_wp5, PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub3_wp5, PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub4_wp5, PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub5_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp1.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp2.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp8.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp10.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub2_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub3_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub4_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub5_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
     print('Done.')
 
     print_utils.print_div()

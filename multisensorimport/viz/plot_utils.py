@@ -18,8 +18,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of force, sEMG, and ultrasound data.
 
     Args:
-        trialdata (pandas.DataFrame): dataobj.TrialData object containing data
-            to to be plotted
+        trialdata (dataobj.TrialData) object containing data to be plotted
         no_titles (bool): whether to omit axis/title labels that are redundant
             with eventual use case (e.g., copying to table for publication)
         plot_font (str): desired matplotlib font family
@@ -79,8 +78,7 @@ def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     ultrasound data.
 
     Args:
-        trialdata (pandas.DataFrame): dataobj.TrialData object containing data
-            to to be plotted
+        trialdata (dataobj.TrialData): object containing data to be plotted
         no_titles (bool): whether to omit axis/title labels that are redundant
             with eventual use case (e.g., copying to table for publication)
         plot_font (str): desired matplotlib font family
@@ -284,15 +282,14 @@ def gen_tracking_error_plot(df_means, df_stds, plot_font=PLOT_FONT):
     plt.show()
 
 
-def gen_error_box_plot(trialdata, plot_font=PLOT_FONT):
+def gen_error_box_plot(df_box, plot_font=PLOT_FONT):
     """Generate box plot of CSA/T/AR fractional error and Jaccard distance.
 
     Args:
-        trialdata (pandas.DataFrame): dataobj.TrialData object containing data
-            to to be plotted
+        df_box (pandas.DataFrame): dataframe containing data to be plotted
         plot_font (str): desired matplotlib font family
     """
     register_matplotlib_converters()
     sns.set()
-    ax = trialdata.df.boxplot(column=['us-csa-e', 'us-t-e', 'us-tr-e', 'us-jd-e'])
+    ax = df_box.boxplot(column=['us-csa-e', 'us-t-e', 'us-tr-e', 'us-jd-e'])
     plt.show()
