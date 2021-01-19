@@ -45,11 +45,17 @@ class TrialData():
             value of output force only
         data_us_csa (TimeSeriesData): ultrasound-extracted time series data of
             muscle cross-sectional area, extracted to CSV using tracking module
+        data_us_csa_tracked (TimeSeriesData): ultrasound-extracted time series
+            data of muscle cross-sectional area, computed via tracking
         data_us_thickness (TimeSeriesData): ultrasound-extracted time series
             data of muscle thickness, extracted to CSV using tracking module
+        data_us_thickness_tracked (TimeSeriesData): ultrasound-extracted time
+            series data of muscle thickness, computed via tracking
         data_us_th_rat (TimeSeriesData): ultrasound-extracted time series data
-            of maximum length/width ration, extracted to CSV using tracking
+            of maximum length/width ratio, extracted to CSV using tracking
             module
+        data_us_th_rat_tracked (TimeSeriesData): ultrasound-extracted time
+            series data of maximum length/width ratio, computed via tracking
         df (pandas.DataFrame): pandas dataframe containing all timesynced data
             streams
         df_dt (pandas.DataFrame): truncated version of df containing only
@@ -72,8 +78,11 @@ class TrialData():
         self.data_force = None
         self.data_force_abs = None
         self.data_us_csa = None
+        self.data_us_csa_tracked = None
         self.data_us_thickness = None
+        self.data_us_thickness_tracked = None
         self.data_us_th_rat = None
+        self.data_us_th_rat_tracked = None
         self.df = None
         self.df_dt = None
 
@@ -88,7 +97,7 @@ class TrialData():
                                    force_peak=0,
                                    us_peak=0,
                                    force_only=False,
-                                   data_type='ground_truth'):
+                                   tracking_data_type=None):
         """Initialize TrialData object from specialized MATLAB .mat file.
 
         This initializer is designed for use with publication-specific
@@ -104,9 +113,9 @@ class TrialData():
                 series, used for alignment across series (specified as index
                 within array)
             force_only (bool): build frame using force and ultrasound data only
-            data_type (str): whether data is 'ground_truth' (manually
-                annotated) or the result of 'tracking' (used in ultrasound .csv
-                filename parsing)
+            tracking_data_type (str): what type of tracking data should be
+                imported, if any (options are 'LK', 'FRLK', 'BFLK-G',
+                'BFLK-T', 'SBLK-G', and 'SBLK-T')
 
         Returns:
             TrialData object containing data from file
@@ -200,24 +209,42 @@ class TrialData():
         us_csa_labels = ['CSA']
         us_freq = 8.3856  # empirical calculation
         us_offset = utils.offset_from_peak(us_peak, us_freq, PREPEAK_VAL)
-        filename_us_csa = filedir_us + '/' + data_type + '_csa.csv'
+        filename_us_csa = filedir_us + '/ground_truth_csa.csv'
         td.data_us_csa = TimeSeriesData.from_file('US-CSA', filename_us_csa,
                                                   us_csa_labels, us_freq,
                                                   us_offset)
+        if tracking_data_type:
+            filename_us_csa_tracked = filedir_us + '/' + tracking_data_type + '/tracking_csa.csv'
+            td.data_us_csa_tracked = TimeSeriesData.from_file('US-CSA-T',
+                                                              filename_us_csa_tracked,
+                                                              us_csa_labels, us_freq,
+                                                              us_offset)
 
         # set ultrasound thickness data
         us_t_labels = ['T']
-        filename_us_t = filedir_us + '/' + data_type + '_thickness.csv'
+        filename_us_t = filedir_us + '/ground_truth_thickness.csv'
         td.data_us_thickness = TimeSeriesData.from_file('US-T', filename_us_t,
                                                         us_t_labels, us_freq,
                                                         us_offset)
+        if tracking_data_type:
+            filename_us_t_tracked = filedir_us + '/' + tracking_data_type + '/tracking_thickness.csv'
+            td.data_us_thickness_tracked = TimeSeriesData.from_file('US-T-T',
+                                                              filename_us_t_tracked,
+                                                              us_t_labels, us_freq,
+                                                              us_offset)
 
         # set ultrasound thickness ratio data
         us_tr_labels = ['TR']
-        filename_us_tr = filedir_us + '/' + data_type + '_thickness_ratio.csv'
+        filename_us_tr = filedir_us + '/ground_truth_thickness_ratio.csv'
         td.data_us_th_rat = TimeSeriesData.from_file('US-TR', filename_us_tr,
                                                      us_tr_labels, us_freq,
                                                      us_offset)
+        if tracking_data_type:
+            filename_us_tr_tracked = filedir_us + '/' + tracking_data_type + '/tracking_thickness_ratio.csv'
+            td.data_us_th_rat_tracked = TimeSeriesData.from_file('US-TR-T',
+                                                              filename_us_tr_tracked,
+                                                              us_tr_labels, us_freq,
+                                                              us_offset)
 
         td.build_synced_dataframe()
 
@@ -231,21 +258,31 @@ class TrialData():
         (generally, the lowest sampling frequency of the comprising data
         series).
         """
-        # build ultrasound data series
+        # build ground truth ultrasound data series
         us_csa_series = utils.build_data_series(self.data_us_csa)
         us_t_series = utils.build_data_series(self.data_us_thickness)
         us_tr_series = utils.build_data_series(self.data_us_th_rat)
 
+        # build tracked ultrasound data series
+        us_csa_series_tracked = utils.build_data_series(self.data_us_csa_tracked)
+        us_t_series_tracked = utils.build_data_series(self.data_us_thickness_tracked)
+        us_tr_series_tracked = utils.build_data_series(self.data_us_th_rat_tracked)
+
         # change ultrasound data series to appropriate units (pixel --> mm^2)
         us_res = 0.157676
         us_csa_series = us_csa_series.multiply(math.pow(us_res, 2))
+        us_csa_series_tracked = us_csa_series_tracked.multiply(math.pow(us_res, 2))
         us_t_series = us_t_series.multiply(us_res)
+        us_t_series_tracked = us_t_series_tracked.multiply(us_res)
 
         # build ultrasound dataframe
         us_series_dict = {
             'us-csa': us_csa_series,
+            'us-csa-t': us_csa_series_tracked,
             'us-t': us_t_series,
-            'us-tr': us_tr_series
+            'us-t-t': us_t_series_tracked,
+            'us-tr': us_tr_series,
+            'us-tr-t': us_tr_series_tracked
         }
         df_us = pd.DataFrame(us_series_dict)
 
@@ -266,8 +303,11 @@ class TrialData():
 
         # combine all series into dataframe
         us_csa_series_nz = df_us['us-csa']
+        us_csa_series_tracked_nz = df_us['us-csa-t']
         us_t_series_nz = df_us['us-t']
+        us_t_series_tracked_nz = df_us['us-t-t']
         us_tr_series_nz = df_us['us-tr']
+        us_tr_series_tracked_nz = df_us['us-tr-t']
 
         if not self.force_only:
             series_dict = {
@@ -277,15 +317,22 @@ class TrialData():
                 'emg-bic': emg_series_bic,
                 'emg-abs-bic': emg_abs_series_bic,
                 'us-csa': us_csa_series_nz,
+                'us-csa-t': us_csa_series_tracked_nz,
                 'us-t': us_t_series_nz,
-                'us-tr': us_tr_series_nz
+                'us-t-t': us_t_series_tracked_nz,
+                'us-tr': us_tr_series_nz,
+                'us-tr-t': us_tr_series_tracked_nz
             }
         else:
             series_dict = {
                 'force': force_series,
                 'us-csa': us_csa_series_nz,
+                'us-csa-t': us_csa_series_tracked_nz,
                 'us-t': us_t_series_nz,
-                'us-tr': us_tr_series_nz
+                'us-t-t': us_t_series_tracked_nz,
+                'us-t': us_t_series_nz,
+                'us-tr': us_tr_series_nz,
+                'us-tr-t': us_tr_series_tracked_nz
             }
 
         df = pd.DataFrame(series_dict)

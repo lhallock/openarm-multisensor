@@ -71,15 +71,13 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
-def gen_time_plot_w_tracking(trialdata, trialdata_tracked, no_titles=False, plot_font=PLOT_FONT):
+def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of ground truth and tracked force, sEMG, and
     ultrasound data.
 
     Args:
         trialdata (pandas.DataFrame): dataobj.TrialData object containing data
             to to be plotted
-        trialdata_tracked (pandas.DataFrame): dataobj.TrialData object
-            containing corresponding tracked data
         no_titles (bool): whether to omit axis/title labels that are redundant
             with eventual use case (e.g., copying to table for publication)
         plot_font (str): desired matplotlib font family
@@ -100,14 +98,14 @@ def gen_time_plot_w_tracking(trialdata, trialdata_tracked, no_titles=False, plot
         axs[1].plot(trialdata.df['emg-abs-bic'] * 1e4, color='#fdae6b')
         axs[2].plot(trialdata.df['emg-brd'] * 1e3, color='#cccccc')
         axs[2].plot(trialdata.df['emg-abs-brd'] * 1e4, color='#f16913')
-    axs[3].plot(trialdata.df['us-csa-dt'], color='#41b6c4')
-    axs[3].plot(trialdata_tracked.df['us-csa-dt'], color='#41b6c4',
+    axs[3].plot(trialdata.df['us-csa'], color='#41b6c4')
+    axs[3].plot(trialdata.df['us-csa-t'], color='#41b6c4',
                 linestyle='dashed')
-    axs[4].plot(trialdata.df['us-t-dt'], color='#225ea8')
-    axs[4].plot(trialdata_tracked.df['us-t-dt'], color='#225ea8',
+    axs[4].plot(trialdata.df['us-t'], color='#225ea8')
+    axs[4].plot(trialdata.df['us-t-t'], color='#225ea8',
                 linestyle='dashed')
-    axs[5].plot(plot_ind, trialdata.df['us-tr-dt'], color='#081d58')
-    axs[5].plot(plot_ind, trialdata_tracked.df['us-tr-dt'], color='#081d58',
+    axs[5].plot(plot_ind, trialdata.df['us-tr'], color='#081d58')
+    axs[5].plot(plot_ind, trialdata.df['us-tr-t'], color='#081d58',
                 linestyle='dashed')
     axs[5].set_xlabel('time (s)', fontname=plot_font)
     axs[5].xaxis.set_label_coords(1.0, -0.15)
@@ -119,9 +117,9 @@ def gen_time_plot_w_tracking(trialdata, trialdata_tracked, no_titles=False, plot
         axs[0].set(ylabel='f')
         axs[1].set(ylabel='sEMG-BIC')
         axs[2].set(ylabel='sEMG-BRD')
-        axs[3].set(ylabel='CSA-DT')
-        axs[4].set(ylabel='T-DT')
-        axs[5].set(ylabel='AR-DT')
+        axs[3].set(ylabel='CSA')
+        axs[4].set(ylabel='T')
+        axs[5].set(ylabel='AR')
 
     axs[0].xaxis.set_visible(False)
     axs[1].xaxis.set_visible(False)
