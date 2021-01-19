@@ -205,6 +205,22 @@ def main():
 
     print_utils.print_div()
 
+    # generate final formatted box plots
+    print('\nDisplaying final box plots...')
+    plot_utils.gen_error_box_plot(data_sub1_wp1, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp2, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp8, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub1_wp10, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub2_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub3_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub4_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_error_box_plot(data_sub5_wp5, PRINT_PUB_PLOTS)
+    print('Done.')
+
+    print_utils.print_div()
+
+
     # generate correlation data and print to console and CSV
     print('\nComputing correlations...')
     df_corr = data_utils.build_corr_table([

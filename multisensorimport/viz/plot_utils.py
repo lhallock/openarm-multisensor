@@ -110,7 +110,10 @@ def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     axs[5].plot(plot_ind, trialdata.df['us-tr'], color='#081d58')
     axs[5].plot(plot_ind, trialdata.df['us-tr-t'], color='#081d58',
                 linestyle='dashed')
-    axs[6].plot(trialdata.df['us-jd-e'], 'r')
+    axs[6].plot(trialdata.df['us-csa-e'], 'r')
+    axs[6].plot(trialdata.df['us-t-e'], 'g')
+    axs[6].plot(trialdata.df['us-tr-e'], 'b')
+    axs[6].plot(trialdata.df['us-jd-e'], 'k')
     axs[6].set_xlabel('time (s)', fontname=plot_font)
     axs[6].xaxis.set_label_coords(1.0, -0.15)
 
@@ -278,4 +281,18 @@ def gen_tracking_error_plot(df_means, df_stds, plot_font=PLOT_FONT):
         tick.set_fontname(plot_font)
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
+    plt.show()
+
+
+def gen_error_box_plot(trialdata, plot_font=PLOT_FONT):
+    """Generate box plot of CSA/T/AR fractional error and Jaccard distance.
+
+    Args:
+        trialdata (pandas.DataFrame): dataobj.TrialData object containing data
+            to to be plotted
+        plot_font (str): desired matplotlib font family
+    """
+    register_matplotlib_converters()
+    sns.set()
+    ax = trialdata.df.boxplot(column=['us-csa-e', 'us-t-e', 'us-tr-e', 'us-jd-e'])
     plt.show()

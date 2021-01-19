@@ -391,6 +391,11 @@ class TrialData():
         df['us-t-dt'] = df['us-t'] - df['us-t-fit']
         df['us-tr-dt'] = df['us-tr'] - df['us-tr-fit']
 
+        # add error columns to data frame
+        df['us-csa-e'] = abs(df['us-csa-t'] - df['us-csa']) / df['us-csa']
+        df['us-t-e'] = abs(df['us-t-t'] - df['us-t']) / df['us-t']
+        df['us-tr-e'] = abs(df['us-tr-t'] - df['us-tr']) / df['us-tr']
+
         # set object values
         self.df = df
         self.df_dt = df_dt
