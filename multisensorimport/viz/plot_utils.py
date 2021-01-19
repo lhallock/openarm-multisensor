@@ -27,7 +27,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     register_matplotlib_converters()
     sns.set()
 
-    num_subplots = 6
+    num_subplots = 7
 
     fig, axs = plt.subplots(num_subplots)
 
@@ -43,8 +43,9 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     axs[3].plot(trialdata.df['us-csa-dt'], color='#41b6c4')
     axs[4].plot(trialdata.df['us-t-dt'], color='#225ea8')
     axs[5].plot(plot_ind, trialdata.df['us-tr-dt'], color='#081d58')
-    axs[5].set_xlabel('time (s)', fontname=plot_font)
-    axs[5].xaxis.set_label_coords(1.0, -0.15)
+    axs[6].plot(trialdata.df['us-jd-e'], 'r')
+    axs[6].set_xlabel('time (s)', fontname=plot_font)
+    axs[6].xaxis.set_label_coords(1.0, -0.15)
 
     if not no_titles:
         tstring = trialdata.subj + ', ' + str(180 -
@@ -56,12 +57,14 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
         axs[3].set(ylabel='CSA-DT')
         axs[4].set(ylabel='T-DT')
         axs[5].set(ylabel='AR-DT')
+        axs[6].set(ylabel='JD')
 
     axs[0].xaxis.set_visible(False)
     axs[1].xaxis.set_visible(False)
     axs[2].xaxis.set_visible(False)
     axs[3].xaxis.set_visible(False)
     axs[4].xaxis.set_visible(False)
+    axs[5].xaxis.set_visible(False)
 
     for i in range(num_subplots):
         for tick in axs[i].get_xticklabels():
@@ -85,7 +88,7 @@ def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     register_matplotlib_converters()
     sns.set()
 
-    num_subplots = 6
+    num_subplots = 7
 
     fig, axs = plt.subplots(num_subplots)
 
@@ -107,8 +110,9 @@ def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     axs[5].plot(plot_ind, trialdata.df['us-tr'], color='#081d58')
     axs[5].plot(plot_ind, trialdata.df['us-tr-t'], color='#081d58',
                 linestyle='dashed')
-    axs[5].set_xlabel('time (s)', fontname=plot_font)
-    axs[5].xaxis.set_label_coords(1.0, -0.15)
+    axs[6].plot(trialdata.df['us-jd-e'], 'r')
+    axs[6].set_xlabel('time (s)', fontname=plot_font)
+    axs[6].xaxis.set_label_coords(1.0, -0.15)
 
     if not no_titles:
         tstring = trialdata.subj + ', ' + str(180 -
@@ -120,12 +124,14 @@ def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
         axs[3].set(ylabel='CSA')
         axs[4].set(ylabel='T')
         axs[5].set(ylabel='AR')
+        axs[6].set(ylabel='JD')
 
     axs[0].xaxis.set_visible(False)
     axs[1].xaxis.set_visible(False)
     axs[2].xaxis.set_visible(False)
     axs[3].xaxis.set_visible(False)
     axs[4].xaxis.set_visible(False)
+    axs[5].xaxis.set_visible(False)
 
     for i in range(num_subplots):
         for tick in axs[i].get_xticklabels():

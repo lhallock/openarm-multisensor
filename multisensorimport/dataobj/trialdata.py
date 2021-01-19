@@ -56,6 +56,8 @@ class TrialData():
             module
         data_us_th_rat_tracked (TimeSeriesData): ultrasound-extracted time
             series data of maximum length/width ratio, computed via tracking
+        data_us_jd_error (TimeSeriesData): ultrasound-extracted time series
+            tracking error, as 1-IoU (Jaccard Distance)
         df (pandas.DataFrame): pandas dataframe containing all timesynced data
             streams
         df_dt (pandas.DataFrame): truncated version of df containing only
@@ -83,6 +85,7 @@ class TrialData():
         self.data_us_thickness_tracked = None
         self.data_us_th_rat = None
         self.data_us_th_rat_tracked = None
+        self.data_us_jd_error = None
         self.df = None
         self.df_dt = None
 
@@ -246,6 +249,14 @@ class TrialData():
                                                               us_tr_labels, us_freq,
                                                               us_offset)
 
+            # set ultrasound IoU error
+            us_jd_labels = ['JD']
+            filename_jd_error = filedir_us + '/' + tracking_data_type + '/iou_series.csv'
+            td.data_us_jd_error = TimeSeriesData.from_file('US-JD-E',
+                                                         filename_jd_error,
+                                                         us_jd_labels, us_freq,
+                                                         us_offset)
+
         td.build_synced_dataframe()
 
         return td
@@ -267,6 +278,7 @@ class TrialData():
         us_csa_series_tracked = utils.build_data_series(self.data_us_csa_tracked)
         us_t_series_tracked = utils.build_data_series(self.data_us_thickness_tracked)
         us_tr_series_tracked = utils.build_data_series(self.data_us_th_rat_tracked)
+        us_jd_error_series = utils.build_data_series(self.data_us_jd_error)
 
         # change ultrasound data series to appropriate units (pixel --> mm^2)
         us_res = 0.157676
@@ -275,6 +287,9 @@ class TrialData():
         us_t_series = us_t_series.multiply(us_res)
         us_t_series_tracked = us_t_series_tracked.multiply(us_res)
 
+        # compute Jaccard Distance from IoU series
+        us_jd_error_series = 1 - us_jd_error_series
+
         # build ultrasound dataframe
         us_series_dict = {
             'us-csa': us_csa_series,
@@ -282,7 +297,8 @@ class TrialData():
             'us-t': us_t_series,
             'us-t-t': us_t_series_tracked,
             'us-tr': us_tr_series,
-            'us-tr-t': us_tr_series_tracked
+            'us-tr-t': us_tr_series_tracked,
+            'us-jd-e': us_jd_error_series
         }
         df_us = pd.DataFrame(us_series_dict)
 
@@ -308,6 +324,7 @@ class TrialData():
         us_t_series_tracked_nz = df_us['us-t-t']
         us_tr_series_nz = df_us['us-tr']
         us_tr_series_tracked_nz = df_us['us-tr-t']
+        us_jd_error_series_nz = df_us['us-jd-e']
 
         if not self.force_only:
             series_dict = {
@@ -321,7 +338,8 @@ class TrialData():
                 'us-t': us_t_series_nz,
                 'us-t-t': us_t_series_tracked_nz,
                 'us-tr': us_tr_series_nz,
-                'us-tr-t': us_tr_series_tracked_nz
+                'us-tr-t': us_tr_series_tracked_nz,
+                'us-jd-e': us_jd_error_series_nz
             }
         else:
             series_dict = {
@@ -332,7 +350,8 @@ class TrialData():
                 'us-t-t': us_t_series_tracked_nz,
                 'us-t': us_t_series_nz,
                 'us-tr': us_tr_series_nz,
-                'us-tr-t': us_tr_series_tracked_nz
+                'us-tr-t': us_tr_series_tracked_nz,
+                'us-jd-e': us_jd_error_series_nz
             }
 
         df = pd.DataFrame(series_dict)
