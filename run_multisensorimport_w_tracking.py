@@ -203,9 +203,6 @@ def main():
 
     print_utils.print_div()
 
-    plot_utils.gen_error_box_plot(df_box_agg)
-    raise ValueError('break')
-
     # show debugging plots for alignment and fit quality evaluation
     if DEBUG:
         print('\nDisplaying debug plots...')
@@ -218,6 +215,15 @@ def main():
         plot_utils.gen_debug_time_plot(data_sub3_wp5)
         plot_utils.gen_debug_time_plot(data_sub4_wp5)
         plot_utils.gen_debug_time_plot(data_sub5_wp5)
+        plot_utils.gen_error_box_plot(data_sub1_wp1.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(data_sub1_wp2.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(data_sub1_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(data_sub1_wp8.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(data_sub1_wp10.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(data_sub2_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(data_sub3_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(data_sub4_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(data_sub5_wp5.df.between_time(TIME_IN, TIME_OUT))
         print('Done.')
 
         print_utils.print_div()
@@ -238,16 +244,8 @@ def main():
     print_utils.print_div()
 
     # generate final formatted box plots
-    print('\nDisplaying final box plots...')
-    plot_utils.gen_error_box_plot(data_sub1_wp1.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub1_wp2.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub1_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub1_wp8.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub1_wp10.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub2_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub3_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub4_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
-    plot_utils.gen_error_box_plot(data_sub5_wp5.df.between_time(TIME_IN, TIME_OUT), PRINT_PUB_PLOTS)
+    print('\nDisplaying final box plot...')
+    plot_utils.gen_error_box_plot(df_box_agg)
     print('Done.')
 
     print_utils.print_div()
