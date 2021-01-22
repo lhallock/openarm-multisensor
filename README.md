@@ -8,7 +8,9 @@ This repo contains code used to
 
 **If you use this code for academic purposes, please cite the following publication**: Laura A. Hallock, Akash Velu, Amanda Schwartz, and Ruzena Bajcsy, "[Muscle deformation correlates with output force during isometric contraction](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2020biorob/)," in _IEEE RAS/EMBS International Conference on Biomedical Robotics & Biomechatronics (BioRob)_, IEEE, 2020.
 
-This README primarily describes the methods needed to recreate the analyses described in the publication above, as applied to the time OpenArm Multisensor 1.0 data set found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
+**NOTE**: The `master` branch of this code has been updated in preparation for a paper submission currently under review. To access the codebase as released with the publication above, please visit the `biorob-2020` branch [here](https://github.com/lhallock/openarm-multisensor/tree/biorob-2020).
+
+This README primarily describes the methods needed to recreate the analyses described in the publications above, as applied to the time OpenArm Multisensor 1.1 data set found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
 ---
 
@@ -30,16 +32,16 @@ All packages used in code development and their associated versions can be found
 
 ## Time series data aggregation, analysis, and plotting
 
-This section describes the file structure and code necessary to recreate all plots and statistics in the publication above. Two main scripts are included: the first, [`run_multisensorimport.py`](run_multisensorimport.py) aggregates and plots all time series force, sEMG, and ultrasound-based deformation data, and writes out correlation tables to CSV; the second, [`gen_pub_figs.py`](gen_pub_figs.py) uses these CSV files and others generated in the deformation tracking procedures below to generate all bar plots and statistics reported in the publication above.
+This section describes the file structure and code necessary to recreate all plots and statistics in the publication above. Two main scripts are included: the first, [`run_multisensorimport_w_tracking.py`](run_multisensorimport_w_tracking.py) aggregates and plots all time series force, sEMG, and ultrasound-based deformation data, both ground-truth and for an indicated tracker, and writes out correlation tables to CSV; the second, [`gen_pub_figs.py`](gen_pub_figs.py), uses these CSV files and others generated in the deformation tracking procedures below to generate all bar plots and statistics reported in the publication above.
 
 ### Setup
 
-Data should be downloaded from the `time_series` folder of the [OpenArm Multisensor 1.0 data set](https://simtk.org/frs/?group_id=1617) and arranged as follows:
+Data should be downloaded from the `time_series` folder of the [OpenArm Multisensor 1.1 data set](https://simtk.org/frs/?group_id=1617) and arranged as follows:
 
 ```bash
 .
 ├── gen_pub_figs.py
-├── run_multisensorimport.py
+├── run_multisensorimport_w_tracking.py
 ├── sandbox/data/FINAL
 │   ├── sub[N]
 │   │   ├── seg_data.mat
@@ -81,7 +83,7 @@ Note that this file structure is consistent with the released ZIP archive; the h
 First, run
 
 ```bash
-python run_multisensorimport.py
+python run_multisensorimport_w_tracking.py
 ```
 
 to view all time series data plots. This will also generate correlation table files `ang_corr.csv` and `subj_corr.csv` in `sandbox/data/FINAL`, which are necessary for the second script below. (These files are also included with the OpenArm data release; the command above is thus optional if these files are already in the tree.)
@@ -104,7 +106,7 @@ This section describes the file structure and code necessary to recreate all mus
 
 ### Setup
 
-Time series ultrasound data should be downloaded from the `ultrasound_frames` folder of the [OpenArm Multisensor 1.0 data set](https://simtk.org/frs/?group_id=1617), which includes both raw ultrasound image frames (`sub[N]/wp[i]/t[j]/raw`) and (for select trials) corresponding frames in which the brachioradialis contour has been manually segmented (`sub[N]/wp[i]t[j]/seg`). Because the code evaluates tracking quality against these ground truth scans, both must be downloaded to use the current release.
+Time series ultrasound data should be downloaded from the `ultrasound_frames` folder of the [OpenArm Multisensor 1.1 data set](https://simtk.org/frs/?group_id=1617), which includes both raw ultrasound image frames (`sub[N]/wp[i]/t[j]/raw`) and (for select trials) corresponding frames in which the brachioradialis contour has been manually segmented (`sub[N]/wp[i]t[j]/seg`). Because the code evaluates tracking quality against these ground truth scans, both must be downloaded to use the current release.
 
 Paths to each folder are specified as command line arguments during script usage, so data may be stored anywhere. For instance,
 
@@ -150,7 +152,7 @@ If desired, parameter values associated with each tracking method can be modifie
 
 ### Parameter values
 
-Each of the supported optical flow tracking methods can be tuned via a number of hyperparameters, which can be modified via the static variables at the top of `run_tracking.py`. A full list of hyperparameters, descriptions, and values used in the publication above can be found [here](params.md).
+Each of the supported optical flow tracking methods can be tuned via a number of hyperparameters, which can be modified via the static variables at the top of `run_tracking.py`. A full list of hyperparameters, descriptions, and values used in the publications above can be found [here](params.md).
 
 ---
 
