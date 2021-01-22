@@ -181,7 +181,8 @@ def main():
     print_utils.print_div()
 
     # construct time-sliced frames
-    print('\nConstructing time-sliced frames from ' + TIME_IN + ' to ' + TIME_OUT + '...')
+    print('\nConstructing time-sliced frames from ' + TIME_IN + ' to ' +
+          TIME_OUT + '...')
     df_sub1_wp1_crop = data_sub1_wp1.df.between_time(TIME_IN, TIME_OUT)
     df_sub1_wp2_crop = data_sub1_wp2.df.between_time(TIME_IN, TIME_OUT)
     df_sub1_wp5_crop = data_sub1_wp5.df.between_time(TIME_IN, TIME_OUT)
@@ -195,10 +196,13 @@ def main():
 
     # aggregate time-sliced frames
     print('\nAggregating time-sliced frames...')
-    df_box_agg = pd.concat([df_sub1_wp1_crop, df_sub1_wp2_crop,
-                            df_sub1_wp5_crop, df_sub1_wp8_crop,
-                            df_sub1_wp10_crop, df_sub2_wp5_crop,
-                            df_sub3_wp5_crop, df_sub4_wp5_crop, df_sub5_wp5_crop], ignore_index=True, sort=False)
+    df_box_agg = pd.concat([
+        df_sub1_wp1_crop, df_sub1_wp2_crop, df_sub1_wp5_crop, df_sub1_wp8_crop,
+        df_sub1_wp10_crop, df_sub2_wp5_crop, df_sub3_wp5_crop, df_sub4_wp5_crop,
+        df_sub5_wp5_crop
+    ],
+                           ignore_index=True,
+                           sort=False)
     print('Done.')
 
     print_utils.print_div()
@@ -215,15 +219,24 @@ def main():
         plot_utils.gen_debug_time_plot(data_sub3_wp5)
         plot_utils.gen_debug_time_plot(data_sub4_wp5)
         plot_utils.gen_debug_time_plot(data_sub5_wp5)
-        plot_utils.gen_error_box_plot(data_sub1_wp1.df.between_time(TIME_IN, TIME_OUT))
-        plot_utils.gen_error_box_plot(data_sub1_wp2.df.between_time(TIME_IN, TIME_OUT))
-        plot_utils.gen_error_box_plot(data_sub1_wp5.df.between_time(TIME_IN, TIME_OUT))
-        plot_utils.gen_error_box_plot(data_sub1_wp8.df.between_time(TIME_IN, TIME_OUT))
-        plot_utils.gen_error_box_plot(data_sub1_wp10.df.between_time(TIME_IN, TIME_OUT))
-        plot_utils.gen_error_box_plot(data_sub2_wp5.df.between_time(TIME_IN, TIME_OUT))
-        plot_utils.gen_error_box_plot(data_sub3_wp5.df.between_time(TIME_IN, TIME_OUT))
-        plot_utils.gen_error_box_plot(data_sub4_wp5.df.between_time(TIME_IN, TIME_OUT))
-        plot_utils.gen_error_box_plot(data_sub5_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp1.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp2.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp8.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp10.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub2_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub3_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub4_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub5_wp5.df.between_time(TIME_IN, TIME_OUT))
         print('Done.')
 
         print_utils.print_div()
@@ -258,14 +271,12 @@ def main():
 
     print_utils.print_div()
 
-
     # generate final formatted violin plot
     print('\nDisplaying final violin plot (may take a few moments)...')
     plot_utils.gen_error_box_plot(df_box_agg)
     print('Done.')
 
     print_utils.print_div()
-
 
     # generate correlation data and print to console and CSV
     print('\nComputing correlations...')

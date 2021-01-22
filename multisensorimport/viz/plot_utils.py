@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Utility functions for plotting."""
-import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.dates import DateFormatter
+import pandas as pd
 import seaborn as sns
+from matplotlib.dates import DateFormatter
 # deal with pandas index compatibility errors
 from pandas.plotting import register_matplotlib_converters
 
@@ -72,6 +72,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
+
 def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of ground truth and tracked force, sEMG, and
     ultrasound data.
@@ -93,13 +94,13 @@ def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     plot_ind = plot_ind * 24 * 60 * 60
 
     axs[0].plot(trialdata.df['us-csa'], color='#41b6c4')
-    axs[0].plot(trialdata.df['us-csa-t'], color='#41b6c4',
-                linestyle='dotted')
+    axs[0].plot(trialdata.df['us-csa-t'], color='#41b6c4', linestyle='dotted')
     axs[1].plot(trialdata.df['us-t'], color='#225ea8')
-    axs[1].plot(trialdata.df['us-t-t'], color='#225ea8',
-                linestyle='dotted')
+    axs[1].plot(trialdata.df['us-t-t'], color='#225ea8', linestyle='dotted')
     axs[2].plot(plot_ind, trialdata.df['us-tr'], color='#081d58')
-    axs[2].plot(plot_ind, trialdata.df['us-tr-t'], color='#081d58',
+    axs[2].plot(plot_ind,
+                trialdata.df['us-tr-t'],
+                color='#081d58',
                 linestyle='dotted')
     axs[3].plot(plot_ind, trialdata.df['us-jd-e'], 'r')
     axs[3].set_xlabel('time (s)', fontname=plot_font)
@@ -127,7 +128,9 @@ def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     plt.show()
 
 
-def gen_debug_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
+def gen_debug_time_plot_w_tracking(trialdata,
+                                   no_titles=False,
+                                   plot_font=PLOT_FONT):
     """Generate time series plot of ground truth and tracked force, sEMG, and
     ultrasound data.
 
@@ -154,13 +157,13 @@ def gen_debug_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FO
         axs[2].plot(trialdata.df['emg-brd'] * 1e3, color='#cccccc')
         axs[2].plot(trialdata.df['emg-abs-brd'] * 1e4, color='#f16913')
     axs[3].plot(trialdata.df['us-csa'], color='#41b6c4')
-    axs[3].plot(trialdata.df['us-csa-t'], color='#41b6c4',
-                linestyle='dotted')
+    axs[3].plot(trialdata.df['us-csa-t'], color='#41b6c4', linestyle='dotted')
     axs[4].plot(trialdata.df['us-t'], color='#225ea8')
-    axs[4].plot(trialdata.df['us-t-t'], color='#225ea8',
-                linestyle='dotted')
+    axs[4].plot(trialdata.df['us-t-t'], color='#225ea8', linestyle='dotted')
     axs[5].plot(plot_ind, trialdata.df['us-tr'], color='#081d58')
-    axs[5].plot(plot_ind, trialdata.df['us-tr-t'], color='#081d58',
+    axs[5].plot(plot_ind,
+                trialdata.df['us-tr-t'],
+                color='#081d58',
                 linestyle='dotted')
     axs[6].plot(trialdata.df['us-csa-e'], 'r')
     axs[6].plot(trialdata.df['us-t-e'], 'g')
@@ -348,10 +351,21 @@ def gen_error_box_plot(df_box, plot_font=PLOT_FONT):
     # ax = df_box.boxplot(column=['us-csa-e', 'us-t-e', 'us-tr-e', 'us-jd-e'])
     # plt.show()
 
-    df_box = df_box.rename(columns={'us-csa-e': 'Frac. CSA', 'us-t-e': 'Frac. T', 'us-tr-e': 'Frac. AR', 'us-jd-e': 'JD'})
+    df_box = df_box.rename(
+        columns={
+            'us-csa-e': 'Frac. CSA',
+            'us-t-e': 'Frac. T',
+            'us-tr-e': 'Frac. AR',
+            'us-jd-e': 'JD'
+        })
     df_sns = pd.melt(df_box[['Frac. CSA', 'Frac. T', 'Frac. AR', 'JD']])
 
-    box_pal = {'Frac. CSA': '#41b6c4', 'Frac. T': '#225ea8', 'Frac. AR':'#081d58', 'JD': 'r'}
+    box_pal = {
+        'Frac. CSA': '#41b6c4',
+        'Frac. T': '#225ea8',
+        'Frac. AR': '#081d58',
+        'JD': 'r'
+    }
 
     ax = sns.violinplot(x='variable', y='value', data=df_sns, palette=box_pal)
 

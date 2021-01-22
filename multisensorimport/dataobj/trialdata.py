@@ -218,10 +218,9 @@ class TrialData():
                                                   us_offset)
         if tracking_data_type:
             filename_us_csa_tracked = filedir_us + '/' + tracking_data_type + '/tracking_csa.csv'
-            td.data_us_csa_tracked = TimeSeriesData.from_file('US-CSA-T',
-                                                              filename_us_csa_tracked,
-                                                              us_csa_labels, us_freq,
-                                                              us_offset)
+            td.data_us_csa_tracked = TimeSeriesData.from_file(
+                'US-CSA-T', filename_us_csa_tracked, us_csa_labels, us_freq,
+                us_offset)
 
         # set ultrasound thickness data
         us_t_labels = ['T']
@@ -231,10 +230,9 @@ class TrialData():
                                                         us_offset)
         if tracking_data_type:
             filename_us_t_tracked = filedir_us + '/' + tracking_data_type + '/tracking_thickness.csv'
-            td.data_us_thickness_tracked = TimeSeriesData.from_file('US-T-T',
-                                                              filename_us_t_tracked,
-                                                              us_t_labels, us_freq,
-                                                              us_offset)
+            td.data_us_thickness_tracked = TimeSeriesData.from_file(
+                'US-T-T', filename_us_t_tracked, us_t_labels, us_freq,
+                us_offset)
 
         # set ultrasound thickness ratio data
         us_tr_labels = ['TR']
@@ -244,18 +242,15 @@ class TrialData():
                                                      us_offset)
         if tracking_data_type:
             filename_us_tr_tracked = filedir_us + '/' + tracking_data_type + '/tracking_thickness_ratio.csv'
-            td.data_us_th_rat_tracked = TimeSeriesData.from_file('US-TR-T',
-                                                              filename_us_tr_tracked,
-                                                              us_tr_labels, us_freq,
-                                                              us_offset)
+            td.data_us_th_rat_tracked = TimeSeriesData.from_file(
+                'US-TR-T', filename_us_tr_tracked, us_tr_labels, us_freq,
+                us_offset)
 
             # set ultrasound IoU error
             us_jd_labels = ['JD']
             filename_jd_error = filedir_us + '/' + tracking_data_type + '/iou_series.csv'
-            td.data_us_jd_error = TimeSeriesData.from_file('US-JD-E',
-                                                         filename_jd_error,
-                                                         us_jd_labels, us_freq,
-                                                         us_offset)
+            td.data_us_jd_error = TimeSeriesData.from_file(
+                'US-JD-E', filename_jd_error, us_jd_labels, us_freq, us_offset)
 
         td.build_synced_dataframe()
 
@@ -275,15 +270,19 @@ class TrialData():
         us_tr_series = utils.build_data_series(self.data_us_th_rat)
 
         # build tracked ultrasound data series
-        us_csa_series_tracked = utils.build_data_series(self.data_us_csa_tracked)
-        us_t_series_tracked = utils.build_data_series(self.data_us_thickness_tracked)
-        us_tr_series_tracked = utils.build_data_series(self.data_us_th_rat_tracked)
+        us_csa_series_tracked = utils.build_data_series(
+            self.data_us_csa_tracked)
+        us_t_series_tracked = utils.build_data_series(
+            self.data_us_thickness_tracked)
+        us_tr_series_tracked = utils.build_data_series(
+            self.data_us_th_rat_tracked)
         us_jd_error_series = utils.build_data_series(self.data_us_jd_error)
 
         # change ultrasound data series to appropriate units (pixel --> mm^2)
         us_res = 0.157676
         us_csa_series = us_csa_series.multiply(math.pow(us_res, 2))
-        us_csa_series_tracked = us_csa_series_tracked.multiply(math.pow(us_res, 2))
+        us_csa_series_tracked = us_csa_series_tracked.multiply(
+            math.pow(us_res, 2))
         us_t_series = us_t_series.multiply(us_res)
         us_t_series_tracked = us_t_series_tracked.multiply(us_res)
 
