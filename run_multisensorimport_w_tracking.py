@@ -4,13 +4,22 @@
 Example:
     Once filepaths are set appropriately, run this function via
 
-        $ python run_multisensorimport.py
+        $ python run_multisensorimport_w_tracking.py
 """
 import os
+
+import pandas as pd
 
 from multisensorimport.dataobj import data_utils
 from multisensorimport.dataobj import trialdata as td
 from multisensorimport.viz import plot_utils, print_utils, stats_utils
+
+# tracking frame to generate
+TRACKER = 'SBLK-T'
+
+# times for tracking evaluation (box plots)
+TIME_IN = '00:00:00'
+TIME_OUT = '00:02:00'
 
 # directory containing all data (script path + relative string)
 DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
@@ -38,14 +47,14 @@ ANG_CORR_OUT_PATH = DATA_DIR + 'ang_corr.csv'
 SUBJ_CORR_OUT_PATH = DATA_DIR + 'subj_corr.csv'
 
 # show polynomial fit debugging plots
-DEBUG = True
+DEBUG = False
 
 # eliminate certain plot titles/labels for publication printing
 PRINT_PUB_PLOTS = False
 
 
 def main():
-    """Execute all time series data analysis for BioRob 2020 publication."""
+    """Execute all time series data analysis for TNSRE 2021 publication."""
     # import all time series data, detrend via polynomial fit
     # NOTE: AMG data not currently analyzed, peaks inaccurate
     print('Aggregating and fitting time series data (Sub1, 25deg)...')
@@ -57,7 +66,8 @@ def main():
         emg_peak=5500,
         amg_peak=13290,
         force_peak=3721,
-        us_peak=51)
+        us_peak=51,
+        tracking_data_type=TRACKER)
     print('Done.')
 
     print('\nAggregating and fitting time series data (Sub1, 44deg)...')
@@ -69,7 +79,8 @@ def main():
         emg_peak=5500,
         amg_peak=13290,
         force_peak=5800,
-        us_peak=46)
+        us_peak=46,
+        tracking_data_type=TRACKER)
     print('Done.')
 
     print('\nAggregating and fitting time series data (Sub1, 69deg)...')
@@ -81,7 +92,8 @@ def main():
         emg_peak=5800,
         amg_peak=13290,
         force_peak=4476,
-        us_peak=50)
+        us_peak=50,
+        tracking_data_type=TRACKER)
     print('Done.')
 
     print('\nAggregating and fitting time series data (Sub1, 82deg)...')
@@ -93,7 +105,8 @@ def main():
         emg_peak=5700,
         amg_peak=13290,
         force_peak=2469,
-        us_peak=49)
+        us_peak=49,
+        tracking_data_type=TRACKER)
     print('Done.')
 
     print('\nAggregating and fitting time series data (Sub1, 97deg)...')
@@ -105,7 +118,8 @@ def main():
         emg_peak=6000,
         amg_peak=13290,
         force_peak=4222,
-        us_peak=48)
+        us_peak=48,
+        tracking_data_type=TRACKER)
     print('Done.')
 
     print('\nAggregating and fitting time series data (Sub2, 69deg)...')
@@ -118,7 +132,8 @@ def main():
         amg_peak=None,
         force_peak=4033,
         us_peak=53,
-        force_only=True)
+        force_only=True,
+        tracking_data_type=TRACKER)
     print('Done.')
 
     print('\nAggregating and fitting time series data (Sub3, 69deg)...')
@@ -131,7 +146,8 @@ def main():
         amg_peak=None,
         force_peak=7113,
         us_peak=63,
-        force_only=True)
+        force_only=True,
+        tracking_data_type=TRACKER)
     print('Done.')
 
     print('\nAggregating and fitting time series data (Sub4, 69deg)...')
@@ -144,7 +160,8 @@ def main():
         amg_peak=None,
         force_peak=10810,
         us_peak=72,
-        force_only=True)
+        force_only=True,
+        tracking_data_type=TRACKER)
     print('Done.')
 
     print('\nAggregating and fitting time series data (Sub5, 69deg)...')
@@ -157,7 +174,35 @@ def main():
         amg_peak=None,
         force_peak=0,
         us_peak=36,
-        force_only=True)
+        force_only=True,
+        tracking_data_type=TRACKER)
+    print('Done.')
+
+    print_utils.print_div()
+
+    # construct time-sliced frames
+    print('\nConstructing time-sliced frames from ' + TIME_IN + ' to ' +
+          TIME_OUT + '...')
+    df_sub1_wp1_crop = data_sub1_wp1.df.between_time(TIME_IN, TIME_OUT)
+    df_sub1_wp2_crop = data_sub1_wp2.df.between_time(TIME_IN, TIME_OUT)
+    df_sub1_wp5_crop = data_sub1_wp5.df.between_time(TIME_IN, TIME_OUT)
+    df_sub1_wp8_crop = data_sub1_wp8.df.between_time(TIME_IN, TIME_OUT)
+    df_sub1_wp10_crop = data_sub1_wp10.df.between_time(TIME_IN, TIME_OUT)
+    df_sub2_wp5_crop = data_sub2_wp5.df.between_time(TIME_IN, TIME_OUT)
+    df_sub3_wp5_crop = data_sub3_wp5.df.between_time(TIME_IN, TIME_OUT)
+    df_sub4_wp5_crop = data_sub4_wp5.df.between_time(TIME_IN, TIME_OUT)
+    df_sub5_wp5_crop = data_sub5_wp5.df.between_time(TIME_IN, TIME_OUT)
+    print('Done.')
+
+    # aggregate time-sliced frames
+    print('\nAggregating time-sliced frames...')
+    df_box_agg = pd.concat([
+        df_sub1_wp1_crop, df_sub1_wp2_crop, df_sub1_wp5_crop, df_sub1_wp8_crop,
+        df_sub1_wp10_crop, df_sub2_wp5_crop, df_sub3_wp5_crop, df_sub4_wp5_crop,
+        df_sub5_wp5_crop
+    ],
+                           ignore_index=True,
+                           sort=False)
     print('Done.')
 
     print_utils.print_div()
@@ -174,12 +219,30 @@ def main():
         plot_utils.gen_debug_time_plot(data_sub3_wp5)
         plot_utils.gen_debug_time_plot(data_sub4_wp5)
         plot_utils.gen_debug_time_plot(data_sub5_wp5)
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp1.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp2.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp8.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub1_wp10.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub2_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub3_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub4_wp5.df.between_time(TIME_IN, TIME_OUT))
+        plot_utils.gen_error_box_plot(
+            data_sub5_wp5.df.between_time(TIME_IN, TIME_OUT))
         print('Done.')
 
         print_utils.print_div()
 
     # generate final formatted plots
-    print('\nDisplaying final plots...')
+    print('\nDisplaying final time series plots...')
     plot_utils.gen_time_plot(data_sub1_wp1, PRINT_PUB_PLOTS)
     plot_utils.gen_time_plot(data_sub1_wp2, PRINT_PUB_PLOTS)
     plot_utils.gen_time_plot(data_sub1_wp5, PRINT_PUB_PLOTS)
@@ -189,6 +252,28 @@ def main():
     plot_utils.gen_time_plot(data_sub3_wp5, PRINT_PUB_PLOTS)
     plot_utils.gen_time_plot(data_sub4_wp5, PRINT_PUB_PLOTS)
     plot_utils.gen_time_plot(data_sub5_wp5, PRINT_PUB_PLOTS)
+    print('Done.')
+
+    print_utils.print_div()
+
+    # generate final formatted plots
+    print('\nDisplaying final time series plots w/ tracking...')
+    plot_utils.gen_time_plot_w_tracking(data_sub1_wp1, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot_w_tracking(data_sub1_wp2, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot_w_tracking(data_sub1_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot_w_tracking(data_sub1_wp8, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot_w_tracking(data_sub1_wp10, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot_w_tracking(data_sub2_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot_w_tracking(data_sub3_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot_w_tracking(data_sub4_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot_w_tracking(data_sub5_wp5, PRINT_PUB_PLOTS)
+    print('Done.')
+
+    print_utils.print_div()
+
+    # generate final formatted violin plot
+    print('\nDisplaying final violin plot (may take a few moments)...')
+    plot_utils.gen_error_box_plot(df_box_agg)
     print('Done.')
 
     print_utils.print_div()

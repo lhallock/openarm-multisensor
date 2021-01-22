@@ -24,7 +24,7 @@ DATA_DIR_SUB5 = DATA_DIR + 'sub5/wp5t37/'
 
 
 def main():
-    """Generate all plots reported in BioRob 2020 publication."""
+    """Generate all aggregate plots reported in TNSRE 2021 publication."""
     # generate angle correlation plot
     df_ang = pd.read_csv(DATA_DIR + 'ang_corr.csv', header=0, index_col=0).T
 
