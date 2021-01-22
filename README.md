@@ -10,7 +10,7 @@ This repo contains code used to
 
 **NOTE**: The `master` branch of this code has been updated in preparation for a paper submission currently under review. To access the codebase as released with the publication above, please visit the `biorob-2020` branch [here](https://github.com/lhallock/openarm-multisensor/tree/biorob-2020).
 
-This README primarily describes the methods needed to recreate the analyses described in the publications above, as applied to the time OpenArm Multisensor 1.1 data set found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
+This README primarily describes the methods needed to recreate the analyses described in the publications above, as applied to the time OpenArm Multisensor 1.0 data set found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
 ---
 
@@ -36,7 +36,7 @@ This section describes the file structure and code necessary to recreate all plo
 
 ### Setup
 
-Data should be downloaded from the `time_series` folder of the [OpenArm Multisensor 1.1 data set](https://simtk.org/frs/?group_id=1617) and arranged as follows:
+Data should be downloaded from the `time_series` folder of the [OpenArm Multisensor 1.0 data set](https://simtk.org/frs/?group_id=1617) and arranged as follows:
 
 ```bash
 .
@@ -106,7 +106,7 @@ This section describes the file structure and code necessary to recreate all mus
 
 ### Setup
 
-Time series ultrasound data should be downloaded from the `ultrasound_frames` folder of the [OpenArm Multisensor 1.1 data set](https://simtk.org/frs/?group_id=1617), which includes both raw ultrasound image frames (`sub[N]/wp[i]/t[j]/raw`) and (for select trials) corresponding frames in which the brachioradialis contour has been manually segmented (`sub[N]/wp[i]t[j]/seg`). Because the code evaluates tracking quality against these ground truth scans, both must be downloaded to use the current release.
+Time series ultrasound data should be downloaded from the `ultrasound_frames` folder of the [OpenArm Multisensor 1.0 data set](https://simtk.org/frs/?group_id=1617), which includes both raw ultrasound image frames (`sub[N]/wp[i]/t[j]/raw`) and (for select trials) corresponding frames in which the brachioradialis contour has been manually segmented (`sub[N]/wp[i]t[j]/seg`). Because the code evaluates tracking quality against these ground truth scans, both must be downloaded to use the current release.
 
 Paths to each folder are specified as command line arguments during script usage, so data may be stored anywhere. For instance,
 
