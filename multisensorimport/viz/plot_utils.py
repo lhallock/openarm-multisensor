@@ -18,9 +18,9 @@ PLOT_FONT = 'Open Sans'
 
 def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of force, sEMG, and ultrasound data.
-
     Args:
-        trialdata (dataobj.TrialData) object containing data to be plotted
+        trialdata (pandas.DataFrame): dataobj.TrialData object containing data
+            to to be plotted
         no_titles (bool): whether to omit axis/title labels that are redundant
             with eventual use case (e.g., copying to table for publication)
         plot_font (str): desired matplotlib font family
@@ -28,7 +28,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     register_matplotlib_converters()
     sns.set()
 
-    num_subplots = 7
+    num_subplots = 6
 
     fig, axs = plt.subplots(num_subplots)
 
@@ -44,28 +44,25 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     axs[3].plot(trialdata.df['us-csa-dt'], color='#41b6c4')
     axs[4].plot(trialdata.df['us-t-dt'], color='#225ea8')
     axs[5].plot(plot_ind, trialdata.df['us-tr-dt'], color='#081d58')
-    axs[6].plot(trialdata.df['us-jd-e'], 'r')
-    axs[6].set_xlabel('time (s)', fontname=plot_font)
-    axs[6].xaxis.set_label_coords(1.0, -0.15)
+    axs[5].set_xlabel('time (s)', fontname=plot_font)
+    axs[5].xaxis.set_label_coords(1.0, -0.15)
 
     if not no_titles:
         tstring = trialdata.subj + ', ' + str(180 -
                                               int(trialdata.ang)) + '$\degree$'
         fig.suptitle(tstring, fontname=plot_font)
-        axs[0].set_ylabel('f', fontname=plot_font)
-        axs[1].set_ylabel('sEMG-BIC', fontname=plot_font)
-        axs[2].set_ylabel('sEMG-BRD', fontname=plot_font)
-        axs[3].set_ylabel('CSA-DT', fontname=plot_font)
-        axs[4].set_ylabel('T-DT', fontname=plot_font)
-        axs[5].set_ylabel('AR-DT', fontname=plot_font)
-        axs[6].set_ylabel('JD', fontname=plot_font)
+        axs[0].set(ylabel='f')
+        axs[1].set(ylabel='sEMG-BIC')
+        axs[2].set(ylabel='sEMG-BRD')
+        axs[3].set(ylabel='CSA-DT')
+        axs[4].set(ylabel='T-DT')
+        axs[5].set(ylabel='AR-DT')
 
     axs[0].xaxis.set_visible(False)
     axs[1].xaxis.set_visible(False)
     axs[2].xaxis.set_visible(False)
     axs[3].xaxis.set_visible(False)
     axs[4].xaxis.set_visible(False)
-    axs[5].xaxis.set_visible(False)
 
     for i in range(num_subplots):
         for tick in axs[i].get_xticklabels():
@@ -97,13 +94,13 @@ def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     axs[0].plot(trialdata.df['us-csa'], color='#41b6c4')
     axs[0].plot(trialdata.df['us-csa-t'], color='#41b6c4',
-                linestyle='dashed')
+                linestyle='dotted')
     axs[1].plot(trialdata.df['us-t'], color='#225ea8')
     axs[1].plot(trialdata.df['us-t-t'], color='#225ea8',
-                linestyle='dashed')
+                linestyle='dotted')
     axs[2].plot(plot_ind, trialdata.df['us-tr'], color='#081d58')
     axs[2].plot(plot_ind, trialdata.df['us-tr-t'], color='#081d58',
-                linestyle='dashed')
+                linestyle='dotted')
     axs[3].plot(plot_ind, trialdata.df['us-jd-e'], 'r')
     axs[3].set_xlabel('time (s)', fontname=plot_font)
     axs[3].xaxis.set_label_coords(1.0, -0.15)
@@ -158,13 +155,13 @@ def gen_debug_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FO
         axs[2].plot(trialdata.df['emg-abs-brd'] * 1e4, color='#f16913')
     axs[3].plot(trialdata.df['us-csa'], color='#41b6c4')
     axs[3].plot(trialdata.df['us-csa-t'], color='#41b6c4',
-                linestyle='dashed')
+                linestyle='dotted')
     axs[4].plot(trialdata.df['us-t'], color='#225ea8')
     axs[4].plot(trialdata.df['us-t-t'], color='#225ea8',
-                linestyle='dashed')
+                linestyle='dotted')
     axs[5].plot(plot_ind, trialdata.df['us-tr'], color='#081d58')
     axs[5].plot(plot_ind, trialdata.df['us-tr-t'], color='#081d58',
-                linestyle='dashed')
+                linestyle='dotted')
     axs[6].plot(trialdata.df['us-csa-e'], 'r')
     axs[6].plot(trialdata.df['us-t-e'], 'g')
     axs[6].plot(trialdata.df['us-tr-e'], 'b')

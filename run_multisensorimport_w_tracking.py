@@ -4,7 +4,7 @@
 Example:
     Once filepaths are set appropriately, run this function via
 
-        $ python run_multisensorimport.py
+        $ python run_multisensorimport_w_tracking.py
 """
 import os
 
@@ -54,7 +54,7 @@ PRINT_PUB_PLOTS = False
 
 
 def main():
-    """Execute all time series data analysis for BioRob 2020 publication."""
+    """Execute all time series data analysis for TNSRE 2021 publication."""
     # import all time series data, detrend via polynomial fit
     # NOTE: AMG data not currently analyzed, peaks inaccurate
     print('Aggregating and fitting time series data (Sub1, 25deg)...')
@@ -229,7 +229,22 @@ def main():
         print_utils.print_div()
 
     # generate final formatted plots
-    print('\nDisplaying final plots...')
+    print('\nDisplaying final time series plots...')
+    plot_utils.gen_time_plot(data_sub1_wp1, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data_sub1_wp2, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data_sub1_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data_sub1_wp8, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data_sub1_wp10, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data_sub2_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data_sub3_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data_sub4_wp5, PRINT_PUB_PLOTS)
+    plot_utils.gen_time_plot(data_sub5_wp5, PRINT_PUB_PLOTS)
+    print('Done.')
+
+    print_utils.print_div()
+
+    # generate final formatted plots
+    print('\nDisplaying final time series plots w/ tracking...')
     plot_utils.gen_time_plot_w_tracking(data_sub1_wp1, PRINT_PUB_PLOTS)
     plot_utils.gen_time_plot_w_tracking(data_sub1_wp2, PRINT_PUB_PLOTS)
     plot_utils.gen_time_plot_w_tracking(data_sub1_wp5, PRINT_PUB_PLOTS)
@@ -243,8 +258,9 @@ def main():
 
     print_utils.print_div()
 
-    # generate final formatted box plots
-    print('\nDisplaying final box plot...')
+
+    # generate final formatted violin plot
+    print('\nDisplaying final violin plot (may take a few moments)...')
     plot_utils.gen_error_box_plot(df_box_agg)
     print('Done.')
 
