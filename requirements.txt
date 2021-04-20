@@ -60,7 +60,7 @@ prometheus-client==0.7.1
 prompt-toolkit==2.0.10
 prospector==1.1.7
 ptyprocess==0.6.0
-py==1.8.0
+py==1.10.0
 pycodestyle==2.4.0
 pydocstyle==4.0.1
 pyflakes==1.6.0
