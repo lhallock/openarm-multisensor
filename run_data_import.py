@@ -50,6 +50,11 @@ def main():
     print(data.traj_start)
     print(data.df)
 
+#    data.df.plot()
+#    plt.show()
+
+    plot_utils.gen_time_plot(data)
+
 #    trialdict = np.load(readpath, allow_pickle=True)
 #    print(trialdict.keys())
 

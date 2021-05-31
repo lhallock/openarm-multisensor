@@ -28,41 +28,30 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     register_matplotlib_converters()
     sns.set()
 
-    num_subplots = 6
+    num_subplots = 3
 
     fig, axs = plt.subplots(num_subplots)
 
-    plot_ind = trialdata.df.index.to_julian_date().to_numpy() - 2457780.5
-    plot_ind = plot_ind * 24 * 60 * 60
+#    plot_ind = trialdata.df.index.to_julian_date().to_numpy() - 2457780.5
+#    plot_ind = plot_ind * 24 * 60 * 60
+#    plot_ind = trialdata.df.index
 
     axs[0].plot(trialdata.df['force'], 'k')
-    if not trialdata.force_only:
-        axs[1].plot(trialdata.df['emg-bic'] * 1e3, color='#cccccc')
-        axs[1].plot(trialdata.df['emg-abs-bic'] * 1e4, color='#fdae6b')
-        axs[2].plot(trialdata.df['emg-brd'] * 1e3, color='#cccccc')
-        axs[2].plot(trialdata.df['emg-abs-brd'] * 1e4, color='#f16913')
-    axs[3].plot(trialdata.df['us-csa-dt'], color='#41b6c4')
-    axs[4].plot(trialdata.df['us-t-dt'], color='#225ea8')
-    axs[5].plot(plot_ind, trialdata.df['us-tr-dt'], color='#081d58')
-    axs[5].set_xlabel('time (s)', fontname=plot_font)
-    axs[5].xaxis.set_label_coords(1.0, -0.15)
+    axs[1].plot(trialdata.df['emg'] * 1e3, color='#cccccc')
+    axs[2].plot(trialdata.df['us'], color='#225ea8')
+    axs[2].set_xlabel('time (s)', fontname=plot_font)
+#    axs[5].xaxis.set_label_coords(1.0, -0.15)
 
     if not no_titles:
-        tstring = trialdata.subj + ', ' + str(180 -
-                                              int(trialdata.ang)) + '$\degree$'
+        tstring = trialdata.subj
         fig.suptitle(tstring, fontname=plot_font)
         axs[0].set(ylabel='f')
-        axs[1].set(ylabel='sEMG-BIC')
-        axs[2].set(ylabel='sEMG-BRD')
-        axs[3].set(ylabel='CSA-DT')
-        axs[4].set(ylabel='T-DT')
-        axs[5].set(ylabel='AR-DT')
+        axs[1].set(ylabel='sEMG')
+        axs[2].set(ylabel='US')
 
-    axs[0].xaxis.set_visible(False)
-    axs[1].xaxis.set_visible(False)
-    axs[2].xaxis.set_visible(False)
-    axs[3].xaxis.set_visible(False)
-    axs[4].xaxis.set_visible(False)
+#    axs[0].xaxis.set_visible(False)
+#    axs[1].xaxis.set_visible(False)
+#    axs[2].xaxis.set_visible(False)
 
     for i in range(num_subplots):
         for tick in axs[i].get_xticklabels():

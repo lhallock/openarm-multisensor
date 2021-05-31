@@ -97,9 +97,9 @@ class TrialData():
         us_raw = pd.Series(data=trialdict['Raw'][0][0], index=times)
         emg_raw = pd.Series(data=trialdict['Raw'][1][0], index=times)
 
-        force_pro = pd.Series(data=trialdict['Processed'][2][0], index=times)
-        us_pro = pd.Series(data=trialdict['Processed'][0][0], index=times)
-        emg_pro = pd.Series(data=trialdict['Processed'][1][0], index=times)
+        force_pro = pd.Series(data=trialdict['Processed'][2], index=times)
+        us_pro = pd.Series(data=trialdict['Processed'][0], index=times)
+        emg_pro = pd.Series(data=trialdict['Processed'][1], index=times)
 
         traj = pd.Series(data=trialdict['Trajs'], index=times)
 
