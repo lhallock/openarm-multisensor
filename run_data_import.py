@@ -41,10 +41,30 @@ no_titles = False
 def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
     readpath = READ_PATH_TRIAL3
-    trialdict = np.load(readpath, allow_pickle=True)
-    print(trialdict.keys())
 
-    starttime = trialdict['Traj-Changes'][1]
+    data = td.TrialData.from_pickle(readpath, '0')
+    print(data.subj)
+    print(data.trial_no)
+    print(data.mins)
+    print(data.maxs)
+    print(data.traj_start)
+    print(data.df)
+
+#    trialdict = np.load(readpath, allow_pickle=True)
+#    print(trialdict.keys())
+
+#    print(trialdict['Traj-Changes'])
+#    print(trialdict['Processed-Maxs'])
+#    print(trialdict['Processed-Mins'])
+    #for key in trialdict.keys():
+    #    print(str(key) + ' ' + str(len(trialdict[key])))
+    #    print(trialdict[key])
+
+
+    # df = pd.DataFrame(trialdict)
+    # print(df)
+
+#    starttime = trialdict['Traj-Changes'][1]
 
     # ultrasound, emg, force
     sns.set()
