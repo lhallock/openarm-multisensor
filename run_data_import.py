@@ -22,14 +22,14 @@ from multisensorimport.viz import plot_utils, print_utils, stats_utils
 
 
 # directory containing all data (script path + relative string)
-DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/poc_traj/'
+DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/2A/'
 
 # paths to trial files
 READ_PATH_TRIAL = []
-READ_PATH_TRIAL0 = DATA_DIR + 'poc_trial_0.p'
-READ_PATH_TRIAL1 = DATA_DIR + 'poc_trial_1.p'
-READ_PATH_TRIAL2 = DATA_DIR + 'poc_trial_2.p'
-READ_PATH_TRIAL3 = DATA_DIR + 'poc_trial_3.p'
+READ_PATH_TRIAL0 = DATA_DIR + 'trial_0.p'
+READ_PATH_TRIAL1 = DATA_DIR + 'trial_1b.p'
+READ_PATH_TRIAL2 = DATA_DIR + 'trial_2b.p'
+READ_PATH_TRIAL3 = DATA_DIR + 'trial_3b.p'
 
 # sensor order in import files
 US_IND = 0
@@ -40,7 +40,7 @@ no_titles = False
 
 def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
-    readpath = READ_PATH_TRIAL3
+    readpath = READ_PATH_TRIAL1
 
     data = td.TrialData.from_pickle(readpath, '0')
     print(data.subj)
@@ -48,7 +48,7 @@ def main():
     print(data.mins)
     print(data.maxs)
     print(data.traj_start)
-    print(data.df.index)
+    print(data.df.index[0:100])
 
 #    data.df.plot()
 #    plt.show()

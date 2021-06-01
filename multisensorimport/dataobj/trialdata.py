@@ -87,7 +87,7 @@ class TrialData():
         td.maxs['emg'] = trialdict['Processed-Maxs'][1]
 
         # load trajectory start index
-        td.traj_start = trialdict['Traj-Changes'][1]
+        td.traj_start = trialdict['Traj-Changes'][1]-800
 
         # load data streams into frame
 
