@@ -91,17 +91,17 @@ class TrialData():
 
         # load data streams into frame
 
-        times = trialdict['Times']
+        times = trialdict['Times'][td.traj_start:]
 
-        force_raw = pd.Series(data=trialdict['Raw'][2][0], index=times)
-        us_raw = pd.Series(data=trialdict['Raw'][0][0], index=times)
-        emg_raw = pd.Series(data=trialdict['Raw'][1][0], index=times)
+        force_raw = pd.Series(data=trialdict['Raw'][2][0][td.traj_start:], index=times)
+        us_raw = pd.Series(data=trialdict['Raw'][0][0][td.traj_start:], index=times)
+        emg_raw = pd.Series(data=trialdict['Raw'][1][0][td.traj_start:], index=times)
 
-        force_pro = pd.Series(data=trialdict['Processed'][2], index=times)
-        us_pro = pd.Series(data=trialdict['Processed'][0], index=times)
-        emg_pro = pd.Series(data=trialdict['Processed'][1], index=times)
+        force_pro = pd.Series(data=trialdict['Processed'][2][td.traj_start:], index=times)
+        us_pro = pd.Series(data=trialdict['Processed'][0][td.traj_start:], index=times)
+        emg_pro = pd.Series(data=trialdict['Processed'][1][td.traj_start:], index=times)
 
-        traj = pd.Series(data=trialdict['Trajs'], index=times)
+        traj = pd.Series(data=trialdict['Trajs'][td.traj_start:], index=times)
 
         df_dict = {'force-raw': force_raw, 'us-raw': us_raw,
                    'emg-raw': emg_raw, 'force': force_pro,
