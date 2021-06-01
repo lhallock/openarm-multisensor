@@ -91,7 +91,9 @@ class TrialData():
 
         # load data streams into frame
 
-        times = trialdict['Times'][td.traj_start:]
+        times_raw = trialdict['Times'][td.traj_start:]
+        start_time = int(times_raw[0])
+        times = [t - start_time for t in times_raw]
 
         force_raw = pd.Series(data=trialdict['Raw'][2][0][td.traj_start:], index=times)
         us_raw = pd.Series(data=trialdict['Raw'][0][0][td.traj_start:], index=times)

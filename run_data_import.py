@@ -48,10 +48,12 @@ def main():
     print(data.mins)
     print(data.maxs)
     print(data.traj_start)
-    print(data.df)
+    print(data.df.index)
 
 #    data.df.plot()
 #    plt.show()
+
+    print(data.df.corr())
 
     plot_utils.gen_time_plot(data)
 
