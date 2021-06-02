@@ -86,8 +86,15 @@ class TrialData():
         td.maxs['us'] = trialdict['Processed-Maxs'][0]
         td.maxs['emg'] = trialdict['Processed-Maxs'][1]
 
-        # load trajectory start index
-        td.traj_start = trialdict['Traj-Changes'][1]-800
+        # load trajectory start index (compensate for 500-sample offset +
+        # starting baseline, accounting for some minor start time glitches in
+        # particular data sets)
+        if td.subj == '1':
+            td.traj_start = trialdict['Traj-Changes'][1]-800
+        elif td.subj == '6':
+            td.traj_start = trialdict['Traj-Changes'][1]-1100
+        else:
+            td.traj_start = trialdict['Traj-Changes'][1]-700
 
         # load data streams into frame
 
@@ -109,7 +116,9 @@ class TrialData():
                    'emg-raw': emg_raw, 'force': force_pro,
                    'us': us_pro, 'emg': emg_pro, 'traj': traj}
 
-        td.df = pd.DataFrame(df_dict)
+        df = pd.DataFrame(df_dict)
+
+        td.df = df[df.index < 86.0]
 
         return td
 
