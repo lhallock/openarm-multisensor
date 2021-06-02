@@ -62,6 +62,64 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
+def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
+    """Generate bar plot showing correlation across trajectory types.
+
+    Args:
+        df_corr (pandas.DataFrame): frame containing data to be plotted
+        plot_font (str): desired matplotlib font family
+    """
+#    mod_subj_colors = [
+#        '#41b6c4', '#41b6c4', '#225ea8', '#225ea8', '#081d58', '#081d58'
+#    ]
+    sns.set()
+    ax = sns.barplot(x='index', y='value', hue='variable', data=df_corr)
+#    bars = ax.patches
+#    patterns = ('', '////', '', '////', '', '////')
+#    hatches = [p for p in patterns for i in range(len(df_subj))]
+#    for bar, hatch in zip(bars, hatches):
+#        bar.set_hatch(hatch)
+    L = ax.legend(loc='lower left', ncol=1)
+    plt.setp(L.texts, family=plot_font)
+    ax.set_xlabel('Subject', fontname=plot_font)
+    ax.set_ylabel('CC(·,f)', fontname=plot_font)
+    for tick in ax.get_xticklabels():
+        tick.set_fontname(plot_font)
+    for tick in ax.get_yticklabels():
+        tick.set_fontname(plot_font)
+    plt.show()
+
+def gen_subj_corr_plot(df_corr, plot_font=PLOT_FONT):
+    """Generate bar plot showing correlation across subjects.
+
+    Args:
+        df_corr (pandas.DataFrame): frame containing data to be plotted
+        plot_font (str): desired matplotlib font family
+    """
+#    mod_subj_colors = [
+#        '#41b6c4', '#41b6c4', '#225ea8', '#225ea8', '#081d58', '#081d58'
+#    ]
+    sns.set()
+    df_corr_agg = df_corr.loc[df_corr['index'] == 'corr-all']
+    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_corr_agg)
+#    bars = ax.patches
+#    patterns = ('', '////', '', '////', '', '////')
+#    hatches = [p for p in patterns for i in range(len(df_subj))]
+#    for bar, hatch in zip(bars, hatches):
+#        bar.set_hatch(hatch)
+    L = ax.legend(loc='lower left', ncol=1)
+    plt.setp(L.texts, family=plot_font)
+    ax.set_xlabel('Subject', fontname=plot_font)
+    ax.set_ylabel('CC(·,f)', fontname=plot_font)
+    for tick in ax.get_xticklabels():
+        tick.set_fontname(plot_font)
+    for tick in ax.get_yticklabels():
+        tick.set_fontname(plot_font)
+    plt.show()
+
+
+
+
 def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
     """Generate box plot of subjects' tracking mode preferences.
 

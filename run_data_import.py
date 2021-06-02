@@ -78,15 +78,10 @@ def main():
     df_all_corrs = pd.concat(corr_df_list)
     print(df_all_corrs)
 
-    ax = sns.barplot(x='index', y='value', hue='variable', data=df_all_corrs)
-    plt.show()
+    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
+    plot_utils.gen_subj_corr_plot(df_all_corrs)
 
-    df_corrs_agg = df_all_corrs.loc[df_all_corrs['index'] == 'corr-all']
 
-    print(df_corrs_agg)
-
-    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_corrs_agg)
-    plt.show()
     # SURVEY PLOTS
 
     df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
