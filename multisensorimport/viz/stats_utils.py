@@ -1,9 +1,41 @@
 #!/usr/bin/env python3
 """Utility functions for basic dataframe statistics (mean, stdev, etc.)."""
 import pandas as pd
+from multisensorimport.dataobj import trialdata as td
 
 # list of tracker identifiers
 TRACKER_STRINGS = ('LK', 'FRLK', 'BFLK-G', 'BFLK-T', 'SBLK-G', 'SBLK-T')
+
+def gen_corr_df(data_dir, subj_dirs, trial_filename):
+    """Aggregate correlation values from multiple subjects.
+
+    Args:
+        data_dir (str): path to high-level data directory
+        subj_dirs (list): list of all subject identifiers/directories
+        trial_filename (str): filename of trial on which to generate
+            correlation data
+
+    Returns:
+        pandas.DataFrame melted correlation table
+    """
+    corr_df_list = []
+    for d in subj_dirs:
+        readpath = data_dir + d + '/' + trial_filename
+
+        data = td.TrialData.from_pickle(readpath, d)
+        corrs_us = pd.Series(data.get_corrs('us'))
+        corrs_emg = pd.Series(data.get_corrs('emg'))
+
+        df_corrs = pd.DataFrame({'us': corrs_us, 'emg': corrs_emg})
+        df_corrs_melt = pd.melt(df_corrs.reset_index(),
+                      id_vars='index',value_vars=['us','emg'])
+        df_corrs_melt['subj'] = data.subj
+
+        corr_df_list.append(df_corrs_melt)
+
+    df_all_corrs = pd.concat(corr_df_list)
+
+    return df_all_corrs
 
 
 def gen_refined_corr_dfs(df_corr,
