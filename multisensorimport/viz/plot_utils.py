@@ -62,6 +62,87 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
+def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
+    """Generate box plot of subjects' tracking mode preferences.
+
+    Args:
+        df_us (pandas.DataFrame): dataframe containing ultrasound tracking
+            preference data
+        df_emg (pandas.DataFrame): dataframe containing sEMG tracking
+            preference data
+        plot_font (str): desired matplotlib font family
+    """
+    register_matplotlib_converters()
+    sns.set()
+
+#    df_box = df_box.rename(
+#        columns={
+#            'us-csa-e': 'Frac. CSA',
+#            'us-t-e': 'Frac. T',
+#            'us-tr-e': 'Frac. AR',
+#            'us-jd-e': 'JD'
+#        })
+#    df_sns = pd.melt(df_box[['Frac. CSA', 'Frac. T', 'Frac. AR', 'JD']])
+
+#    box_pal = {
+#        'Frac. CSA': '#41b6c4',
+#        'Frac. T': '#225ea8',
+#        'Frac. AR': '#081d58',
+#        'JD': 'r'
+#    }
+    cdf = pd.concat([df_us, df_emg])
+    mdf = cdf.melt(id_vars=['subj', 'sensor'])
+    ax = sns.boxplot(y='variable', x='value', hue='sensor', data=mdf)
+
+#    ax.set_xlabel('Error Type', fontname=plot_font)
+#    ax.set_ylabel('Error Magnitude', fontname=plot_font)
+    for tick in ax.get_xticklabels():
+        tick.set_fontname(plot_font)
+    for tick in ax.get_yticklabels():
+        tick.set_fontname(plot_font)
+
+    plt.show()
+
+def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
+    """Generate box plot of subjects' tracking mode preferences.
+
+    Args:
+        df_comp (pandas.DataFrame): dataframe containing comparative tracker
+            preference data
+        plot_font (str): desired matplotlib font family
+    """
+    register_matplotlib_converters()
+    sns.set()
+
+#    df_box = df_box.rename(
+#        columns={
+#            'us-csa-e': 'Frac. CSA',
+#            'us-t-e': 'Frac. T',
+#            'us-tr-e': 'Frac. AR',
+#            'us-jd-e': 'JD'
+#        })
+#    df_sns = pd.melt(df_box[['Frac. CSA', 'Frac. T', 'Frac. AR', 'JD']])
+
+#    box_pal = {
+#        'Frac. CSA': '#41b6c4',
+#        'Frac. T': '#225ea8',
+#        'Frac. AR': '#081d58',
+#        'JD': 'r'
+#    }
+
+    mdf_comp = df_comp.melt(id_vars=['subj'])
+
+    ax = sns.boxplot(y='variable', x='value', data=mdf_comp)
+
+#    ax.set_xlabel('Error Type', fontname=plot_font)
+#    ax.set_ylabel('Error Magnitude', fontname=plot_font)
+    for tick in ax.get_xticklabels():
+        tick.set_fontname(plot_font)
+    for tick in ax.get_yticklabels():
+        tick.set_fontname(plot_font)
+
+    plt.show()
+
 
 def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of ground truth and tracked force, sEMG, and

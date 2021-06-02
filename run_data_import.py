@@ -48,22 +48,10 @@ def main():
     df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
     df_emg = pd.read_csv(DATA_DIR + 'survey_emg.csv')
 
-    cdf = pd.concat([df_us, df_emg])
-    mdf = cdf.melt(id_vars=['subj', 'sensor'])
-    print(cdf)
-    print(mdf)
+    plot_utils.gen_survey_box_plot(df_us, df_emg)
 
     df_comp = pd.read_csv(DATA_DIR + 'survey_comp.csv')
-    mdf_comp = df_comp.melt(id_vars=['subj'])
-    print(df_comp)
-    print(mdf_comp)
-
-#    ax = sns.boxplot(x='variable', y='value', hue='sensor', data=mdf)
-    ax = sns.boxplot(y='variable', x='value', hue='sensor', data=mdf)
-    plt.show()
-
-    ax2 = sns.boxplot(y='variable', x='value', data=mdf_comp)
-    plt.show()
+    plot_utils.gen_survey_comp_box_plot(df_comp)
 
     raise ValueError('break')
 
