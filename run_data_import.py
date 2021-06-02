@@ -22,7 +22,10 @@ from multisensorimport.viz import plot_utils, print_utils, stats_utils
 
 
 # directory containing all data (script path + relative string)
-DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/2A/'
+DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
+
+SUBJ_DIRS = ['2A/', '3B/', '4A/', '5B/', '6A/', '7B/', '8B/', '9B/', '10A/',
+             '11A/']
 
 # paths to trial files
 READ_PATH_TRIAL = []
@@ -40,22 +43,47 @@ no_titles = False
 
 def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
-    readpath = READ_PATH_TRIAL1
+#    readpath = READ_PATH_TRIAL1
 
-    data = td.TrialData.from_pickle(readpath, '0')
-    print(data.subj)
-    print(data.trial_no)
-    print(data.mins)
-    print(data.maxs)
-    print(data.traj_start)
-    print(data.df.index[0:100])
+    df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
+    df_emg = pd.read_csv(DATA_DIR + 'survey_emg.csv')
+
+    cdf = pd.concat([df_us, df_emg])
+    mdf = cdf.melt(id_vars=['subj', 'sensor'])
+    print(cdf)
+    print(mdf)
+
+    df_comp = pd.read_csv(DATA_DIR + 'survey_comp.csv')
+    mdf_comp = df_comp.melt(id_vars=['subj'])
+    print(df_comp)
+    print(mdf_comp)
+
+#    ax = sns.boxplot(x='variable', y='value', hue='sensor', data=mdf)
+    ax = sns.boxplot(y='variable', x='value', hue='sensor', data=mdf)
+    plt.show()
+
+    ax2 = sns.boxplot(y='variable', x='value', data=mdf_comp)
+    plt.show()
+
+    raise ValueError('break')
+
+    for d in SUBJ_DIRS:
+        readpath = DATA_DIR + d + 'trial_1b.p'
+
+        data = td.TrialData.from_pickle(readpath, d)
+        print(data.subj)
+        print(data.trial_no)
+        print(data.mins)
+        print(data.maxs)
+        print(data.traj_start)
+        print(data.df)
 
 #    data.df.plot()
 #    plt.show()
 
-    print(data.df.corr())
+        print(data.df.corr())
 
-    plot_utils.gen_time_plot(data)
+        plot_utils.gen_time_plot(data)
 
 #    trialdict = np.load(readpath, allow_pickle=True)
 #    print(trialdict.keys())
