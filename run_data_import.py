@@ -34,7 +34,7 @@ def main():
 #    readpath = READ_PATH_TRIAL1
 
     for d in SUBJ_DIRS:
-        readpath = DATA_DIR + d + '/trial_2b.p'
+        readpath = DATA_DIR + d + '/trial_3b.p'
 
         data = td.TrialData.from_pickle(readpath, d)
         plot_utils.gen_time_plot(data)

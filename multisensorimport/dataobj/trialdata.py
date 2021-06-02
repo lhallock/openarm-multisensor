@@ -114,7 +114,12 @@ class TrialData():
             else:
                 td.traj_start = trialdict['Traj-Changes'][1]-700
         elif td.trial_no == '3b':
-            td.traj_start = trialdict['Traj-Changes'][1]-700
+            if td.subj == '1':
+                td.traj_start = trialdict['Traj-Changes'][1]-800
+            elif td.subj == '3':
+                td.traj_start = trialdict['Traj-Changes'][1]-800
+            else:
+                td.traj_start = trialdict['Traj-Changes'][1]-700
         else:
             raise ValueError('No offsets have been defined for this trial series.')
 
