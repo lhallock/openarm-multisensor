@@ -73,7 +73,7 @@ def main():
 
 #        raise ValueError('break')
 
-#        plot_utils.gen_time_plot(data)
+        plot_utils.gen_time_plot(data)
 
     df_all_corrs = pd.concat(corr_df_list)
     print(df_all_corrs)
@@ -81,6 +81,12 @@ def main():
     ax = sns.barplot(x='index', y='value', hue='variable', data=df_all_corrs)
     plt.show()
 
+    df_corrs_agg = df_all_corrs.loc[df_all_corrs['index'] == 'corr-all']
+
+    print(df_corrs_agg)
+
+    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_corrs_agg)
+    plt.show()
     # SURVEY PLOTS
 
     df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')

@@ -96,11 +96,11 @@ class TrialData():
         # load trajectory start index (compensate for 500-sample offset +
         # starting baseline, accounting for some minor start time glitches in
         # particular data sets)
-        if td.subj == '1':
-            td.traj_start = trialdict['Traj-Changes'][1]-800
-        elif td.subj == '6':
+#        if td.subj == '1':
+#            td.traj_start = trialdict['Traj-Changes'][1]-700 #800
+        if td.subj == '6':
             td.traj_start = trialdict['Traj-Changes'][1]-1100
-        elif td.subj == '9' or td.subj == '10':
+        elif td.subj == '10': # also 9 w/ old version
             td.traj_start = trialdict['Traj-Changes'][1]-650
         else:
             td.traj_start = trialdict['Traj-Changes'][1]-700
