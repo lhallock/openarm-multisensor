@@ -184,3 +184,15 @@ class TrialData():
 
         return corr_dict
 
+    def get_tracking_errors(self, tracked_val):
+        """Get time series errors from trajectory tracking.
+
+        Args:
+            tracked_val (str): sensor used in trajectory tracking game
+                (generally 'us' or 'emg', or possibly 'force')
+
+        Returns:
+            pandas.Dataframe time series errors
+        """
+        return abs(self.df[tracked_val] - self.df['traj'])
+

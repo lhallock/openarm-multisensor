@@ -33,12 +33,28 @@ def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
 #    readpath = READ_PATH_TRIAL1
 
+    err_df_list = []
     for d in SUBJ_DIRS:
-        readpath = DATA_DIR + d + '/trial_3b.p'
+        readpath_us = DATA_DIR + d + '/trial_2b.p'
+        readpath_emg = DATA_DIR + d + '/trial_3b.p'
 
-        data = td.TrialData.from_pickle(readpath, d)
-        plot_utils.gen_time_plot(data)
+        data_us = td.TrialData.from_pickle(readpath_us, d)
+        data_emg = td.TrialData.from_pickle(readpath_emg, d)
 
+        errors_us = data_us.get_tracking_errors('us')
+        errors_emg = data_emg.get_tracking_errors('emg')
+
+        df_errors = pd.DataFrame({'us': errors_us, 'emg': errors_emg})
+        df_errors['subj'] = d
+        err_df_list.append(df_errors)
+
+#        plot_utils.gen_time_plot(data)
+
+    df_all_errors = pd.concat(err_df_list)
+    print(df_all_errors)
+    df_error_melt = df_all_errors.melt(id_vars=['subj'], value_vars=['us', 'emg'])
+    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_error_melt)
+    plt.show()
 
     raise ValueError('break')
     # CORRELATION PLOTS
