@@ -37,7 +37,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 #    plot_ind = trialdata.df.index
 
     axs[0].plot(trialdata.df['force'], 'k')
-    axs[0].plot(trialdata.df['traj'], 'k', linestyle='dotted')
+    axs[2].plot(trialdata.df['traj'], 'k', linestyle='dotted')
     axs[1].plot(trialdata.df['emg'], color='#cccccc')
     axs[2].plot(trialdata.df['us'], color='#225ea8')
     axs[2].set_xlabel('time (s)', fontname=plot_font)

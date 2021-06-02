@@ -96,14 +96,27 @@ class TrialData():
         # load trajectory start index (compensate for 500-sample offset +
         # starting baseline, accounting for some minor start time glitches in
         # particular data sets)
-#        if td.subj == '1':
-#            td.traj_start = trialdict['Traj-Changes'][1]-700 #800
-        if td.subj == '6':
-            td.traj_start = trialdict['Traj-Changes'][1]-1100
-        elif td.subj == '10': # also 9 w/ old version
-            td.traj_start = trialdict['Traj-Changes'][1]-650
-        else:
+        if td.trial_no == '1b':
+            if td.subj == '6':
+                td.traj_start = trialdict['Traj-Changes'][1]-1100
+            elif td.subj == '10': # also 9 w/ old version
+                td.traj_start = trialdict['Traj-Changes'][1]-650
+            else:
+                td.traj_start = trialdict['Traj-Changes'][1]-700
+        elif td.trial_no == '2b':
+            if td.subj == '1':
+                td.traj_start = trialdict['Traj-Changes'][1]-1000
+                print(td.traj_start)
+            elif td.subj == '4':
+                td.traj_start = trialdict['Traj-Changes'][1]-800
+            elif td.subj == '8':
+                td.traj_start = trialdict['Traj-Changes'][1]-600
+            else:
+                td.traj_start = trialdict['Traj-Changes'][1]-700
+        elif td.trial_no == '3b':
             td.traj_start = trialdict['Traj-Changes'][1]-700
+        else:
+            raise ValueError('No offsets have been defined for this trial series.')
 
         # load data streams into frame
 
