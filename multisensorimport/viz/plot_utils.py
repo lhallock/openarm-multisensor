@@ -92,6 +92,8 @@ def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
 #    }
     cdf = pd.concat([df_us, df_emg])
     mdf = cdf.melt(id_vars=['subj', 'sensor'])
+    print(cdf)
+    print(mdf)
     ax = sns.boxplot(y='variable', x='value', hue='sensor', data=mdf)
 
 #    ax.set_xlabel('Error Type', fontname=plot_font)

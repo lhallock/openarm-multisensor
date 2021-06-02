@@ -39,6 +39,9 @@ class TrialData():
         df (pandas.DataFrame): pandas dataframe containing all timesynced data
             streams, including force, ultrasound-measured muscle thickness,
             sEMG, and plotted goal trajectory, both raw and processed
+        df_{sus, ramp, steps, sin} (pandas.DataFrame): pandas dataframes
+            containing time series data for only {sustained, ramp, "stair"
+            step, sine} portions of the trial
     """
 
     def __init__(self):
@@ -53,6 +56,10 @@ class TrialData():
         self.maxs = None
         self.traj_start = None
         self.df = None
+        self.df_sus = None
+        self.df_ramp = None
+        self.df_steps = None
+        self.df_sin = None
 
     @classmethod
     def from_pickle(cls, filename, subj):
@@ -93,6 +100,8 @@ class TrialData():
             td.traj_start = trialdict['Traj-Changes'][1]-800
         elif td.subj == '6':
             td.traj_start = trialdict['Traj-Changes'][1]-1100
+        elif td.subj == '9' or td.subj == '10':
+            td.traj_start = trialdict['Traj-Changes'][1]-650
         else:
             td.traj_start = trialdict['Traj-Changes'][1]-700
 
@@ -118,7 +127,42 @@ class TrialData():
 
         df = pd.DataFrame(df_dict)
 
+        # full trial
         td.df = df[df.index < 86.0]
 
+        # sustained
+        td.df_sus = df[df.index < 36.0]
+
+        # ramp
+        df_ramp = df[df.index < 53.0]
+        td.df_ramp = df_ramp[df_ramp.index > 36.0]
+
+        # "stair" steps
+        df_steps = df[df.index < 72.0]
+        td.df_steps = df_steps[df_steps.index > 53.0]
+
+        # sine
+        df_sin = df[df.index < 86.0]
+        td.df_sin = df_sin[df_sin.index > 72.0]
+
         return td
+
+    def get_corrs(self, col):
+        """Get correlation values between specified data column and force.
+
+        Args:
+            col (str): data column with which to compute correlation (generally
+                'us' or 'emg')
+
+        Returns:
+            dictionary of correlations for each trial segment
+        """
+        corr_dict = {}
+        corr_dict['corr-all'] = self.df.corr()['force'][col]
+        corr_dict['corr-sus'] = self.df_sus.corr()['force'][col]
+        corr_dict['corr-ramp'] = self.df_ramp.corr()['force'][col]
+        corr_dict['corr-steps'] = self.df_steps.corr()['force'][col]
+        corr_dict['corr-sin'] = self.df_sin.corr()['force'][col]
+
+        return corr_dict
 

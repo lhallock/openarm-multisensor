@@ -45,6 +45,7 @@ def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
 #    readpath = READ_PATH_TRIAL1
 
+    corr_df_list = []
     for d in SUBJ_DIRS:
         readpath = DATA_DIR + d + '/trial_1b.p'
 
@@ -57,9 +58,28 @@ def main():
         print(data.df)
 
         print(data.df.corr())
+        print(data.df.corr()['force']['emg'])
+        corrs_us = pd.Series(data.get_corrs('us'))
+        corrs_emg = pd.Series(data.get_corrs('emg'))
+
+        df_corrs = pd.DataFrame({'us': corrs_us, 'emg': corrs_emg})
+        df_corrs_melt = pd.melt(df_corrs.reset_index(),
+                      id_vars='index',value_vars=['us','emg'])
+        print(df_corrs)
+        df_corrs_melt['subj'] = data.subj
+        print(df_corrs_melt)
+
+        corr_df_list.append(df_corrs_melt)
+
 #        raise ValueError('break')
 
-        plot_utils.gen_time_plot(data)
+#        plot_utils.gen_time_plot(data)
+
+    df_all_corrs = pd.concat(corr_df_list)
+    print(df_all_corrs)
+
+    ax = sns.barplot(x='index', y='value', hue='variable', data=df_all_corrs)
+    plt.show()
 
     # SURVEY PLOTS
 
