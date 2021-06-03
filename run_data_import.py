@@ -41,19 +41,26 @@ def main():
         data_us = td.TrialData.from_pickle(readpath_us, d)
         data_emg = td.TrialData.from_pickle(readpath_emg, d)
 
-        errors_us = data_us.get_tracking_errors('us')
-        errors_emg = data_emg.get_tracking_errors('emg')
+        errors_us = pd.Series(data_us.get_tracking_errors('us'))
+        errors_emg = pd.Series(data_emg.get_tracking_errors('emg'))
 
         df_errors = pd.DataFrame({'us': errors_us, 'emg': errors_emg})
-        df_errors['subj'] = d
-        err_df_list.append(df_errors)
+        df_errors_melt = pd.melt(df_errors.reset_index(), id_vars='index',
+                                 value_vars=['us', 'emg'])
+
+        df_errors_melt['subj'] = d
+        err_df_list.append(df_errors_melt)
 
 #        plot_utils.gen_time_plot(data)
 
     df_all_errors = pd.concat(err_df_list)
     print(df_all_errors)
-    df_error_melt = df_all_errors.melt(id_vars=['subj'], value_vars=['us', 'emg'])
-    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_error_melt)
+#    df_error_melt = df_all_errors.melt(id_vars=['subj'], value_vars=['us', 'emg'])
+    ax = sns.barplot(x='index', y='value', hue='variable', data=df_all_errors)
+    plt.show()
+
+    df_err_agg = df_all_errors.loc[df_all_errors['index'] == 'err-all']
+    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_err_agg)
     plt.show()
 
     raise ValueError('break')
