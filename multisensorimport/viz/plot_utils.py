@@ -70,6 +70,60 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
+def gen_tracking_time_plot(trialdata_us, trialdata_emg, no_titles=False, plot_font=PLOT_FONT):
+    """Generate time series plot tracked sEMG and ultrasound data.
+    Args:
+        trialdata_us (pandas.DataFrame): dataobj.TrialData object containing
+            data from ultrasound tracking trial to to be plotted
+        trialdata_emg (pandas.DataFrame): dataobj.TrialData object containing
+            data from sEMG tracking trial to to be plotted
+        no_titles (bool): whether to omit axis/title labels that are redundant
+            with eventual use case (e.g., copying to table for publication)
+        plot_font (str): desired matplotlib font family
+    """
+    register_matplotlib_converters()
+    sns.set()
+
+    num_subplots = 2
+
+    fig, axs = plt.subplots(num_subplots)
+
+#    plot_ind = trialdata.df.index.to_julian_date().to_numpy() - 2457780.5
+#    plot_ind = plot_ind * 24 * 60 * 60
+#    plot_ind = trialdata.df.index
+
+    axs[0].plot(trialdata_us.df['us'], color='C0')
+    axs[0].plot(trialdata_us.df['traj'], color='k', linestyle='dotted')
+    axs[1].plot(trialdata_emg.df['emg'], color='C1')
+    axs[1].plot(trialdata_emg.df['traj'], color='k', linestyle='dotted')
+    axs[1].set_xlabel('time (s)', fontname=plot_font)
+#    axs[5].xaxis.set_label_coords(1.0, -0.15)
+
+    if not no_titles:
+        tstring = trialdata_us.subj
+        fig.suptitle(tstring, fontname=plot_font)
+
+    axs[0].set(ylabel='deformation')
+    axs[1].set(ylabel='activation')
+
+    fig.text(0.04, 0.5, 'normalized signal value', va='center',
+             rotation='vertical', fontname=plot_font, fontsize='large')
+
+#    fig.supylabel('normalized signal value', fontname=plot_font)
+
+#    axs[0].xaxis.set_visible(False)
+#    axs[1].xaxis.set_visible(False)
+#    axs[2].xaxis.set_visible(False)
+
+    for i in range(num_subplots):
+        for tick in axs[i].get_xticklabels():
+            tick.set_fontname(plot_font)
+        for tick in axs[i].get_yticklabels():
+            tick.set_fontname(plot_font)
+
+    plt.show()
+
+
 def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
     """Generate bar plot showing correlation across trajectory types.
 
