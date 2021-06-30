@@ -39,8 +39,8 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 #    plot_ind = trialdata.df.index
 
     axs[0].plot(trialdata.df['force'], 'k')
-    axs[1].plot(trialdata.df['emg'], color='#cccccc')
-    axs[2].plot(trialdata.df['us'], color='#225ea8')
+    axs[1].plot(trialdata.df['us'], color='C0')
+    axs[2].plot(trialdata.df['emg'], color='C1')
     axs[2].set_xlabel('time (s)', fontname=plot_font)
     axs[0].plot(trialdata.df['traj'], 'k', linestyle='dotted')
 #    axs[5].xaxis.set_label_coords(1.0, -0.15)
@@ -48,9 +48,15 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     if not no_titles:
         tstring = trialdata.subj
         fig.suptitle(tstring, fontname=plot_font)
-        axs[0].set(ylabel='f')
-        axs[1].set(ylabel='sEMG')
-        axs[2].set(ylabel='US')
+
+    axs[0].set(ylabel='force')
+    axs[1].set(ylabel='deformation')
+    axs[2].set(ylabel='activation')
+
+    fig.text(0.04, 0.5, 'normalized signal value', va='center',
+             rotation='vertical', fontname=plot_font, fontsize='large')
+
+#    fig.supylabel('normalized signal value', fontname=plot_font)
 
 #    axs[0].xaxis.set_visible(False)
 #    axs[1].xaxis.set_visible(False)
