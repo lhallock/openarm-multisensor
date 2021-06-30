@@ -44,7 +44,8 @@ def gen_corr_df(data_dir, subj_dirs, trial_filename):
 
     df_all_corrs['index_corr'] = df_all_corrs['index'].map(corr_ind_dict)
 
-    df_all_corrs = df_all_corrs.sort_values('index_corr')
+    df_all_corrs['subj'] = df_all_corrs['subj'].apply(pd.to_numeric)
+#    df_all_corrs = df_all_corrs.sort_values('index_corr')
 
     return df_all_corrs
 

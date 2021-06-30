@@ -24,7 +24,7 @@ from multisensorimport.viz import plot_utils, print_utils, stats_utils
 # directory containing all data (script path + relative string)
 DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
-SUBJ_DIRS = ['01', '02', '03', '04', '05', '06', '07', '08', '09',
+SUBJ_DIRS = ['1', '2', '3', '4', '5', '6', '7', '8', '9',
              '10']
 
 no_titles = False
@@ -37,6 +37,7 @@ def main():
 
     df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
     print(df_all_corrs)
+    print(df_all_corrs.dtypes)
 
     plot_utils.gen_trajtype_corr_plot(df_all_corrs)
     plot_utils.gen_subj_corr_plot(df_all_corrs)

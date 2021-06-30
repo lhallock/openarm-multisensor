@@ -72,8 +72,10 @@ def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
 #    mod_subj_colors = [
 #        '#41b6c4', '#41b6c4', '#225ea8', '#225ea8', '#081d58', '#081d58'
 #    ]
+    df_corr = df_corr.sort_values('index_corr')
     sns.set()
     ax = sns.barplot(x='index', y='value', hue='variable', data=df_corr)
+    plt.axvline(x = 3.5, color='#cccccc')
 #    bars = ax.patches
 #    patterns = ('', '////', '', '////', '', '////')
 #    hatches = [p for p in patterns for i in range(len(df_subj))]
@@ -99,6 +101,7 @@ def gen_subj_corr_plot(df_corr, plot_font=PLOT_FONT):
 #    mod_subj_colors = [
 #        '#41b6c4', '#41b6c4', '#225ea8', '#225ea8', '#081d58', '#081d58'
 #    ]
+    df_corr = df_corr.sort_values('subj')
     sns.set()
     df_corr_agg = df_corr.loc[df_corr['index'] == 'ALL']
     ax = sns.barplot(x='subj', y='value', hue='variable', data=df_corr_agg)
