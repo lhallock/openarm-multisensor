@@ -43,6 +43,17 @@ def main():
     plot_utils.gen_subj_corr_plot(df_all_corrs)
 
 
+    # SURVEY PLOTS
+
+    df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
+    df_emg = pd.read_csv(DATA_DIR + 'survey_emg.csv')
+
+    plot_utils.gen_survey_box_plot(df_us, df_emg)
+
+    df_comp = pd.read_csv(DATA_DIR + 'survey_comp.csv')
+    plot_utils.gen_survey_comp_box_plot(df_comp)
+
+
     raise ValueError('break')
 
     err_df_list = []
@@ -78,17 +89,6 @@ def main():
     plt.show()
 
 #    raise ValueError('break')
-
-
-    # SURVEY PLOTS
-
-    df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
-    df_emg = pd.read_csv(DATA_DIR + 'survey_emg.csv')
-
-    plot_utils.gen_survey_box_plot(df_us, df_emg)
-
-    df_comp = pd.read_csv(DATA_DIR + 'survey_comp.csv')
-    plot_utils.gen_survey_comp_box_plot(df_comp)
 
 
 

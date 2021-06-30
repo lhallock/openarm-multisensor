@@ -74,7 +74,8 @@ def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
 #    ]
     df_corr = df_corr.sort_values('index_corr')
     sns.set()
-    ax = sns.barplot(x='index', y='value', hue='variable', data=df_corr)
+    ax = sns.barplot(x='index', y='value', hue='variable', data=df_corr,
+                     hue_order=['deformation', 'activation'])
     plt.axvline(x = 3.5, color='#cccccc')
 #    bars = ax.patches
 #    patterns = ('', '////', '', '////', '', '////')
