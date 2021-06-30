@@ -12,6 +12,8 @@ from pandas.plotting import register_matplotlib_converters
 mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
 
+#mpl.rcParams['text.usetex'] = True
+
 # plot defaults
 PLOT_FONT = 'Open Sans'
 
@@ -159,17 +161,24 @@ def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
 #        'JD': 'r'
 #    }
     cdf = pd.concat([df_us, df_emg])
+    print(cdf)
+    cdf = cdf.rename(columns={'difficulty': r'$\bf{difficulty}$' '\n (1 = hard, \n 7 = easy)',
+                              'match': r'$\bf{force\ match}$' '\n (1 = no match, \n 7 = perfect match)',
+                              'responsivity': r'$\bf{responsivity}$' '\n (1 = slow, \n 7 = fast)'})
     mdf = cdf.melt(id_vars=['subj', 'sensor'])
     print(cdf)
     print(mdf)
     ax = sns.boxplot(y='variable', x='value', hue='sensor', data=mdf)
 
-#    ax.set_xlabel('Error Type', fontname=plot_font)
-#    ax.set_ylabel('Error Magnitude', fontname=plot_font)
+    L = ax.legend(loc='lower left', ncol=1, framealpha=1)
+    plt.setp(L.texts, family=plot_font)
+    ax.set_xlabel('', fontname=plot_font)
+    ax.set_ylabel('', fontname=plot_font)
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
+        tick.set_style('italic')
 
     plt.show()
 

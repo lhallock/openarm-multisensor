@@ -33,15 +33,6 @@ def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
 #    readpath = READ_PATH_TRIAL1
 
-    # CORRELATION PLOTS
-
-    df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
-    print(df_all_corrs)
-    print(df_all_corrs.dtypes)
-
-    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
-    plot_utils.gen_subj_corr_plot(df_all_corrs)
-
 
     # SURVEY PLOTS
 
@@ -55,6 +46,15 @@ def main():
 
 
     raise ValueError('break')
+
+    # CORRELATION PLOTS
+
+    df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
+    print(df_all_corrs)
+    print(df_all_corrs.dtypes)
+
+    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
+    plot_utils.gen_subj_corr_plot(df_all_corrs)
 
     err_df_list = []
     for d in SUBJ_DIRS:
