@@ -179,7 +179,6 @@ def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
         tick.set_style('italic')
-
     plt.show()
 
 def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
@@ -211,17 +210,36 @@ def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
 
     mdf_comp = df_comp.melt(id_vars=['subj'])
 
-    ax = sns.boxplot(y='variable', x='value', data=mdf_comp)
+    ax = sns.boxplot(y='variable', x='value', data=mdf_comp, color='C4')
 
+    plt.axhline(y=2.5, color='#cccccc')
+
+    ax.set_xlabel('', fontname=plot_font)
+    ax.set_ylabel('', fontname=plot_font)
 #    ax.set_xlabel('Error Type', fontname=plot_font)
 #    ax.set_ylabel('Error Magnitude', fontname=plot_font)
+
+#    labels = [item.get_text() for item in ax.get_xticklabels()]
+    labels = [int(label) for label in ax.get_xticks().tolist()]
+    print(labels)
+    labels[1] = '1 \n (deformation \n preferred)'
+    labels[7] = '7 \n (activation \n preferred)'
+
+    ax.set_xticklabels(labels)
+
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
+        tick.set_fontweight('bold')
+#    hatches = ['-', '+', 'x', '*']
+#    for i, thisbar in enumerate(ax.artists):
+#        # Set a different hatch for each bar
+#        thisbar.set_hatch('-')
+
+#    gradientbars(bar)
 
     plt.show()
-
 
 def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of ground truth and tracked force, sEMG, and
