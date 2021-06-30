@@ -40,7 +40,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     axs[1].plot(trialdata.df['emg'], color='#cccccc')
     axs[2].plot(trialdata.df['us'], color='#225ea8')
     axs[2].set_xlabel('time (s)', fontname=plot_font)
-    axs[1].plot(trialdata.df['traj'], 'k', linestyle='dotted')
+    axs[0].plot(trialdata.df['traj'], 'k', linestyle='dotted')
 #    axs[5].xaxis.set_label_coords(1.0, -0.15)
 
     if not no_titles:
@@ -81,7 +81,7 @@ def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
 #        bar.set_hatch(hatch)
     L = ax.legend(loc='lower left', ncol=1)
     plt.setp(L.texts, family=plot_font)
-    ax.set_xlabel('Subject', fontname=plot_font)
+    ax.set_xlabel('Trajectory Type', fontname=plot_font)
     ax.set_ylabel('CC(·,f)', fontname=plot_font)
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
@@ -100,7 +100,7 @@ def gen_subj_corr_plot(df_corr, plot_font=PLOT_FONT):
 #        '#41b6c4', '#41b6c4', '#225ea8', '#225ea8', '#081d58', '#081d58'
 #    ]
     sns.set()
-    df_corr_agg = df_corr.loc[df_corr['index'] == 'corr-all']
+    df_corr_agg = df_corr.loc[df_corr['index'] == 'ALL']
     ax = sns.barplot(x='subj', y='value', hue='variable', data=df_corr_agg)
 #    bars = ax.patches
 #    patterns = ('', '////', '', '////', '', '////')

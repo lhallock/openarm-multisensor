@@ -176,11 +176,11 @@ class TrialData():
             dictionary of correlations for each trial segment
         """
         corr_dict = {}
-        corr_dict['corr-all'] = self.df.corr()['force'][col]
-        corr_dict['corr-sus'] = self.df_sus.corr()['force'][col]
-        corr_dict['corr-ramp'] = self.df_ramp.corr()['force'][col]
-        corr_dict['corr-steps'] = self.df_steps.corr()['force'][col]
-        corr_dict['corr-sin'] = self.df_sin.corr()['force'][col]
+        corr_dict['ALL'] = self.df.corr()['force'][col]
+        corr_dict['sustained'] = self.df_sus.corr()['force'][col]
+        corr_dict['ramp'] = self.df_ramp.corr()['force'][col]
+        corr_dict['step'] = self.df_steps.corr()['force'][col]
+        corr_dict['sine'] = self.df_sin.corr()['force'][col]
 
         return corr_dict
 

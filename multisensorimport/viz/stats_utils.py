@@ -26,14 +26,25 @@ def gen_corr_df(data_dir, subj_dirs, trial_filename):
         corrs_us = pd.Series(data.get_corrs('us'))
         corrs_emg = pd.Series(data.get_corrs('emg'))
 
-        df_corrs = pd.DataFrame({'us': corrs_us, 'emg': corrs_emg})
+        df_corrs = pd.DataFrame({'deformation': corrs_us, 'activation': corrs_emg})
         df_corrs_melt = pd.melt(df_corrs.reset_index(),
-                      id_vars='index',value_vars=['us','emg'])
+                      id_vars='index',value_vars=['deformation','activation'])
         df_corrs_melt['subj'] = data.subj
 
         corr_df_list.append(df_corrs_melt)
 
     df_all_corrs = pd.concat(corr_df_list)
+
+#    df_all_corrs.rename(columns={"index": "index_temp"})
+
+    corr_ind_dict = {'ALL': 4, 'sustained': 0, 'ramp': 1, 'step': 2, 'sine': 3}
+
+#    df_all_corrs['index_corr'] = df_all_corrs.apply(lambda row:
+#                                                    corr_ind_dict[str(row.index.index)], axis = 1)
+
+    df_all_corrs['index_corr'] = df_all_corrs['index'].map(corr_ind_dict)
+
+    df_all_corrs = df_all_corrs.sort_values('index_corr')
 
     return df_all_corrs
 

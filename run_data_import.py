@@ -24,7 +24,7 @@ from multisensorimport.viz import plot_utils, print_utils, stats_utils
 # directory containing all data (script path + relative string)
 DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
-SUBJ_DIRS = ['1', '2', '3', '4', '5', '6', '7', '8', '9',
+SUBJ_DIRS = ['01', '02', '03', '04', '05', '06', '07', '08', '09',
              '10']
 
 no_titles = False
@@ -33,11 +33,24 @@ def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
 #    readpath = READ_PATH_TRIAL1
 
+    # CORRELATION PLOTS
+
+    df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
+    print(df_all_corrs)
+
+    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
+    plot_utils.gen_subj_corr_plot(df_all_corrs)
+
+
+    raise ValueError('break')
+
     err_df_list = []
     for d in SUBJ_DIRS:
+        readpath_corr = DATA_DIR + d + '/trial_1b.p'
         readpath_us = DATA_DIR + d + '/trial_2b.p'
         readpath_emg = DATA_DIR + d + '/trial_3b.p'
 
+        data_corr = td.TrialData.from_pickle(readpath_corr, d)
         data_us = td.TrialData.from_pickle(readpath_us, d)
         data_emg = td.TrialData.from_pickle(readpath_emg, d)
 
@@ -51,7 +64,7 @@ def main():
         df_errors_melt['subj'] = d
         err_df_list.append(df_errors_melt)
 
-#        plot_utils.gen_time_plot(data)
+#        plot_utils.gen_time_plot(data_corr)
 
     df_all_errors = pd.concat(err_df_list)
     print(df_all_errors)
@@ -63,15 +76,7 @@ def main():
     ax = sns.barplot(x='subj', y='value', hue='variable', data=df_err_agg)
     plt.show()
 
-    raise ValueError('break')
-    # CORRELATION PLOTS
-
-    df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
-#    print(df_all_corrs)
-
-    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
-    plot_utils.gen_subj_corr_plot(df_all_corrs)
-
+#    raise ValueError('break')
 
 
     # SURVEY PLOTS
