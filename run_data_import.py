@@ -69,9 +69,9 @@ def main():
 
     plot_utils.gen_trajtype_err_plot(df_all_errors)
 
-    df_err_agg = df_all_errors.loc[df_all_errors['index'] == 'ALL']
-    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_err_agg)
-    plt.show()
+#    df_err_agg = df_all_errors.loc[df_all_errors['index'] == 'ALL']
+#    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_err_agg)
+#    plt.show()
 
     plot_utils.gen_subj_err_plot(df_all_errors)
 #    raise ValueError('break')

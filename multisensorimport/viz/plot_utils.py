@@ -152,7 +152,7 @@ def gen_trajtype_err_plot(df_err, plot_font=PLOT_FONT):
     L = ax.legend(loc='upper left', ncol=1, framealpha=1)
     plt.setp(L.texts, family=plot_font)
     ax.set_xlabel('Trajectory Type', fontname=plot_font)
-    ax.set_ylabel('RMS Error (normalized)', fontname=plot_font)
+    ax.set_ylabel('RMS Error (fraction of MVC)', fontname=plot_font)
     i = 0
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
@@ -185,10 +185,10 @@ def gen_subj_err_plot(df_err, plot_font=PLOT_FONT):
 #    hatches = [p for p in patterns for i in range(len(df_subj))]
 #    for bar, hatch in zip(bars, hatches):
 #        bar.set_hatch(hatch)
-    L = ax.legend(loc='upper left', ncol=1, framealpha=1)
+    L = ax.legend(loc='upper right', ncol=1, framealpha=1)
     plt.setp(L.texts, family=plot_font)
     ax.set_xlabel('Subject', fontname=plot_font)
-    ax.set_ylabel('RMS Error (normalized)', fontname=plot_font)
+    ax.set_ylabel('RMS Error (fraction of MVC)', fontname=plot_font)
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
     for tick in ax.get_yticklabels():

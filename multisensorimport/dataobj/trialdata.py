@@ -195,15 +195,20 @@ class TrialData():
             dictionary of time series errors
         """
         err_dict = {}
-        err_dict['ALL'] = abs(self.df[tracked_val] -
-                                  self.df['traj']).mean()
-        err_dict['sustained'] = abs(self.df_sus[tracked_val] -
-                                  self.df_sus['traj']).mean()
-        err_dict['ramp'] = abs(self.df_ramp[tracked_val] -
-                                   self.df_ramp['traj']).mean()
-        err_dict['step'] = abs(self.df_steps[tracked_val] -
-                                    self.df_steps['traj']).mean()
-        err_dict['sine'] = abs(self.df_sin[tracked_val] -
-                                  self.df_sin['traj']).mean()
+        err_dict['ALL'] = ((self.df[tracked_val] - self.df['traj']) ** 2).mean() ** .5
+        err_dict['sustained'] = ((self.df_sus[tracked_val] - self.df_sus['traj']) ** 2).mean() ** .5
+        err_dict['ramp'] = ((self.df_ramp[tracked_val] - self.df_ramp['traj']) ** 2).mean() ** .5
+        err_dict['step'] = ((self.df_steps[tracked_val] - self.df_steps['traj']) ** 2).mean() ** .5
+        err_dict['sine'] = ((self.df_sin[tracked_val] - self.df_sin['traj']) ** 2).mean() ** .5
+#        err_dict['ALL'] = abs(self.df[tracked_val] -
+#                                  self.df['traj']).mean()
+#        err_dict['sustained'] = abs(self.df_sus[tracked_val] -
+#                                  self.df_sus['traj']).mean()
+#        err_dict['ramp'] = abs(self.df_ramp[tracked_val] -
+#                                   self.df_ramp['traj']).mean()
+#        err_dict['step'] = abs(self.df_steps[tracked_val] -
+#                                    self.df_steps['traj']).mean()
+#        err_dict['sine'] = abs(self.df_sin[tracked_val] -
+#                                  self.df_sin['traj']).mean()
 
         return err_dict
