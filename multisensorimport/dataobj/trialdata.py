@@ -195,15 +195,15 @@ class TrialData():
             dictionary of time series errors
         """
         err_dict = {}
-        err_dict['err-all'] = abs(self.df[tracked_val] -
+        err_dict['ALL'] = abs(self.df[tracked_val] -
                                   self.df['traj']).mean()
-        err_dict['err-sus'] = abs(self.df_sus[tracked_val] -
+        err_dict['sustained'] = abs(self.df_sus[tracked_val] -
                                   self.df_sus['traj']).mean()
-        err_dict['err-ramp'] = abs(self.df_ramp[tracked_val] -
+        err_dict['ramp'] = abs(self.df_ramp[tracked_val] -
                                    self.df_ramp['traj']).mean()
-        err_dict['err-steps'] = abs(self.df_steps[tracked_val] -
+        err_dict['step'] = abs(self.df_steps[tracked_val] -
                                     self.df_steps['traj']).mean()
-        err_dict['err-sin'] = abs(self.df_sin[tracked_val] -
+        err_dict['sine'] = abs(self.df_sin[tracked_val] -
                                   self.df_sin['traj']).mean()
 
         return err_dict

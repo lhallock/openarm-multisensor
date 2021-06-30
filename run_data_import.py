@@ -32,30 +32,6 @@ no_titles = False
 def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
 #    readpath = READ_PATH_TRIAL1
-
-
-    # SURVEY PLOTS
-
-    df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
-    df_emg = pd.read_csv(DATA_DIR + 'survey_emg.csv')
-
-    plot_utils.gen_survey_box_plot(df_us, df_emg)
-
-    df_comp = pd.read_csv(DATA_DIR + 'survey_comp.csv')
-    plot_utils.gen_survey_comp_box_plot(df_comp)
-
-
-    raise ValueError('break')
-
-    # CORRELATION PLOTS
-
-    df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
-    print(df_all_corrs)
-    print(df_all_corrs.dtypes)
-
-    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
-    plot_utils.gen_subj_corr_plot(df_all_corrs)
-
     err_df_list = []
     for d in SUBJ_DIRS:
         readpath_corr = DATA_DIR + d + '/trial_1b.p'
@@ -69,9 +45,9 @@ def main():
         errors_us = pd.Series(data_us.get_tracking_errors('us'))
         errors_emg = pd.Series(data_emg.get_tracking_errors('emg'))
 
-        df_errors = pd.DataFrame({'us': errors_us, 'emg': errors_emg})
+        df_errors = pd.DataFrame({'deformation': errors_us, 'activation': errors_emg})
         df_errors_melt = pd.melt(df_errors.reset_index(), id_vars='index',
-                                 value_vars=['us', 'emg'])
+                                 value_vars=['deformation', 'activation'])
 
         df_errors_melt['subj'] = d
         err_df_list.append(df_errors_melt)
@@ -80,15 +56,49 @@ def main():
 
     df_all_errors = pd.concat(err_df_list)
     print(df_all_errors)
-#    df_error_melt = df_all_errors.melt(id_vars=['subj'], value_vars=['us', 'emg'])
-    ax = sns.barplot(x='index', y='value', hue='variable', data=df_all_errors)
-    plt.show()
 
-    df_err_agg = df_all_errors.loc[df_all_errors['index'] == 'err-all']
+
+    err_ind_dict = {'ALL': 4, 'sustained': 0, 'ramp': 1, 'step': 2, 'sine': 3}
+    df_all_errors['index_err'] = df_all_errors['index'].map(err_ind_dict)
+    df_all_errors['subj'] = df_all_errors['subj'].apply(pd.to_numeric)
+
+    print(df_all_errors)
+#    df_error_melt = df_all_errors.melt(id_vars=['subj'], value_vars=['us', 'emg'])
+#    ax = sns.barplot(x='index', y='value', hue='variable', data=df_all_errors)
+#    plt.show()
+
+    plot_utils.gen_trajtype_err_plot(df_all_errors)
+
+    df_err_agg = df_all_errors.loc[df_all_errors['index'] == 'ALL']
     ax = sns.barplot(x='subj', y='value', hue='variable', data=df_err_agg)
     plt.show()
 
+    plot_utils.gen_subj_err_plot(df_all_errors)
 #    raise ValueError('break')
+
+    raise ValueError('break')
+
+    # CORRELATION PLOTS
+
+    df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
+    print(df_all_corrs)
+    print(df_all_corrs.dtypes)
+
+    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
+    plot_utils.gen_subj_corr_plot(df_all_corrs)
+
+
+    # SURVEY PLOTS
+
+    df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
+    df_emg = pd.read_csv(DATA_DIR + 'survey_emg.csv')
+
+    plot_utils.gen_survey_box_plot(df_us, df_emg)
+
+    df_comp = pd.read_csv(DATA_DIR + 'survey_comp.csv')
+    plot_utils.gen_survey_comp_box_plot(df_comp)
+
+
 
 
 
