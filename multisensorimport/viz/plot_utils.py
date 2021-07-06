@@ -58,8 +58,8 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
 #    fig.supylabel('normalized signal value', fontname=plot_font)
 
-#    axs[0].xaxis.set_visible(False)
-#    axs[1].xaxis.set_visible(False)
+    axs[0].xaxis.set_visible(False)
+    axs[1].xaxis.set_visible(False)
 #    axs[2].xaxis.set_visible(False)
 
     for i in range(num_subplots):
@@ -67,6 +67,8 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
             tick.set_fontname(plot_font)
         for tick in axs[i].get_yticklabels():
             tick.set_fontname(plot_font)
+
+    plt.tight_layout()
 
     plt.show()
 
@@ -111,7 +113,7 @@ def gen_tracking_time_plot(trialdata_us, trialdata_emg, no_titles=False, plot_fo
 
 #    fig.supylabel('normalized signal value', fontname=plot_font)
 
-#    axs[0].xaxis.set_visible(False)
+    axs[0].xaxis.set_visible(False)
 #    axs[1].xaxis.set_visible(False)
 #    axs[2].xaxis.set_visible(False)
 
@@ -120,6 +122,8 @@ def gen_tracking_time_plot(trialdata_us, trialdata_emg, no_titles=False, plot_fo
             tick.set_fontname(plot_font)
         for tick in axs[i].get_yticklabels():
             tick.set_fontname(plot_font)
+
+    plt.tight_layout()
 
     plt.show()
 
@@ -158,6 +162,7 @@ def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
             tick.set_style('italic')
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
+    plt.tight_layout()
     plt.show()
 
 def gen_subj_corr_plot(df_corr, plot_font=PLOT_FONT):
@@ -187,6 +192,7 @@ def gen_subj_corr_plot(df_corr, plot_font=PLOT_FONT):
         tick.set_fontname(plot_font)
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
+    plt.tight_layout()
     plt.show()
 
 def gen_trajtype_err_plot(df_err, plot_font=PLOT_FONT):
@@ -212,7 +218,7 @@ def gen_trajtype_err_plot(df_err, plot_font=PLOT_FONT):
     L = ax.legend(loc='upper left', ncol=1, framealpha=1)
     plt.setp(L.texts, family=plot_font)
     ax.set_xlabel('Trajectory Type', fontname=plot_font)
-    ax.set_ylabel('RMS Error (fraction of MVC)', fontname=plot_font)
+    ax.set_ylabel('RMS Error (fractional)', fontname=plot_font)
     i = 0
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
@@ -223,6 +229,7 @@ def gen_trajtype_err_plot(df_err, plot_font=PLOT_FONT):
             tick.set_style('italic')
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
+    plt.tight_layout()
     plt.show()
 
 
@@ -248,11 +255,12 @@ def gen_subj_err_plot(df_err, plot_font=PLOT_FONT):
     L = ax.legend(loc='upper right', ncol=1, framealpha=1)
     plt.setp(L.texts, family=plot_font)
     ax.set_xlabel('Subject', fontname=plot_font)
-    ax.set_ylabel('RMS Error (fraction of MVC)', fontname=plot_font)
+    ax.set_ylabel('RMS Error (fractional)', fontname=plot_font)
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
+    plt.tight_layout()
     plt.show()
 
 
@@ -305,6 +313,7 @@ def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
     for tick in ax.get_yticklabels():
         tick.set_fontname(plot_font)
         tick.set_style('italic')
+    plt.tight_layout()
     plt.show()
 
 def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
@@ -334,6 +343,7 @@ def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
 #        'JD': 'r'
 #    }
 
+    df_comp = df_comp.rename(columns={'overall preference': 'overall \n preference'})
     mdf_comp = df_comp.melt(id_vars=['subj'])
 
     ax = sns.boxplot(y='variable', x='value', data=mdf_comp, color='C4')
@@ -365,6 +375,7 @@ def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
 
 #    gradientbars(bar)
 
+    plt.tight_layout()
     plt.show()
 
 def gen_time_plot_w_tracking(trialdata, no_titles=False, plot_font=PLOT_FONT):

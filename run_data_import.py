@@ -52,10 +52,10 @@ def main():
         df_errors_melt['subj'] = d
         err_df_list.append(df_errors_melt)
 
-        plot_utils.gen_time_plot(data_corr, no_titles=True)
-        plot_utils.gen_tracking_time_plot(data_us, data_emg, no_titles=True)
+#        plot_utils.gen_time_plot(data_corr, no_titles=True)
+#        plot_utils.gen_tracking_time_plot(data_us, data_emg, no_titles=True)
 
-        raise ValueError('break')
+#        raise ValueError('break')
 
     df_all_errors = pd.concat(err_df_list)
     print(df_all_errors)
