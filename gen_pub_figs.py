@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Example import of time series muscle data.
+"""Generate all plots for publication.
 
 Example:
     Once filepaths are set appropriately, run this function via
 
-        $ python run_multisensorimport_w_tracking.py
+        $ python gen_pub_figs.py
 """
 import os
 
@@ -24,7 +24,7 @@ NO_TITLES = False
 
 
 def main():
-    """Execute all time series data analysis for TNSRE 2021 publication."""
+    """Generate all plots reported in TNSRE 2021 publication."""
 
     # generate correlation plots
     print('Plotting correlation by subject...')
