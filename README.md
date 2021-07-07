@@ -47,12 +47,12 @@ Select data should be downloaded from the `time_series` and `survey` folders of 
 ├── gen_pub_figs.py
 ├── sandbox/data/FINAL
 │   ├── [N]
-│   │   ├── trial_0.p
-│   │   ├── trial_1a.p
+│   │   ├── trial_0.p # optional, not used in analysis
+│   │   ├── trial_1a.p # optional, not used in analysis
 │   │   ├── trial_1b.p
-│   │   ├── trial_2a.p
+│   │   ├── trial_2a.p # optional, not used in analysis
 │   │   ├── trial_2b.p
-│   │   ├── trial_3a.p
+│   │   ├── trial_3a.p # optional, not used in analysis
 │   │   └── trial_3b.p
 │   ├── ...
 │   ├── survey_comp.csv
