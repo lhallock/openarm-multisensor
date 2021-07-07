@@ -48,17 +48,11 @@ def main():
         plot_utils.gen_time_plot(data_corr, no_titles=False)
         plot_utils.gen_tracking_time_plot(data_us, data_emg, no_titles=True)
 
-#        raise ValueError('break')
-
     df_all_errors = pd.concat(err_df_list)
-    print(df_all_errors)
-
 
     err_ind_dict = {'ALL': 4, 'sustained': 0, 'ramp': 1, 'step': 2, 'sine': 3}
     df_all_errors['index_err'] = df_all_errors['index'].map(err_ind_dict)
     df_all_errors['subj'] = df_all_errors['subj'].apply(pd.to_numeric)
-
-    print(df_all_errors)
 
     plot_utils.gen_trajtype_err_plot(df_all_errors)
 
@@ -68,8 +62,6 @@ def main():
     # CORRELATION PLOTS
 
     df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
-    print(df_all_corrs)
-    print(df_all_corrs.dtypes)
 
     plot_utils.gen_trajtype_corr_plot(df_all_corrs)
     plot_utils.gen_subj_corr_plot(df_all_corrs)

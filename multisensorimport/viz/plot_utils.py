@@ -295,13 +295,10 @@ def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
 #        'JD': 'r'
 #    }
     cdf = pd.concat([df_us, df_emg])
-    print(cdf)
     cdf = cdf.rename(columns={'difficulty': r'$\bf{difficulty}$' '\n (1 = hard, \n 7 = easy)',
                               'match': r'$\bf{force\ match}$' '\n (1 = no match, \n 7 = perfect match)',
                               'responsivity': r'$\bf{responsivity}$' '\n (1 = slow, \n 7 = fast)'})
     mdf = cdf.melt(id_vars=['subj', 'sensor'])
-    print(cdf)
-    print(mdf)
     ax = sns.boxplot(y='variable', x='value', hue='sensor', data=mdf)
 
     L = ax.legend(loc='lower left', ncol=1, framealpha=1)
@@ -357,7 +354,6 @@ def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
 
 #    labels = [item.get_text() for item in ax.get_xticklabels()]
     labels = [int(label) for label in ax.get_xticks().tolist()]
-    print(labels)
     labels[1] = '1 \n (deformation \n preferred)'
     labels[7] = '7 \n (activation \n preferred)'
 

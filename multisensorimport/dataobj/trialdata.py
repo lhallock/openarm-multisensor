@@ -106,7 +106,6 @@ class TrialData():
         elif td.trial_no == '2b':
             if td.subj == '1':
                 td.traj_start = trialdict['Traj-Changes'][1]-1000
-                print(td.traj_start)
             elif td.subj == '4':
                 td.traj_start = trialdict['Traj-Changes'][1]-800
             elif td.subj == '8':
