@@ -50,6 +50,13 @@ def main():
     print('done.\n')
 
 
+    df_all_errors = stats_utils.gen_err_df(DATA_DIR, SUBJ_DIRS, 'trial_2b.p',
+                                           'trial_3b.p')
+    plot_utils.gen_subj_err_plot(df_all_errors)
+    plot_utils.gen_trajtype_err_plot(df_all_errors)
+
+    raise ValueError('break')
+
     err_df_list = []
     for d in SUBJ_DIRS:
         readpath_corr = DATA_DIR + d + '/trial_1b.p'
@@ -60,6 +67,11 @@ def main():
         data_us = td.TrialData.from_pickle(readpath_us, d)
         data_emg = td.TrialData.from_pickle(readpath_emg, d)
 
+        plot_utils.gen_time_plot(data_corr, no_titles=NO_TITLES)
+        plot_utils.gen_tracking_time_plot(data_us, data_emg,
+                                          no_titles=NO_TITLES)
+
+
         errors_us = pd.Series(data_us.get_tracking_errors('us'))
         errors_emg = pd.Series(data_emg.get_tracking_errors('emg'))
 
@@ -69,11 +81,6 @@ def main():
 
         df_errors_melt['subj'] = d
         err_df_list.append(df_errors_melt)
-
-        plot_utils.gen_time_plot(data_corr, no_titles=NO_TITLES)
-        plot_utils.gen_tracking_time_plot(data_us, data_emg,
-                                          no_titles=NO_TITLES)
-
     df_all_errors = pd.concat(err_df_list)
 
     err_ind_dict = {'ALL': 4, 'sustained': 0, 'ramp': 1, 'step': 2, 'sine': 3}
