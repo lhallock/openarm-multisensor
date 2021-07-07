@@ -25,7 +25,6 @@ NO_TITLES = False
 
 def main():
     """Generate all plots reported in TNSRE 2021 publication."""
-
     # generate correlation plots
     print('Plotting correlation by subject...')
     df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')

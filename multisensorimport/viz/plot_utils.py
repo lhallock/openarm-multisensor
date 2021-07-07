@@ -17,6 +17,7 @@ PLOT_FONT = 'Open Sans'
 
 def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     """Generate time series plot of force, sEMG, and ultrasound data.
+
     Args:
         trialdata (pandas.DataFrame): dataobj.TrialData object containing data
             to to be plotted
@@ -72,6 +73,7 @@ def gen_tracking_time_plot(trialdata_us,
                            no_titles=False,
                            plot_font=PLOT_FONT):
     """Generate time series plot tracked sEMG and ultrasound data.
+
     Args:
         trialdata_us (pandas.DataFrame): dataobj.TrialData object containing
             data from ultrasound tracking trial to to be plotted
