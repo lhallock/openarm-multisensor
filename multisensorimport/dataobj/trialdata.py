@@ -12,6 +12,7 @@ import re
 import numpy as np
 import pandas as pd
 
+
 class TrialData():
     """Class containing muscle time series data and associated metadata.
 
@@ -83,29 +84,30 @@ class TrialData():
         # particular data sets)
         if td.trial_no == '1b':
             if td.subj == '6':
-                td.traj_start = trialdict['Traj-Changes'][1]-1100
-            elif td.subj == '10': # also 9 w/ old version
-                td.traj_start = trialdict['Traj-Changes'][1]-650
+                td.traj_start = trialdict['Traj-Changes'][1] - 1100
+            elif td.subj == '10':  # also 9 w/ old version
+                td.traj_start = trialdict['Traj-Changes'][1] - 650
             else:
-                td.traj_start = trialdict['Traj-Changes'][1]-700
+                td.traj_start = trialdict['Traj-Changes'][1] - 700
         elif td.trial_no == '2b':
             if td.subj == '1':
-                td.traj_start = trialdict['Traj-Changes'][1]-1000
+                td.traj_start = trialdict['Traj-Changes'][1] - 1000
             elif td.subj == '4':
-                td.traj_start = trialdict['Traj-Changes'][1]-800
+                td.traj_start = trialdict['Traj-Changes'][1] - 800
             elif td.subj == '8':
-                td.traj_start = trialdict['Traj-Changes'][1]-600
+                td.traj_start = trialdict['Traj-Changes'][1] - 600
             else:
-                td.traj_start = trialdict['Traj-Changes'][1]-700
+                td.traj_start = trialdict['Traj-Changes'][1] - 700
         elif td.trial_no == '3b':
             if td.subj == '1':
-                td.traj_start = trialdict['Traj-Changes'][1]-800
+                td.traj_start = trialdict['Traj-Changes'][1] - 800
             elif td.subj == '3':
-                td.traj_start = trialdict['Traj-Changes'][1]-800
+                td.traj_start = trialdict['Traj-Changes'][1] - 800
             else:
-                td.traj_start = trialdict['Traj-Changes'][1]-700
+                td.traj_start = trialdict['Traj-Changes'][1] - 700
         else:
-            raise ValueError('No offsets have been defined for this trial series.')
+            raise ValueError(
+                'No offsets have been defined for this trial series.')
 
         # load data streams into frame
 
@@ -113,19 +115,31 @@ class TrialData():
         start_time = int(times_raw[0])
         times = [t - start_time for t in times_raw]
 
-        force_raw = pd.Series(data=trialdict['Raw'][2][0][td.traj_start:], index=times)
-        us_raw = pd.Series(data=trialdict['Raw'][0][0][td.traj_start:], index=times)
-        emg_raw = pd.Series(data=trialdict['Raw'][1][0][td.traj_start:], index=times)
+        force_raw = pd.Series(data=trialdict['Raw'][2][0][td.traj_start:],
+                              index=times)
+        us_raw = pd.Series(data=trialdict['Raw'][0][0][td.traj_start:],
+                           index=times)
+        emg_raw = pd.Series(data=trialdict['Raw'][1][0][td.traj_start:],
+                            index=times)
 
-        force_pro = pd.Series(data=trialdict['Processed'][2][td.traj_start:], index=times)
-        us_pro = pd.Series(data=trialdict['Processed'][0][td.traj_start:], index=times)
-        emg_pro = pd.Series(data=trialdict['Processed'][1][td.traj_start:], index=times)
+        force_pro = pd.Series(data=trialdict['Processed'][2][td.traj_start:],
+                              index=times)
+        us_pro = pd.Series(data=trialdict['Processed'][0][td.traj_start:],
+                           index=times)
+        emg_pro = pd.Series(data=trialdict['Processed'][1][td.traj_start:],
+                            index=times)
 
         traj = pd.Series(data=trialdict['Trajs'][td.traj_start:], index=times)
 
-        df_dict = {'force-raw': force_raw, 'us-raw': us_raw,
-                   'emg-raw': emg_raw, 'force': force_pro,
-                   'us': us_pro, 'emg': emg_pro, 'traj': traj}
+        df_dict = {
+            'force-raw': force_raw,
+            'us-raw': us_raw,
+            'emg-raw': emg_raw,
+            'force': force_pro,
+            'us': us_pro,
+            'emg': emg_pro,
+            'traj': traj
+        }
 
         df = pd.DataFrame(df_dict)
 
@@ -179,10 +193,15 @@ class TrialData():
             dictionary of time series errors
         """
         err_dict = {}
-        err_dict['ALL'] = ((self.df[tracked_val] - self.df['traj']) ** 2).mean() ** .5
-        err_dict['sustained'] = ((self.df_sus[tracked_val] - self.df_sus['traj']) ** 2).mean() ** .5
-        err_dict['ramp'] = ((self.df_ramp[tracked_val] - self.df_ramp['traj']) ** 2).mean() ** .5
-        err_dict['step'] = ((self.df_steps[tracked_val] - self.df_steps['traj']) ** 2).mean() ** .5
-        err_dict['sine'] = ((self.df_sin[tracked_val] - self.df_sin['traj']) ** 2).mean() ** .5
+        err_dict['ALL'] = ((self.df[tracked_val] -
+                            self.df['traj'])**2).mean()**.5
+        err_dict['sustained'] = ((self.df_sus[tracked_val] -
+                                  self.df_sus['traj'])**2).mean()**.5
+        err_dict['ramp'] = ((self.df_ramp[tracked_val] -
+                             self.df_ramp['traj'])**2).mean()**.5
+        err_dict['step'] = ((self.df_steps[tracked_val] -
+                             self.df_steps['traj'])**2).mean()**.5
+        err_dict['sine'] = ((self.df_sin[tracked_val] -
+                             self.df_sin['traj'])**2).mean()**.5
 
         return err_dict

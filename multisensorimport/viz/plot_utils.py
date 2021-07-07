@@ -45,8 +45,13 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
     axs[1].set(ylabel='deformation')
     axs[2].set(ylabel='activation')
 
-    fig.text(0.04, 0.5, 'normalized signal value', va='center',
-             rotation='vertical', fontname=plot_font, fontsize='large')
+    fig.text(0.04,
+             0.5,
+             'normalized signal value',
+             va='center',
+             rotation='vertical',
+             fontname=plot_font,
+             fontsize='large')
 
     axs[0].xaxis.set_visible(False)
     axs[1].xaxis.set_visible(False)
@@ -61,7 +66,11 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 
     plt.show()
 
-def gen_tracking_time_plot(trialdata_us, trialdata_emg, no_titles=False, plot_font=PLOT_FONT):
+
+def gen_tracking_time_plot(trialdata_us,
+                           trialdata_emg,
+                           no_titles=False,
+                           plot_font=PLOT_FONT):
     """Generate time series plot tracked sEMG and ultrasound data.
     Args:
         trialdata_us (pandas.DataFrame): dataobj.TrialData object containing
@@ -92,8 +101,13 @@ def gen_tracking_time_plot(trialdata_us, trialdata_emg, no_titles=False, plot_fo
     axs[0].set(ylabel='deformation')
     axs[1].set(ylabel='activation')
 
-    fig.text(0.04, 0.5, 'normalized signal value', va='center',
-             rotation='vertical', fontname=plot_font, fontsize='large')
+    fig.text(0.04,
+             0.5,
+             'normalized signal value',
+             va='center',
+             rotation='vertical',
+             fontname=plot_font,
+             fontsize='large')
 
     axs[0].xaxis.set_visible(False)
 
@@ -117,9 +131,12 @@ def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
     """
     df_corr = df_corr.sort_values('index_corr')
     sns.set()
-    ax = sns.barplot(x='index', y='value', hue='variable', data=df_corr,
+    ax = sns.barplot(x='index',
+                     y='value',
+                     hue='variable',
+                     data=df_corr,
                      hue_order=['deformation', 'activation'])
-    plt.axvline(x = 3.5, color='#cccccc')
+    plt.axvline(x=3.5, color='#cccccc')
     L = ax.legend(loc='lower left', ncol=1, framealpha=1)
     plt.setp(L.texts, family=plot_font)
     ax.set_xlabel('Trajectory Type', fontname=plot_font)
@@ -127,7 +144,7 @@ def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
     i = 0
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
-        i = i+1
+        i = i + 1
         if i == 5:
             tick.set_fontweight('bold')
         else:
@@ -136,6 +153,7 @@ def gen_trajtype_corr_plot(df_corr, plot_font=PLOT_FONT):
         tick.set_fontname(plot_font)
     plt.tight_layout()
     plt.show()
+
 
 def gen_subj_corr_plot(df_corr, plot_font=PLOT_FONT):
     """Generate bar plot showing correlation across subjects.
@@ -159,6 +177,7 @@ def gen_subj_corr_plot(df_corr, plot_font=PLOT_FONT):
     plt.tight_layout()
     plt.show()
 
+
 def gen_trajtype_err_plot(df_err, plot_font=PLOT_FONT):
     """Generate bar plot showing tracking error across trajectory types.
 
@@ -168,9 +187,12 @@ def gen_trajtype_err_plot(df_err, plot_font=PLOT_FONT):
     """
     df_err = df_err.sort_values('index_err')
     sns.set()
-    ax = sns.barplot(x='index', y='value', hue='variable', data=df_err,
+    ax = sns.barplot(x='index',
+                     y='value',
+                     hue='variable',
+                     data=df_err,
                      hue_order=['deformation', 'activation'])
-    plt.axvline(x = 3.5, color='#cccccc')
+    plt.axvline(x=3.5, color='#cccccc')
     L = ax.legend(loc='upper left', ncol=1, framealpha=1)
     plt.setp(L.texts, family=plot_font)
     ax.set_xlabel('Trajectory Type', fontname=plot_font)
@@ -178,7 +200,7 @@ def gen_trajtype_err_plot(df_err, plot_font=PLOT_FONT):
     i = 0
     for tick in ax.get_xticklabels():
         tick.set_fontname(plot_font)
-        i = i+1
+        i = i + 1
         if i == 5:
             tick.set_fontweight('bold')
         else:
@@ -211,6 +233,7 @@ def gen_subj_err_plot(df_err, plot_font=PLOT_FONT):
     plt.tight_layout()
     plt.show()
 
+
 def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
     """Generate box plot of subjects' tracking mode preferences.
 
@@ -224,9 +247,15 @@ def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
     register_matplotlib_converters()
     sns.set()
     cdf = pd.concat([df_us, df_emg])
-    cdf = cdf.rename(columns={'difficulty': r'$\bf{difficulty}$' '\n (1 = hard, \n 7 = easy)',
-                              'match': r'$\bf{force\ match}$' '\n (1 = no match, \n 7 = perfect match)',
-                              'responsivity': r'$\bf{responsivity}$' '\n (1 = slow, \n 7 = fast)'})
+    cdf = cdf.rename(
+        columns={
+            'difficulty': r'$\bf{difficulty}$'
+                          '\n (1 = hard, \n 7 = easy)',
+            'match': r'$\bf{force\ match}$'
+                     '\n (1 = no match, \n 7 = perfect match)',
+            'responsivity': r'$\bf{responsivity}$'
+                            '\n (1 = slow, \n 7 = fast)'
+        })
     mdf = cdf.melt(id_vars=['subj', 'sensor'])
     ax = sns.boxplot(y='variable', x='value', hue='sensor', data=mdf)
 
@@ -242,6 +271,7 @@ def gen_survey_box_plot(df_us, df_emg, plot_font=PLOT_FONT):
     plt.tight_layout()
     plt.show()
 
+
 def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
     """Generate box plot of subjects' tracking mode preferences.
 
@@ -252,7 +282,8 @@ def gen_survey_comp_box_plot(df_comp, plot_font=PLOT_FONT):
     """
     register_matplotlib_converters()
     sns.set()
-    df_comp = df_comp.rename(columns={'overall preference': 'overall \n preference'})
+    df_comp = df_comp.rename(
+        columns={'overall preference': 'overall \n preference'})
     mdf_comp = df_comp.melt(id_vars=['subj'])
     ax = sns.boxplot(y='variable', x='value', data=mdf_comp, color='C4')
     plt.axhline(y=2.5, color='#cccccc')

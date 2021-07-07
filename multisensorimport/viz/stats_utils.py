@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Utility functions for basic dataframe building/statistics."""
 import pandas as pd
+
 from multisensorimport.dataobj import trialdata as td
+
 
 def gen_corr_df(data_dir, subj_dirs, trial_filename):
     """Aggregate correlation values from multiple subjects.
@@ -23,9 +25,13 @@ def gen_corr_df(data_dir, subj_dirs, trial_filename):
         corrs_us = pd.Series(data.get_corrs('us'))
         corrs_emg = pd.Series(data.get_corrs('emg'))
 
-        df_corrs = pd.DataFrame({'deformation': corrs_us, 'activation': corrs_emg})
+        df_corrs = pd.DataFrame({
+            'deformation': corrs_us,
+            'activation': corrs_emg
+        })
         df_corrs_melt = pd.melt(df_corrs.reset_index(),
-                      id_vars='index',value_vars=['deformation','activation'])
+                                id_vars='index',
+                                value_vars=['deformation', 'activation'])
         df_corrs_melt['subj'] = data.subj
 
         corr_df_list.append(df_corrs_melt)
@@ -37,6 +43,7 @@ def gen_corr_df(data_dir, subj_dirs, trial_filename):
     df_all_corrs['subj'] = df_all_corrs['subj'].apply(pd.to_numeric)
 
     return df_all_corrs
+
 
 def gen_err_df(data_dir, subj_dirs, trial_us_filename, trial_emg_filename):
     """Aggregate tracking error values from multiple subjects.
@@ -62,8 +69,12 @@ def gen_err_df(data_dir, subj_dirs, trial_us_filename, trial_emg_filename):
         errors_us = pd.Series(data_us.get_tracking_errors('us'))
         errors_emg = pd.Series(data_emg.get_tracking_errors('emg'))
 
-        df_errors = pd.DataFrame({'deformation': errors_us, 'activation': errors_emg})
-        df_errors_melt = pd.melt(df_errors.reset_index(), id_vars='index',
+        df_errors = pd.DataFrame({
+            'deformation': errors_us,
+            'activation': errors_emg
+        })
+        df_errors_melt = pd.melt(df_errors.reset_index(),
+                                 id_vars='index',
                                  value_vars=['deformation', 'activation'])
         df_errors_melt['subj'] = d
 

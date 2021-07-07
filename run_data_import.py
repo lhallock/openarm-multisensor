@@ -13,16 +13,15 @@ import pandas as pd
 from multisensorimport.dataobj import trialdata as td
 from multisensorimport.viz import plot_utils, stats_utils
 
-
 # directory containing all data (script path + relative string)
 DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
 # directory names for all subject (trial_*.p) data files
-SUBJ_DIRS = ['1', '2', '3', '4', '5', '6', '7', '8', '9',
-             '10']
+SUBJ_DIRS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
 # whether to print titles on time series plots (True for publication)
 NO_TITLES = False
+
 
 def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
@@ -48,7 +47,6 @@ def main():
     plot_utils.gen_trajtype_err_plot(df_all_errors)
     print('done.\n')
 
-
     # generate survey plots
     print('Plotting user preferences (evaluating controllers separately)...')
     df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
@@ -72,9 +70,11 @@ def main():
         data_emg = td.TrialData.from_pickle(readpath_emg, d)
 
         plot_utils.gen_time_plot(data_corr, no_titles=NO_TITLES)
-        plot_utils.gen_tracking_time_plot(data_us, data_emg,
+        plot_utils.gen_tracking_time_plot(data_us,
+                                          data_emg,
                                           no_titles=NO_TITLES)
     print('done.\n')
+
 
 if __name__ == "__main__":
     main()
