@@ -46,7 +46,7 @@ def gen_time_plot(trialdata, no_titles=False, plot_font=PLOT_FONT):
 #    axs[5].xaxis.set_label_coords(1.0, -0.15)
 
     if not no_titles:
-        tstring = trialdata.subj
+        tstring = 'correlation time series (force tracking): Sub' + trialdata.subj
         fig.suptitle(tstring, fontname=plot_font)
 
     axs[0].set(ylabel='force')
@@ -102,7 +102,7 @@ def gen_tracking_time_plot(trialdata_us, trialdata_emg, no_titles=False, plot_fo
 #    axs[5].xaxis.set_label_coords(1.0, -0.15)
 
     if not no_titles:
-        tstring = trialdata_us.subj
+        tstring = 'trajectory tracking time series (deformation/activation tracking): Sub' + trialdata_us.subj
         fig.suptitle(tstring, fontname=plot_font)
 
     axs[0].set(ylabel='deformation')

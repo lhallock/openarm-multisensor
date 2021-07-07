@@ -37,6 +37,18 @@ def main():
     plot_utils.gen_trajtype_corr_plot(df_all_corrs)
     print('done.\n')
 
+    # generate trajectory tracking error plots
+    print('Plotting trajectory tracking error by subject...')
+    df_all_errors = stats_utils.gen_err_df(DATA_DIR, SUBJ_DIRS, 'trial_2b.p',
+                                           'trial_3b.p')
+    plot_utils.gen_subj_err_plot(df_all_errors)
+    print('done.\n')
+
+    print('Plotting trajectory tracking error by trajectory type...')
+    plot_utils.gen_trajtype_err_plot(df_all_errors)
+    print('done.\n')
+
+
     # generate survey plots
     print('Plotting user preferences (evaluating controllers separately)...')
     df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
@@ -49,15 +61,7 @@ def main():
     plot_utils.gen_survey_comp_box_plot(df_comp)
     print('done.\n')
 
-
-    df_all_errors = stats_utils.gen_err_df(DATA_DIR, SUBJ_DIRS, 'trial_2b.p',
-                                           'trial_3b.p')
-    plot_utils.gen_subj_err_plot(df_all_errors)
-    plot_utils.gen_trajtype_err_plot(df_all_errors)
-
-    raise ValueError('break')
-
-    err_df_list = []
+    print('Plotting time series data for all subjects...')
     for d in SUBJ_DIRS:
         readpath_corr = DATA_DIR + d + '/trial_1b.p'
         readpath_us = DATA_DIR + d + '/trial_2b.p'
@@ -70,28 +74,7 @@ def main():
         plot_utils.gen_time_plot(data_corr, no_titles=NO_TITLES)
         plot_utils.gen_tracking_time_plot(data_us, data_emg,
                                           no_titles=NO_TITLES)
-
-
-        errors_us = pd.Series(data_us.get_tracking_errors('us'))
-        errors_emg = pd.Series(data_emg.get_tracking_errors('emg'))
-
-        df_errors = pd.DataFrame({'deformation': errors_us, 'activation': errors_emg})
-        df_errors_melt = pd.melt(df_errors.reset_index(), id_vars='index',
-                                 value_vars=['deformation', 'activation'])
-
-        df_errors_melt['subj'] = d
-        err_df_list.append(df_errors_melt)
-    df_all_errors = pd.concat(err_df_list)
-
-    err_ind_dict = {'ALL': 4, 'sustained': 0, 'ramp': 1, 'step': 2, 'sine': 3}
-    df_all_errors['index_err'] = df_all_errors['index'].map(err_ind_dict)
-    df_all_errors['subj'] = df_all_errors['subj'].apply(pd.to_numeric)
-
-    plot_utils.gen_trajtype_err_plot(df_all_errors)
-
-    plot_utils.gen_subj_err_plot(df_all_errors)
-
-
+    print('done.\n')
 
 if __name__ == "__main__":
     main()
