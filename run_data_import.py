@@ -11,7 +11,7 @@ import os
 import pandas as pd
 
 from multisensorimport.dataobj import trialdata as td
-from multisensorimport.viz import plot_utils, print_utils, stats_utils
+from multisensorimport.viz import plot_utils, stats_utils
 
 
 # directory containing all data (script path + relative string)
