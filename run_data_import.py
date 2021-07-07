@@ -17,14 +17,39 @@ from multisensorimport.viz import plot_utils, print_utils, stats_utils
 # directory containing all data (script path + relative string)
 DATA_DIR = os.path.dirname(os.path.abspath(__file__)) + '/sandbox/data/FINAL/'
 
+# directory names for all subject (trial_*.p) data files
 SUBJ_DIRS = ['1', '2', '3', '4', '5', '6', '7', '8', '9',
              '10']
 
-no_titles = False
+# whether to print titles on time series plots (True for publication)
+NO_TITLES = False
 
 def main():
     """Execute all time series data analysis for TNSRE 2021 publication."""
-#    readpath = READ_PATH_TRIAL1
+
+    # generate correlation plots
+    print('Plotting correlation by subject...')
+    df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
+    plot_utils.gen_subj_corr_plot(df_all_corrs)
+    print('done.\n')
+
+    print('Plotting correlation by trajectory type...')
+    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
+    print('done.\n')
+
+    # generate survey plots
+    print('Plotting user preferences (evaluating controllers separately)...')
+    df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
+    df_emg = pd.read_csv(DATA_DIR + 'survey_emg.csv')
+    plot_utils.gen_survey_box_plot(df_us, df_emg)
+    print('done.\n')
+
+    print('Plotting user preferences (evaluating controllers together)...')
+    df_comp = pd.read_csv(DATA_DIR + 'survey_comp.csv')
+    plot_utils.gen_survey_comp_box_plot(df_comp)
+    print('done.\n')
+
+
     err_df_list = []
     for d in SUBJ_DIRS:
         readpath_corr = DATA_DIR + d + '/trial_1b.p'
@@ -45,8 +70,9 @@ def main():
         df_errors_melt['subj'] = d
         err_df_list.append(df_errors_melt)
 
-        plot_utils.gen_time_plot(data_corr, no_titles=False)
-        plot_utils.gen_tracking_time_plot(data_us, data_emg, no_titles=True)
+        plot_utils.gen_time_plot(data_corr, no_titles=NO_TITLES)
+        plot_utils.gen_tracking_time_plot(data_us, data_emg,
+                                          no_titles=NO_TITLES)
 
     df_all_errors = pd.concat(err_df_list)
 
@@ -57,27 +83,6 @@ def main():
     plot_utils.gen_trajtype_err_plot(df_all_errors)
 
     plot_utils.gen_subj_err_plot(df_all_errors)
-
-
-    # CORRELATION PLOTS
-
-    df_all_corrs = stats_utils.gen_corr_df(DATA_DIR, SUBJ_DIRS, 'trial_1b.p')
-
-    plot_utils.gen_trajtype_corr_plot(df_all_corrs)
-    plot_utils.gen_subj_corr_plot(df_all_corrs)
-
-
-    # SURVEY PLOTS
-
-    df_us = pd.read_csv(DATA_DIR + 'survey_us.csv')
-    df_emg = pd.read_csv(DATA_DIR + 'survey_emg.csv')
-
-    plot_utils.gen_survey_box_plot(df_us, df_emg)
-
-    df_comp = pd.read_csv(DATA_DIR + 'survey_comp.csv')
-    plot_utils.gen_survey_comp_box_plot(df_comp)
-
-
 
 
 
