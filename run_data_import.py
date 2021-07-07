@@ -8,15 +8,8 @@ Example:
 """
 import os
 
-import pickle5 as pickle
-
-import numpy as np
 import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import seaborn as sns
 
-from multisensorimport.dataobj import data_utils
 from multisensorimport.dataobj import trialdata as td
 from multisensorimport.viz import plot_utils, print_utils, stats_utils
 
@@ -66,18 +59,10 @@ def main():
     df_all_errors['subj'] = df_all_errors['subj'].apply(pd.to_numeric)
 
     print(df_all_errors)
-#    df_error_melt = df_all_errors.melt(id_vars=['subj'], value_vars=['us', 'emg'])
-#    ax = sns.barplot(x='index', y='value', hue='variable', data=df_all_errors)
-#    plt.show()
 
     plot_utils.gen_trajtype_err_plot(df_all_errors)
 
-#    df_err_agg = df_all_errors.loc[df_all_errors['index'] == 'ALL']
-#    ax = sns.barplot(x='subj', y='value', hue='variable', data=df_err_agg)
-#    plt.show()
-
     plot_utils.gen_subj_err_plot(df_all_errors)
-#    raise ValueError('break')
 
 
     # CORRELATION PLOTS
