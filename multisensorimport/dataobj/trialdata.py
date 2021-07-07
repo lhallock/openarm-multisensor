@@ -3,29 +3,14 @@
 
 This module contains the TrialData class, which contains all time series data
 associated with a particular trial and associated metadata. Specifically, this
-class is used to aggregate associated surface electromyography (sEMG), acoustic
-myography (AMG), force, and quantitative features associated with time series
-ultrasound (e.g., muscle cross-sectional area, or CSA), alongside subject
+class is used to aggregate associated ultrasound (i.e., extracted muscle
+thickness), surface electromyography (sEMG), and force data, alongside subject
 metadata.
 """
 import re
-import pickle5 as pickle
-import math
 
 import numpy as np
 import pandas as pd
-from scipy.io import loadmat
-
-import multisensorimport.dataobj.data_utils as utils
-from multisensorimport.dataobj.timeseriesdata import TimeSeriesData
-
-# MAGIC NUMBERS (fungible)
-EMG_EWM_SPAN = 500
-FORCE_DETREND_CUTOFF = 5.0
-POLYNOMIAL_ORDER = 3
-PREPEAK_VAL = 3
-INTERPOLATION_METHOD = 'linear'
-
 
 class TrialData():
     """Class containing muscle time series data and associated metadata.
@@ -199,15 +184,5 @@ class TrialData():
         err_dict['ramp'] = ((self.df_ramp[tracked_val] - self.df_ramp['traj']) ** 2).mean() ** .5
         err_dict['step'] = ((self.df_steps[tracked_val] - self.df_steps['traj']) ** 2).mean() ** .5
         err_dict['sine'] = ((self.df_sin[tracked_val] - self.df_sin['traj']) ** 2).mean() ** .5
-#        err_dict['ALL'] = abs(self.df[tracked_val] -
-#                                  self.df['traj']).mean()
-#        err_dict['sustained'] = abs(self.df_sus[tracked_val] -
-#                                  self.df_sus['traj']).mean()
-#        err_dict['ramp'] = abs(self.df_ramp[tracked_val] -
-#                                   self.df_ramp['traj']).mean()
-#        err_dict['step'] = abs(self.df_steps[tracked_val] -
-#                                    self.df_steps['traj']).mean()
-#        err_dict['sine'] = abs(self.df_sin[tracked_val] -
-#                                  self.df_sin['traj']).mean()
 
         return err_dict
