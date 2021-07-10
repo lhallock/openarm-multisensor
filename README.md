@@ -1,8 +1,14 @@
 # Muscle Time Series Data Aggregation & Analysis
 
-![openarm-multisensor tracking exemplar](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2020biorob/featured.png)
+![openarm-multisensor tracking exemplar](header.png)
 
-This repo contains code used to import, manipulate, and visualize muscle time series data, including ultrasound, surface electromyography (sEMG), acoustic myography, and output force data streams. Code used to generate the time series data used in this repository (including muscle deformation tracking via optical flow) can be found [here](TODO).
+This repo contains code used to import, manipulate, and visualize muscle time
+series data, including ultrasound, surface electromyography (sEMG), acoustic
+myography, and output force data streams. Code used to generate the time series
+data used in this repository (including muscle deformation tracking via optical
+flow) can be found [here](https://github.com/lhallock/us-streaming) and
+[here](https://github.com/cmitch/amg_emg_force_control)
+(currently under development for open-source release).
 
 **If you use this code for academic purposes, please cite the following publication**: Laura A. Hallock, Bhavna Sud, Chris Mitchell, Eric Hu, Fayyaz Ahamed, Akash Velu, Amanda Schwartz, and Ruzena Bajcsy, "[Toward Real-Time Muscle Force Inference and Device Control via Optical-Flow-Tracked Muscle Deformation](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2021tnsre/)," in _IEEE Transactions on Neural Systems and Rehabilitation Engineering (TNSRE)_, IEEE, 2021. (under review)
 
@@ -81,7 +87,9 @@ Note that plots must be manually closed before the next will appear.
 
 ## Deformation tracking in ultrasound scans
 
-The [OpenArm Multisensor 2.0 data set](https://simtk.org/frs/?group_id=1617) used by this branch of the repository was generated using our [real-time muscle thickness tracking system](TODO), and thus this branch no longer contains code for muscle contour tracking. The old contour tracking code can still be accessed on the `biorob-2020` branch [here](https://github.com/lhallock/openarm-multisensor/tree/biorob-2020).
+The [OpenArm Multisensor 2.0 data set](https://simtk.org/frs/?group_id=1617)
+used by this branch of the repository was generated using our [real-time muscle
+thickness tracking system](https://github.com/lhallock/us-streaming), and thus this branch no longer contains code for muscle contour tracking. The old contour tracking code can still be accessed on the `biorob-2020` branch [here](https://github.com/lhallock/openarm-multisensor/tree/biorob-2020).
 
 ---
 
