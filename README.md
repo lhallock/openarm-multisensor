@@ -12,7 +12,7 @@ flow) can be found [here](https://github.com/lhallock/us-streaming) and
 
 **If you use this code for academic purposes, please cite the following publication**: Laura A. Hallock, Bhavna Sud, Chris Mitchell, Eric Hu, Fayyaz Ahamed, Akash Velu, Amanda Schwartz, and Ruzena Bajcsy, "[Toward Real-Time Muscle Force Inference and Device Control via Optical-Flow-Tracked Muscle Deformation](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2021tnsre/)," in _IEEE Transactions on Neural Systems and Rehabilitation Engineering (TNSRE)_, IEEE, 2021. (under review)
 
-**NOTE**: This code branch has been updated in preparation for the paper submission above, currently under review. To access the codebase as released with the previous BioRob 2020 publication, please visit the `biorob-2020` branch [here](https://github.com/lhallock/openarm-multisensor/tree/biorob-2020).
+**NOTE**: This code branch has been updated in preparation for the paper submission above, currently under review. To access the codebase as released with the previous BioRob 2020 publication, please visit the `biorob-2020` branch [here](https://github.com/lhallock/openarm-multisensor/tree/biorob-2020), or view the last stable code release on the `master` branch [here](https://github.com/lhallock/openarm-multisensor/).
 
 This README primarily describes the methods needed to recreate the analyses described in the publication above, as applied to the OpenArm Multisensor 2.0 data set found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
