@@ -8,6 +8,8 @@ This repo contains code used to
 
 **If you use this code for academic purposes, please cite the following publication**: Laura A. Hallock, Akash Velu, Amanda Schwartz, and Ruzena Bajcsy, "[Muscle deformation correlates with output force during isometric contraction](https://people.eecs.berkeley.edu/~lhallock/publication/hallock2020biorob/)," in _IEEE RAS/EMBS International Conference on Biomedical Robotics & Biomechatronics (BioRob)_, IEEE, 2020.
 
+**NOTE**: This code branch appears exactly as used for the paper submission above. To access the current release of this codebase, please visit the `master` branch [here](https://github.com/lhallock/openarm-multisensor/).
+
 This README primarily describes the methods needed to recreate the analyses described in the publication above, as applied to the time OpenArm Multisensor 1.0 data set found in the [OpenArm repository](https://simtk.org/frs/?group_id=1617). The code and documentation are provided as-is; however, we invite anyone who wishes to adapt and use it under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
 ---
@@ -22,6 +24,12 @@ To download all modules and scripts, clone this repository via
 git clone https://github.com/lhallock/openarm-multisensor.git
 ```
 
+and navigate to this branch via
+
+```bash
+git checkout biorob-2020
+```
+     
 ### Dependencies
 
 All packages used in code development and their associated versions can be found in [`requirements.txt`](requirements.txt); however, many of these packages relate to our formatting, linting, and testing procedures and are unnecessary for non-developers. For simply running the code, the following Python modules are required, all of which can be installed via `pip`: `matplotlib`, `numpy`, `opencv-python`, `pandas`, `scipy`, and `seaborn`. **In particular, ensure that `opencv-python` and `pandas` are updated to the listed versions**; older installations may cause errors.
