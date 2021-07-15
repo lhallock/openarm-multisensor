@@ -1,6 +1,6 @@
 # Muscle Time Series Data Aggregation & Analysis
 
-![openarm-multisensor tracking exemplar](header.png)
+![openarm-multisensor tracking exemplar](header_animated.gif)
 
 This repo contains code used to import, manipulate, and visualize muscle time
 series data, including ultrasound, surface electromyography (sEMG), acoustic
