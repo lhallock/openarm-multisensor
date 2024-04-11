@@ -15,7 +15,7 @@ docutils==0.15.2
 dodgy==0.1.9
 entrypoints==0.3
 frosted==1.4.1
-idna==2.8
+idna==3.7
 importlib-metadata==0.23
 ipykernel==5.1.3
 ipython==8.10.0
