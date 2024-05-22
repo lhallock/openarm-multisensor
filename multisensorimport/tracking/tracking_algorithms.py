@@ -271,7 +271,7 @@ def track_LK(run_params,
                     # draw the tracked contour
                     for i in range(len(tracked_contour)):
                         x, y = tracked_contour[i].ravel()
-                        cv2.circle(frame_color, (x, y), 3, (0, 0, 255), -1)
+                        cv2.circle(frame_color, (int(x), int(y)), 3, (0, 0, 255), -1)
 
                     cv2.imshow('Frame', frame_color)
                     key = cv2.waitKey(1)
