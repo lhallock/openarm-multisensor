@@ -89,7 +89,7 @@ six==1.13.0
 snowballstemmer==2.0.0
 terminado==0.8.3
 testpath==0.4.4
-tornado==6.4.2
+tornado==6.5.1
 traitlets==4.3.3
 typed-ast==1.4.0
 typing-extensions==3.7.4.1
