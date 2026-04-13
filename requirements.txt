@@ -73,7 +73,7 @@ pylint-plugin-utils==0.6
 pyparsing==2.4.5
 pyroma==2.6
 pyrsistent==0.15.5
-pytest==5.2.4
+pytest==9.0.3
 python-dateutil==2.8.1
 pytz==2019.3
 PyYAML==5.4
